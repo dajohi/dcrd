@@ -18,9 +18,6 @@ REPO=dcrd
 
 go version
 
-# binary needed for RPC tests
-env CC=gcc go build
-cp "$REPO" "$(go env GOPATH)/bin/"
 
 # run tests on all modules
 ROOTPATH=$(go list -m)
@@ -28,7 +25,6 @@ ROOTPATHPATTERN=$(echo $ROOTPATH | sed 's/\\/\\\\/g' | sed 's/\//\\\//g')
 MODPATHS=$(go list -m all | grep "^$ROOTPATHPATTERN" | cut -d' ' -f1)
 for module in $MODPATHS; do
   echo "==> ${module}"
-  env CC=gcc go test -short -tags rpctest ${module}/...
 
   # check linters
   MODNAME=$(echo $module | sed -E -e "s/^$ROOTPATHPATTERN//" \
@@ -61,6 +57,7 @@ for module in $MODPATHS; do
       --enable=govet \
       --enable=misspell \
       --enable=deadcode \
+      --enable=errorlint || true \
   )
 done
 

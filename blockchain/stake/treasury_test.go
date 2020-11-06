@@ -6,9 +6,10 @@ package stake
 
 import (
 	"bytes"
+	"crypto/rand"
 	"encoding/hex"
+	"errors"
 	"math"
-	"math/rand"
 	"testing"
 
 	"github.com/decred/dcrd/chaincfg/chainhash"
@@ -1135,15 +1136,22 @@ func TestTSpendErrors(t *testing.T) {
 		},
 	}
 	for i, tt := range tests {
+		var expErr RuleError
+		if !errors.As(tt.expected, &expErr) {
+			t.Errorf("%v: unexpected error type: got:%T want:%T",
+				tt.expected, expErr)
+		}
+
 		test := dcrutil.NewTx(tt.tx)
 		test.SetTree(wire.TxTreeStake)
 		test.SetIndex(0)
 		err := checkTSpend(test.MsgTx())
-		if err.(RuleError).GetCode() != tt.expected.(RuleError).GetCode() {
+		var rErr RuleError
+		if !errors.As(err, &rErr) || rErr.GetCode() != expErr.GetCode() {
 			t.Errorf("%v: checkTSpend should have returned %v but "+
 				"instead returned %v: %v",
-				tt.name, tt.expected.(RuleError).GetCode(),
-				err.(RuleError).GetCode(), err)
+				tt.name, expErr.GetCode(),
+				rErr.GetCode(), err)
 		}
 		if IsTSpend(test.MsgTx()) {
 			t.Errorf("IsTSpend claimed an invalid tspend is valid"+
@@ -1350,15 +1358,21 @@ func TestTAddErrors(t *testing.T) {
 		},
 	}
 	for i, tt := range tests {
+		var expErr RuleError
+		if !errors.As(tt.expected, &expErr) {
+			t.Errorf("%v: unexpected error type: got:%T want:%T",
+				tt.expected, expErr)
+		}
+
 		test := dcrutil.NewTx(tt.tx)
 		test.SetTree(wire.TxTreeStake)
 		test.SetIndex(0)
 		err := checkTAdd(test.MsgTx())
-		if err.(RuleError).GetCode() != tt.expected.(RuleError).GetCode() {
+		if !errors.As(err, &rErr) || rErr.GetCode() != expErr.GetCode() {
 			t.Errorf("%v: checkTAdd should have returned %v but "+
 				"instead returned %v: %v",
-				tt.name, tt.expected.(RuleError).GetCode(),
-				err.(RuleError).GetCode(), err)
+				tt.name, expErr.GetCode(),
+				rErr.GetCode(), err)
 		}
 		if IsTAdd(test.MsgTx()) {
 			t.Errorf("IsTAdd claimed an invalid tadd is valid"+
@@ -1723,15 +1737,22 @@ func TestTreasuryBaseErrors(t *testing.T) {
 		},
 	}
 	for i, tt := range tests {
+		var expErr RuleError
+		if !errors.As(tt.expected, &expErr) {
+			t.Errorf("%v: unexpected error type: got:%T want:%T",
+				tt.expected, expErr)
+		}
+
 		test := dcrutil.NewTx(tt.tx)
 		test.SetTree(wire.TxTreeStake)
 		test.SetIndex(0)
 		err := checkTreasuryBase(test.MsgTx())
-		if err.(RuleError).GetCode() != tt.expected.(RuleError).GetCode() {
+		var rErr RuleError
+		if !errors.As(err, &rErr) || rErr.GetCode() != expErr.GetCode() {
 			t.Errorf("%v: checkTreasuryBase should have returned "+
 				"%v but instead returned %v: %v",
-				tt.name, tt.expected.(RuleError).GetCode(),
-				err.(RuleError).GetCode(), err)
+				tt.name, expErr.GetCode(),
+				rErr.GetCode(), err)
 		}
 		if IsTreasuryBase(test.MsgTx()) {
 			t.Errorf("IsTreasuryBase claimed an invalid treasury "+

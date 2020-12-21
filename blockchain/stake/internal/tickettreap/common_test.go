@@ -27,6 +27,8 @@ func uint32ToKey(ui uint32) Key {
 
 // TestSizeValues are correct.
 func TestSizeValues(t *testing.T) {
+	t.Parallel()
+
 	var node treapNode
 	sizeOfNode := reflect.TypeOf(node).Size()
 	if sizeOfNode != nodeFieldsSize {

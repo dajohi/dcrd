@@ -18,6 +18,8 @@ import (
 
 // TestTx tests the API for Tx.
 func TestTx(t *testing.T) {
+	t.Parallel()
+
 	testTx := Block100000.Transactions[0]
 	tx := NewTx(testTx)
 
@@ -78,6 +80,8 @@ func TestTx(t *testing.T) {
 
 // TestNewTxFromBytes tests creation of a Tx from serialized bytes.
 func TestNewTxFromBytes(t *testing.T) {
+	t.Parallel()
+
 	// Serialize the test transaction.
 	testTx := Block100000.Transactions[0]
 	var testTxBuf bytes.Buffer
@@ -104,6 +108,8 @@ func TestNewTxFromBytes(t *testing.T) {
 
 // TestTxErrors tests the error paths for the Tx API.
 func TestTxErrors(t *testing.T) {
+	t.Parallel()
+
 	// Serialize the test transaction.
 	testTx := Block100000.Transactions[0]
 	var testTxBuf bytes.Buffer
@@ -125,6 +131,8 @@ func TestTxErrors(t *testing.T) {
 
 // TestNewTxDeep tests the API for Tx deep copy.
 func TestNewTxDeep(t *testing.T) {
+	t.Parallel()
+
 	orgTx := Block100000.Transactions[0]
 	copyTxDeep := NewTxDeep(orgTx)
 	copyTx := copyTxDeep.MsgTx()
@@ -175,6 +183,8 @@ func TestNewTxDeep(t *testing.T) {
 
 // TestNewTxDeepTxIns tests the API for creation of a Tx with deep TxIn copy.
 func TestNewTxDeepTxIns(t *testing.T) {
+	t.Parallel()
+
 	tx := Block100000.Transactions[0]
 	copyTxDeep := NewTxDeepTxIns(tx)
 	cpTx := copyTxDeep.MsgTx()

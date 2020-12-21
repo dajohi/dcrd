@@ -20,6 +20,8 @@ import (
 
 // TestVersion tests the MsgVersion API.
 func TestVersion(t *testing.T) {
+	t.Parallel()
+
 	pver := ProtocolVersion
 
 	// Create version message data.
@@ -181,6 +183,8 @@ func TestVersion(t *testing.T) {
 // TestVersionWire tests the MsgVersion wire encode and decode for various
 // protocol versions.
 func TestVersionWire(t *testing.T) {
+	t.Parallel()
+
 	// verRelayTxFalse and verRelayTxFalseEncoded is a version message as of
 	// BIP0037Version with the transaction relay disabled.
 	baseVersionBIP0037Copy := *baseVersionBIP0037
@@ -245,6 +249,8 @@ func TestVersionWire(t *testing.T) {
 // TestVersionWireErrors performs negative tests against wire encode and
 // decode of MsgGetHeaders to confirm error paths work correctly.
 func TestVersionWireErrors(t *testing.T) {
+	t.Parallel()
+
 	// Use protocol version 60002 specifically here instead of the latest
 	// because the test data is using bytes encoded with that protocol
 	// version.
@@ -338,6 +344,8 @@ func TestVersionWireErrors(t *testing.T) {
 // TestVersionOptionalFields performs tests to ensure that an encoded version
 // messages that omit optional fields are handled correctly.
 func TestVersionOptionalFields(t *testing.T) {
+	t.Parallel()
+
 	// onlyRequiredVersion is a version message that only contains the
 	// required versions and all other values set to their default values.
 	onlyRequiredVersion := MsgVersion{

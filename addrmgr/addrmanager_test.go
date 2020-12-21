@@ -106,6 +106,8 @@ func lookupFunc(host string) ([]net.IP, error) {
 }
 
 func TestStartStop(t *testing.T) {
+	t.Parallel()
+
 	n := New("teststartstop", lookupFunc)
 	n.Start()
 	if err := n.Stop(); err != nil {
@@ -114,6 +116,8 @@ func TestStartStop(t *testing.T) {
 }
 
 func TestAddAddressByIP(t *testing.T) {
+	t.Parallel()
+
 	fmtErr := fmt.Errorf("")
 	addrErr := &net.AddrError{}
 	var tests = []struct {
@@ -183,6 +187,8 @@ func TestAddAddressByIP(t *testing.T) {
 }
 
 func TestAddAddressUpdate(t *testing.T) {
+	t.Parallel()
+
 	amgr := New("testaddaddressupdate", nil)
 	amgr.Start()
 	if ka := amgr.GetAddress(); ka != nil {
@@ -222,6 +228,8 @@ func TestAddAddressUpdate(t *testing.T) {
 }
 
 func TestAddLocalAddress(t *testing.T) {
+	t.Parallel()
+
 	var tests = []struct {
 		address  wire.NetAddress
 		priority AddressPriority
@@ -275,6 +283,8 @@ func TestAddLocalAddress(t *testing.T) {
 }
 
 func TestAttempt(t *testing.T) {
+	t.Parallel()
+
 	n := New("testattempt", lookupFunc)
 
 	// Add a new address and get it
@@ -297,6 +307,8 @@ func TestAttempt(t *testing.T) {
 }
 
 func TestConnected(t *testing.T) {
+	t.Parallel()
+
 	n := New("testconnected", lookupFunc)
 
 	// Add a new address and get it
@@ -317,6 +329,8 @@ func TestConnected(t *testing.T) {
 }
 
 func TestNeedMoreAddresses(t *testing.T) {
+	t.Parallel()
+
 	n := New("testneedmoreaddresses", lookupFunc)
 	addrsToAdd := 1500
 	b := n.NeedMoreAddresses()
@@ -349,6 +363,8 @@ func TestNeedMoreAddresses(t *testing.T) {
 }
 
 func TestGood(t *testing.T) {
+	t.Parallel()
+
 	n := New("testgood", lookupFunc)
 	addrsToAdd := 64 * 64
 	addrs := make([]*wire.NetAddress, addrsToAdd)
@@ -381,6 +397,8 @@ func TestGood(t *testing.T) {
 }
 
 func TestGetAddress(t *testing.T) {
+	t.Parallel()
+
 	n := New("testgetaddress", lookupFunc)
 
 	// Get an address from an empty set (should error)
@@ -418,6 +436,8 @@ func TestGetAddress(t *testing.T) {
 }
 
 func TestGetBestLocalAddress(t *testing.T) {
+	t.Parallel()
+
 	localAddrs := []wire.NetAddress{
 		{IP: net.ParseIP("192.168.0.100")},
 		{IP: net.ParseIP("::1")},
@@ -524,6 +544,8 @@ func TestGetBestLocalAddress(t *testing.T) {
 }
 
 func TestNetAddressKey(t *testing.T) {
+	t.Parallel()
+
 	addNaTests()
 
 	t.Logf("Running %d tests", len(naTests))
@@ -537,6 +559,8 @@ func TestNetAddressKey(t *testing.T) {
 }
 
 func TestCorruptPeersFile(t *testing.T) {
+	t.Parallel()
+
 	dir, err := ioutil.TempDir("", "testcorruptpeersfile")
 	if err != nil {
 		t.Fatal(err)

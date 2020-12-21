@@ -13,6 +13,8 @@ import (
 )
 
 func Test256C(t *testing.T) {
+	t.Parallel()
+
 	// Test as in C program.
 	var hashes = [][]byte{
 		{
@@ -104,14 +106,20 @@ func newTestVectors(t *testing.T, hashfunc func() hash.Hash, vectors []blakeVect
 }
 
 func TestNew256(t *testing.T) {
+	t.Parallel()
+
 	newTestVectors(t, New, vectors256)
 }
 
 func TestNew224(t *testing.T) {
+	t.Parallel()
+
 	newTestVectors(t, New224, vectors224)
 }
 
 func TestSum256(t *testing.T) {
+	t.Parallel()
+
 	for i, v := range vectors256 {
 		res := fmt.Sprintf("%x", Sum256([]byte(v.in)))
 		if res != v.out {
@@ -121,6 +129,8 @@ func TestSum256(t *testing.T) {
 }
 
 func TestSum224(t *testing.T) {
+	t.Parallel()
+
 	for i, v := range vectors224 {
 		res := fmt.Sprintf("%x", Sum224([]byte(v.in)))
 		if res != v.out {
@@ -139,6 +149,8 @@ var vectors256salt = []struct{ out, in, salt string }{
 }
 
 func TestSalt(t *testing.T) {
+	t.Parallel()
+
 	for i, v := range vectors256salt {
 		h := NewSalt([]byte(v.salt))
 		h.Write([]byte(v.in))
@@ -158,6 +170,8 @@ func TestSalt(t *testing.T) {
 }
 
 func TestTwoWrites(t *testing.T) {
+	t.Parallel()
+
 	b := make([]byte, 65)
 	for i := range b {
 		b[i] = byte(i)

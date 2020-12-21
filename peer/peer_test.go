@@ -206,6 +206,8 @@ func testPeer(t *testing.T, p *Peer, s peerStats) {
 
 // TestPeerConnection tests connection between inbound and outbound peers.
 func TestPeerConnection(t *testing.T) {
+	t.Parallel()
+
 	var pause sync.Mutex
 	verack := make(chan struct{})
 	peerCfg := &Config{
@@ -322,6 +324,8 @@ func TestPeerConnection(t *testing.T) {
 
 // TestPeerListeners tests that the peer listeners are called as expected.
 func TestPeerListeners(t *testing.T) {
+	t.Parallel()
+
 	verack := make(chan struct{}, 1)
 	ok := make(chan wire.Message, 20)
 	peerCfg := &Config{
@@ -587,6 +591,8 @@ func TestPeerListeners(t *testing.T) {
 
 // TestOutboundPeer tests that the outbound peer works as expected.
 func TestOutboundPeer(t *testing.T) {
+	t.Parallel()
+
 	peerCfg := &Config{
 		NewestBlock: func() (*chainhash.Hash, int64, error) {
 			return nil, 0, errors.New("newest block not found")
@@ -729,6 +735,8 @@ func TestOutboundPeer(t *testing.T) {
 // TestDuplicateVersionMsg ensures that receiving a version message after one
 // has already been received results in the peer being disconnected.
 func TestDuplicateVersionMsg(t *testing.T) {
+	t.Parallel()
+
 	// Create a pair of peers that are connected to each other using a fake
 	// connection.
 	verack := make(chan struct{})
@@ -791,6 +799,8 @@ func TestDuplicateVersionMsg(t *testing.T) {
 // TestNetFallback ensures the network is set to the expected value in
 // accordance with the parameters.
 func TestNetFallback(t *testing.T) {
+	t.Parallel()
+
 	cfg := Config{
 		NewestBlock: func() (*chainhash.Hash, int64, error) {
 			return nil, 0, errors.New("newest block not found")
@@ -818,6 +828,8 @@ func TestNetFallback(t *testing.T) {
 // during the initial version negotiation and is only allowed to advance to
 // higher values via the associated update function.
 func TestUpdateLastBlockHeight(t *testing.T) {
+	t.Parallel()
+
 	// Create a pair of peers that are connected to each other using a fake
 	// connection and the remote peer starting at height 100.
 	const remotePeerHeight = 100

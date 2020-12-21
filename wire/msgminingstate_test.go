@@ -15,6 +15,8 @@ import (
 )
 
 func TestMiningState(t *testing.T) {
+	t.Parallel()
+
 	pver := ProtocolVersion
 
 	// Ensure the command is expected value.
@@ -59,6 +61,8 @@ func TestMiningState(t *testing.T) {
 // TestMiningStateWire tests the MsgMiningState wire encode and decode for a sample
 // message containing a fake block header and some fake vote hashes.
 func TestMiningStateWire(t *testing.T) {
+	t.Parallel()
+
 	// Empty tx message.
 	sampleMSMsg := NewMsgMiningState()
 	sampleMSMsg.Version = 1

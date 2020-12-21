@@ -30,6 +30,8 @@ var vectors = [...]mdTest{
 }
 
 func TestVectors(t *testing.T) {
+	t.Parallel()
+
 	for i := 0; i < len(vectors); i++ {
 		tv := vectors[i]
 		md := New()
@@ -59,6 +61,8 @@ func millionA() string {
 }
 
 func TestMillionA(t *testing.T) {
+	t.Parallel()
+
 	const out = "52783243c1697bdbe16d37f97f68f08325dc1528"
 	if s := millionA(); s != out {
 		t.Fatalf("RIPEMD-160 (1 million 'a') = %s, expected %s", s, out)

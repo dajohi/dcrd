@@ -14,6 +14,8 @@ import (
 
 // TestGetCFTypes tests the MsgGetCFTypes API.
 func TestGetCFTypes(t *testing.T) {
+	t.Parallel()
+
 	pver := ProtocolVersion
 	oldPver := NodeCFVersion - 1
 
@@ -62,6 +64,8 @@ func TestGetCFTypes(t *testing.T) {
 // TestGetCFTypesWire tests the MsgGetCFTypes wire encode and decode for various
 // protocol versions.
 func TestGetCFTypesWire(t *testing.T) {
+	t.Parallel()
+
 	msgGetCFTypes := NewMsgGetCFTypes()
 	msgGetCFTypesEncoded := []byte{}
 

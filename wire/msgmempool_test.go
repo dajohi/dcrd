@@ -11,6 +11,8 @@ import (
 )
 
 func TestMemPool(t *testing.T) {
+	t.Parallel()
+
 	pver := ProtocolVersion
 
 	// Ensure the command is expected value.

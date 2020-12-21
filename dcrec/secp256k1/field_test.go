@@ -70,6 +70,8 @@ func randIntAndFieldVal(t *testing.T, rng *rand.Rand) (*big.Int, *FieldVal) {
 // TestFieldSetInt ensures that setting a field value to various native
 // integers works as expected.
 func TestFieldSetInt(t *testing.T) {
+	t.Parallel()
+
 	tests := []struct {
 		name     string     // test description
 		in       uint16     // test value
@@ -102,6 +104,8 @@ func TestFieldSetInt(t *testing.T) {
 // unsigned integer via both the slice and array methods works as expected for
 // edge cases.  Random cases are tested via the various other tests.
 func TestFieldSetBytes(t *testing.T) {
+	t.Parallel()
+
 	tests := []struct {
 		name     string     // test description
 		in       string     // hex encoded test value
@@ -275,6 +279,8 @@ func TestFieldSetBytes(t *testing.T) {
 // unsigned integer via the various methods works as expected for edge cases.
 // Random cases are tested via the various other tests.
 func TestFieldBytes(t *testing.T) {
+	t.Parallel()
+
 	tests := []struct {
 		name     string // test description
 		in       string // hex encoded test value
@@ -371,6 +377,8 @@ func TestFieldBytes(t *testing.T) {
 
 // TestFieldZero ensures that zeroing a field value works as expected.
 func TestFieldZero(t *testing.T) {
+	t.Parallel()
+
 	var f FieldVal
 	f.SetHex("a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5")
 	f.Zero()
@@ -385,6 +393,8 @@ func TestFieldZero(t *testing.T) {
 // TestFieldIsZero ensures that checking if a field is zero via IsZero and
 // IsZeroBit works as expected.
 func TestFieldIsZero(t *testing.T) {
+	t.Parallel()
+
 	f := new(FieldVal)
 	if !f.IsZero() {
 		t.Errorf("new field value is not zero - got %v (rawints %x)", f, f.n)
@@ -422,6 +432,8 @@ func TestFieldIsZero(t *testing.T) {
 // TestFieldIsOne ensures that checking if a field is one via IsOne and IsOneBit
 // works as expected.
 func TestFieldIsOne(t *testing.T) {
+	t.Parallel()
+
 	tests := []struct {
 		name      string // test description
 		in        string // hex encoded test value
@@ -527,6 +539,8 @@ func TestFieldIsOne(t *testing.T) {
 
 // TestFieldStringer ensures the stringer returns the appropriate hex string.
 func TestFieldStringer(t *testing.T) {
+	t.Parallel()
+
 	tests := []struct {
 		name     string //test description
 		in       string // hex encoded test value
@@ -635,6 +649,8 @@ func TestFieldStringer(t *testing.T) {
 // TestFieldNormalize ensures that normalizing the internal field words works as
 // expected.
 func TestFieldNormalize(t *testing.T) {
+	t.Parallel()
+
 	tests := []struct {
 		name       string     // test description
 		raw        [10]uint32 // Intentionally denormalized value
@@ -853,6 +869,8 @@ func TestFieldNormalize(t *testing.T) {
 // TestFieldIsOdd ensures that checking if a field value is odd via IsOdd and
 // IsOddBit works as expected.
 func TestFieldIsOdd(t *testing.T) {
+	t.Parallel()
+
 	tests := []struct {
 		name     string // test description
 		in       string // hex encoded value
@@ -908,6 +926,8 @@ func TestFieldIsOdd(t *testing.T) {
 // TestFieldEquals ensures that checking two field values for equality via
 // Equals works as expected.
 func TestFieldEquals(t *testing.T) {
+	t.Parallel()
+
 	tests := []struct {
 		name     string // test description
 		in1      string // hex encoded value
@@ -965,6 +985,8 @@ func TestFieldEquals(t *testing.T) {
 // TestFieldNegate ensures that negating field values via Negate works as
 // expected.
 func TestFieldNegate(t *testing.T) {
+	t.Parallel()
+
 	tests := []struct {
 		name     string // test description
 		in       string // hex encoded test value
@@ -1040,6 +1062,8 @@ func TestFieldNegate(t *testing.T) {
 // TestFieldAddInt ensures that adding an integer to field values via AddInt
 // works as expected.
 func TestFieldAddInt(t *testing.T) {
+	t.Parallel()
+
 	tests := []struct {
 		name     string // test description
 		in1      string // hex encoded value
@@ -1107,6 +1131,8 @@ func TestFieldAddInt(t *testing.T) {
 // TestFieldAdd ensures that adding two field values together via Add and Add2
 // works as expected.
 func TestFieldAdd(t *testing.T) {
+	t.Parallel()
+
 	tests := []struct {
 		name     string // test description
 		in1      string // first hex encoded value
@@ -1203,6 +1229,8 @@ func TestFieldAdd(t *testing.T) {
 // TestFieldMulInt ensures that multiplying an integer to field values via
 // MulInt works as expected.
 func TestFieldMulInt(t *testing.T) {
+	t.Parallel()
+
 	tests := []struct {
 		name     string // test description
 		in1      string // hex encoded value
@@ -1283,6 +1311,8 @@ func TestFieldMulInt(t *testing.T) {
 // TestFieldMul ensures that multiplying two field values via Mul and Mul2 works
 // as expected.
 func TestFieldMul(t *testing.T) {
+	t.Parallel()
+
 	tests := []struct {
 		name     string // test description
 		in1      string // first hex encoded value
@@ -1378,6 +1408,8 @@ func TestFieldMul(t *testing.T) {
 // TestFieldSquare ensures that squaring field values via Square and SqualVal
 // works as expected.
 func TestFieldSquare(t *testing.T) {
+	t.Parallel()
+
 	tests := []struct {
 		name     string // test description
 		in       string // hex encoded value
@@ -1447,6 +1479,8 @@ func TestFieldSquare(t *testing.T) {
 // TestFieldSquareRoot ensures that calculating the square root of field values
 // via SquareRootVal works as expected for edge cases.
 func TestFieldSquareRoot(t *testing.T) {
+	t.Parallel()
+
 	tests := []struct {
 		name  string // test description
 		in    string // hex encoded value
@@ -1547,6 +1581,8 @@ func TestFieldSquareRoot(t *testing.T) {
 // field values works as expected by also performing the same operation with big
 // ints and comparing the results.
 func TestFieldSquareRootRandom(t *testing.T) {
+	t.Parallel()
+
 	// Use a unique random seed each test instance and log it if the tests fail.
 	seed := time.Now().Unix()
 	rng := rand.New(rand.NewSource(seed))
@@ -1590,6 +1626,8 @@ func TestFieldSquareRootRandom(t *testing.T) {
 // TestFieldInverse ensures that finding the multiplicative inverse via Inverse
 // works as expected.
 func TestFieldInverse(t *testing.T) {
+	t.Parallel()
+
 	tests := []struct {
 		name     string // test description
 		in       string // hex encoded value
@@ -1648,6 +1686,8 @@ func TestFieldInverse(t *testing.T) {
 // not they are greater than or equal to the field prime minus the group order
 // as expected for edge cases.
 func TestFieldIsGtOrEqPrimeMinusOrder(t *testing.T) {
+	t.Parallel()
+
 	tests := []struct {
 		name     string // test description
 		in       string // hex encoded test value
@@ -1725,6 +1765,8 @@ func TestFieldIsGtOrEqPrimeMinusOrder(t *testing.T) {
 // group order as expected by also performing the same operation with big ints
 // and comparing the results.
 func TestFieldIsGtOrEqPrimeMinusOrderRandom(t *testing.T) {
+	t.Parallel()
+
 	// Use a unique random seed each test instance and log it if the tests fail.
 	seed := time.Now().Unix()
 	rng := rand.New(rand.NewSource(seed))

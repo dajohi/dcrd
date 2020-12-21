@@ -19,6 +19,8 @@ func newKnownAddress(na *wire.NetAddress, attempts int, lastattempt, lastsuccess
 }
 
 func TestChance(t *testing.T) {
+	t.Parallel()
+
 	now := time.Unix(time.Now().Unix(), 0)
 	var tests = []struct {
 		addr     *KnownAddress
@@ -62,6 +64,8 @@ func TestChance(t *testing.T) {
 }
 
 func TestIsBad(t *testing.T) {
+	t.Parallel()
+
 	now := time.Unix(time.Now().Unix(), 0)
 	future := now.Add(35 * time.Minute)
 	monthOld := now.Add(-43 * time.Hour * 24)

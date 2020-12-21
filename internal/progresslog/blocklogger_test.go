@@ -22,6 +22,8 @@ var (
 // TestLogBlockHeight ensures the logging functionality works as expected via
 // a test logger.
 func TestLogBlockHeight(t *testing.T) {
+	t.Parallel()
+
 	testBlocks := []wire.MsgBlock{{
 		Header: wire.BlockHeader{
 			Version:     1,

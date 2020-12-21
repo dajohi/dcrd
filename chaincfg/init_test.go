@@ -290,6 +290,8 @@ var (
 )
 
 func TestChoices(t *testing.T) {
+	t.Parallel()
+
 	tests := []struct {
 		name     string
 		vote     Vote
@@ -360,6 +362,8 @@ var (
 )
 
 func TestDeployments(t *testing.T) {
+	t.Parallel()
+
 	tests := []struct {
 		name        string
 		deployments []ConsensusDeployment
@@ -393,6 +397,8 @@ func allDefaultNetParams() []*Params {
 // required to be unique are in fact unique for all of the provided default
 // parameters.
 func TestRequiredUnique(t *testing.T) {
+	t.Parallel()
+
 	var (
 		netMagics         = make(map[wire.CurrencyNet]struct{})
 		netPrefixes       = make(map[string]struct{})

@@ -17,6 +17,8 @@ import (
 
 // TestGetCFHeaders tests the MsgGetCfHeaders API.
 func TestGetCFHeaders(t *testing.T) {
+	t.Parallel()
+
 	pver := ProtocolVersion
 
 	// Block 200,000 hash.
@@ -86,6 +88,8 @@ func TestGetCFHeaders(t *testing.T) {
 // TestGetCFHeadersWire tests the MsgGetCFHeaders wire encode and decode for
 // various numbers of block locator hashes and protocol versions.
 func TestGetCFHeadersWire(t *testing.T) {
+	t.Parallel()
+
 	// Block 194,999 hash.
 	hashStr := "00000000000000258d61596292b8d2f0630923cdbf82678a43fb2b17a26e99f3"
 	hashLocator, err := chainhash.NewHashFromStr(hashStr)
@@ -217,6 +221,8 @@ func TestGetCFHeadersWire(t *testing.T) {
 // TestGetCFHeadersWireErrors performs negative tests against wire encode and
 // decode of MsgGetCFHeaders to confirm error paths work correctly.
 func TestGetCFHeadersWireErrors(t *testing.T) {
+	t.Parallel()
+
 	pver := ProtocolVersion
 	oldPver := NodeCFVersion - 1
 
@@ -319,6 +325,8 @@ func TestGetCFHeadersWireErrors(t *testing.T) {
 // TestGetCFHeadersMalformedErrors performs negative tests against wire decode
 // of MsgGetCFHeaders to confirm malformed encoded data doesn't pass through.
 func TestGetCFHeadersMalformedErrors(t *testing.T) {
+	t.Parallel()
+
 	pver := ProtocolVersion
 
 	tests := []struct {

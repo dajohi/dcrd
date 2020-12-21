@@ -311,6 +311,8 @@ func TestCheckPubKeyEncoding(t *testing.T) {
 // TestIsStrictNullData ensures the function that deals with strict null data
 // requirements works as expected.
 func TestIsStrictNullData(t *testing.T) {
+	t.Parallel()
+
 	tests := []struct {
 		name        string
 		scriptVer   uint16

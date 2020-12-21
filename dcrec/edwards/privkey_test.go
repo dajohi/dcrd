@@ -9,6 +9,8 @@ import (
 )
 
 func TestPrivKeySign(t *testing.T) {
+	t.Parallel()
+
 	message := []byte("the quick brown fox jumps over the lazy dog")
 
 	privkey, err := GeneratePrivateKey()

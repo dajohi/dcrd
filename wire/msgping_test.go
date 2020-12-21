@@ -17,6 +17,8 @@ import (
 
 // TestPing tests the MsgPing API against the latest protocol version.
 func TestPing(t *testing.T) {
+	t.Parallel()
+
 	pver := ProtocolVersion
 
 	// Ensure we get the same nonce back out.
@@ -57,6 +59,8 @@ func TestPing(t *testing.T) {
 // TestPingWire tests the MsgPing wire encode and decode for various protocol
 // versions.
 func TestPingWire(t *testing.T) {
+	t.Parallel()
+
 	tests := []struct {
 		in   MsgPing // Message to encode
 		out  MsgPing // Expected decoded message
@@ -106,6 +110,8 @@ func TestPingWire(t *testing.T) {
 // TestPingWireErrors performs negative tests against wire encode and decode
 // of MsgPing to confirm error paths work correctly.
 func TestPingWireErrors(t *testing.T) {
+	t.Parallel()
+
 	pver := ProtocolVersion
 
 	tests := []struct {

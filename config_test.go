@@ -23,6 +23,8 @@ import (
 
 // TestLoadConfig ensures that basic configuration loading succeeds.
 func TestLoadConfig(t *testing.T) {
+	t.Parallel()
+
 	appName := filepath.Base(os.Args[0])
 	appName = strings.TrimSuffix(appName, filepath.Ext(appName))
 	_, _, err := loadConfig(appName)
@@ -34,6 +36,8 @@ func TestLoadConfig(t *testing.T) {
 // TestDefaultAltDNSNames ensures that there are no additional hostnames added
 // by default during the configuration load phase.
 func TestDefaultAltDNSNames(t *testing.T) {
+	t.Parallel()
+
 	appName := filepath.Base(os.Args[0])
 	appName = strings.TrimSuffix(appName, filepath.Ext(appName))
 	cfg, _, err := loadConfig(appName)
@@ -48,6 +52,8 @@ func TestDefaultAltDNSNames(t *testing.T) {
 // TestAltDNSNamesWithEnv ensures the DCRD_ALT_DNSNAMES environment variable is
 // parsed into a slice of additional hostnames as intended.
 func TestAltDNSNamesWithEnv(t *testing.T) {
+	t.Parallel()
+
 	appName := filepath.Base(os.Args[0])
 	appName = strings.TrimSuffix(appName, filepath.Ext(appName))
 	os.Setenv("DCRD_ALT_DNSNAMES", "hostname1,hostname2")
@@ -65,6 +71,8 @@ func TestAltDNSNamesWithEnv(t *testing.T) {
 // TestAltDNSNamesWithArg ensures the altdnsnames configuration option parses
 // additional hostnames into a slice of hostnames as intended.
 func TestAltDNSNamesWithArg(t *testing.T) {
+	t.Parallel()
+
 	appName := filepath.Base(os.Args[0])
 	appName = strings.TrimSuffix(appName, filepath.Ext(appName))
 	old := os.Args

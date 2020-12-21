@@ -19,6 +19,8 @@ import (
 
 // TestAddr tests the MsgAddr API.
 func TestAddr(t *testing.T) {
+	t.Parallel()
+
 	pver := ProtocolVersion
 
 	// Ensure the command is expected value.
@@ -88,6 +90,8 @@ func TestAddr(t *testing.T) {
 // TestAddrWire tests the MsgAddr wire encode and decode for various numbers
 // of addresses and protocol versions.
 func TestAddrWire(t *testing.T) {
+	t.Parallel()
+
 	// A couple of NetAddresses to use for testing.
 	na := &NetAddress{
 		Timestamp: time.Unix(0x495fab29, 0), // 2009-01-03 12:15:05 -0600 CST
@@ -183,6 +187,8 @@ func TestAddrWire(t *testing.T) {
 // TestAddrWireErrors performs negative tests against wire encode and decode
 // of MsgAddr to confirm error paths work correctly.
 func TestAddrWireErrors(t *testing.T) {
+	t.Parallel()
+
 	pver := ProtocolVersion
 
 	// A couple of NetAddresses to use for testing.

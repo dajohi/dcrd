@@ -13,6 +13,8 @@ import (
 // TestIsOnCurveAdaptor ensures the IsOnCurve method used to satisfy the
 // elliptic.Curve interfaces works as intended.
 func TestIsOnCurveAdaptor(t *testing.T) {
+	t.Parallel()
+
 	s256 := S256()
 	if !s256.IsOnCurve(s256.Params().Gx, s256.Params().Gy) {
 		t.Fatal("generator point does not claim to be on the curve")
@@ -22,6 +24,8 @@ func TestIsOnCurveAdaptor(t *testing.T) {
 // TestScalarBaseMultAdaptor ensures the ScalarBaseMult method used to satisfy
 // the elliptic.Curve interfaces works as intended.
 func TestScalarBaseMultAdaptor(t *testing.T) {
+	t.Parallel()
+
 	tests := []struct {
 		k    string
 		x, y string

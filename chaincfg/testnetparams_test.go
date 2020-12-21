@@ -16,6 +16,8 @@ import (
 // TestTestNetGenesisBlock tests the genesis block of the test network (version
 // 3) for validity by checking the encoded bytes and hashes.
 func TestTestNetGenesisBlock(t *testing.T) {
+	t.Parallel()
+
 	testNetGenesisBlockBytes, _ := hex.DecodeString("06000000000000000000" +
 		"00000000000000000000000000000000000000000000000000002c0ad603" +
 		"d44a16698ac951fa22aab5e7b30293fa1d0ac72560cdfcc9eabcdfe70000" +

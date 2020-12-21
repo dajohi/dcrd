@@ -115,6 +115,8 @@ func defaultParams(vote chaincfg.Vote) chaincfg.Params {
 // TestNoQuorum ensures that the quorum behavior works as expected with no
 // votes.
 func TestNoQuorum(t *testing.T) {
+	t.Parallel()
+
 	params := defaultParams(pedro)
 	bc := newFakeChain(&params)
 	node := bc.bestChain.Tip()
@@ -271,6 +273,8 @@ func TestNoQuorum(t *testing.T) {
 // TestNoQuorum ensures that the quorum behavior works as expected with yes
 // votes.
 func TestYesQuorum(t *testing.T) {
+	t.Parallel()
+
 	params := defaultParams(pedro)
 	bc := newFakeChain(&params)
 	node := bc.bestChain.Tip()
@@ -428,6 +432,8 @@ func TestYesQuorum(t *testing.T) {
 // TestVoting ensure the overall voting of an agenda works as expected including
 // a wide variety of conditions.
 func TestVoting(t *testing.T) {
+	t.Parallel()
+
 	params := defaultParams(chaincfg.Vote{})
 	rci := params.RuleChangeActivationInterval
 	svh := uint32(params.StakeValidationHeight)
@@ -1524,6 +1530,8 @@ func defaultParallelParams() chaincfg.Params {
 // TestParallelVoting ensures that two agendas running at the same time progress
 // through the expected states.
 func TestParallelVoting(t *testing.T) {
+	t.Parallel()
+
 	params := defaultParallelParams()
 
 	type voteCount struct {

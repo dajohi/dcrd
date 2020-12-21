@@ -46,6 +46,8 @@ func baseMsgCFilterV2(t *testing.T) *MsgCFilterV2 {
 // TestCFilterV2 tests the MsgCFilterV2 API against the latest protocol
 // version.
 func TestCFilterV2(t *testing.T) {
+	t.Parallel()
+
 	pver := ProtocolVersion
 
 	// Ensure the command is expected value.
@@ -91,6 +93,8 @@ func TestCFilterV2(t *testing.T) {
 // TestCFilterV2PreviousProtocol tests the MsgCFilterV2 API against the protocol
 // prior to version CFilterV2Version.
 func TestCFilterV2PreviousProtocol(t *testing.T) {
+	t.Parallel()
+
 	// Use the protocol version just prior to CFilterV2Version changes.
 	pver := CFilterV2Version - 1
 
@@ -116,6 +120,8 @@ func TestCFilterV2PreviousProtocol(t *testing.T) {
 // TestCFilterV2CrossProtocol tests the MsgCFilterV2 API when encoding with
 // the latest protocol version and decoding with CFilterV2Version.
 func TestCFilterV2CrossProtocol(t *testing.T) {
+	t.Parallel()
+
 	msg := baseMsgCFilterV2(t)
 
 	// Encode with latest protocol version.
@@ -136,6 +142,8 @@ func TestCFilterV2CrossProtocol(t *testing.T) {
 // TestCFilterV2Wire tests the MsgCFilterV2 wire encode and decode for various
 // protocol versions.
 func TestCFilterV2Wire(t *testing.T) {
+	t.Parallel()
+
 	msgCFilterV2 := baseMsgCFilterV2(t)
 	msgCFilterV2Encoded := []byte{
 		0xba, 0xdc, 0xb8, 0xe5, 0xc1, 0xe8, 0x95, 0xe8,
@@ -214,6 +222,8 @@ func TestCFilterV2Wire(t *testing.T) {
 // TestCFilterV2WireErrors performs negative tests against wire encode and
 // decode of MsgCFilterV2 to confirm error paths work correctly.
 func TestCFilterV2WireErrors(t *testing.T) {
+	t.Parallel()
+
 	pver := ProtocolVersion
 
 	// Message with valid mock values.

@@ -164,6 +164,8 @@ var (
 
 // TestTreasuryIsFunctions goes through all valid treasury opcode combinations.
 func TestTreasuryIsFunctions(t *testing.T) {
+	t.Parallel()
+
 	tests := []struct {
 		name     string
 		createTx func() *wire.MsgTx
@@ -1034,6 +1036,8 @@ var tspendInvalidTxVersion = &wire.MsgTx{
 }
 
 func TestTSpendGenerated(t *testing.T) {
+	t.Parallel()
+
 	rawScript := "03000000010000000000000000000000000000000000000000000000000000000000000000ffffffff00ffffffff0200000000000000000000226a20562ce42e7531d1710ea1ee02628191190ef5152bbbcd23acca864433c4e4e7849cf1052a01000000000018c3a914f5a8302ee8695bf836258b8f2b57b38a0be14e478700000000520000000100f2052a0100000000000000ffffffff64408ea1c04f5e5dd59350847fad8b800887200ae7268da3b70488a605dd5f4ad28e6e240dbd483a8ba46324a047cf0d6c506e6ebb61d93cae6e868b86f31d9bda892103b459ccf3ce4935a676414fd9ec93ecf7c9dad081a52ed6993bf073c627499388c2"
 	s, err := hex.DecodeString(rawScript)
 	if err != nil {
@@ -1054,6 +1058,8 @@ func TestTSpendGenerated(t *testing.T) {
 }
 
 func TestTSpendErrors(t *testing.T) {
+	t.Parallel()
+
 	tests := []struct {
 		name     string
 		tx       *wire.MsgTx
@@ -1297,6 +1303,8 @@ var taddInvalidTxVersion = &wire.MsgTx{
 // TestTAddErrors verifies that all TADD errors can be hit and return the
 // proper error.
 func TestTAddErrors(t *testing.T) {
+	t.Parallel()
+
 	tests := []struct {
 		name     string
 		tx       *wire.MsgTx
@@ -1653,6 +1661,8 @@ var treasurybaseInvalidLength = &wire.MsgTx{
 // TestTreasuryBaseErrors verifies that all treasurybase errors can be hit and
 // return the proper error.
 func TestTreasuryBaseErrors(t *testing.T) {
+	t.Parallel()
+
 	tests := []struct {
 		name     string
 		tx       *wire.MsgTx

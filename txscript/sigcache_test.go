@@ -92,6 +92,8 @@ func genRandomSig(t *testing.T) (*chainhash.Hash, *ecdsa.Signature, *secp256k1.P
 // TestSigCacheAddExists tests the ability to add, and later check the
 // existence of a signature triplet in the signature cache.
 func TestSigCacheAddExists(t *testing.T) {
+	t.Parallel()
+
 	sigCache, err := NewSigCache(200)
 	if err != nil {
 		t.Fatalf("error creating NewSigCache: %v", err)
@@ -115,6 +117,8 @@ func TestSigCacheAddExists(t *testing.T) {
 // triplet is added to a full signature cache which should trigger randomized
 // eviction, followed by adding the new element to the cache.
 func TestSigCacheAddEvictEntry(t *testing.T) {
+	t.Parallel()
+
 	// Create a sigcache that can hold up to 100 entries.
 	sigCacheSize := uint(100)
 	sigCache, err := NewSigCache(sigCacheSize)
@@ -166,6 +170,8 @@ func TestSigCacheAddEvictEntry(t *testing.T) {
 // TestSigCacheAddMaxEntriesZeroOrNegative tests that if a sigCache is created
 // with a max size <= 0, then no entries are added to the sigcache at all.
 func TestSigCacheAddMaxEntriesZeroOrNegative(t *testing.T) {
+	t.Parallel()
+
 	// Create a sigcache that can hold up to 0 entries.
 	sigCache, err := NewSigCache(0)
 	if err != nil {
@@ -196,6 +202,8 @@ func TestSigCacheAddMaxEntriesZeroOrNegative(t *testing.T) {
 // TestShortTxHash tests the ability to generate the short hash of a transaction
 // accurately.
 func TestShortTxHash(t *testing.T) {
+	t.Parallel()
+
 	// Create test keys.
 	key1 := [shortTxHashKeySize]byte{0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0,
 		0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0}
@@ -226,6 +234,8 @@ func TestShortTxHash(t *testing.T) {
 // TestEvictEntries tests that evictEntries properly removes all SigCache
 // entries related to the given block.
 func TestEvictEntries(t *testing.T) {
+	t.Parallel()
+
 	// Create a SigCache instance.
 	numTxns := len(block432100.Transactions) + len(block432100.STransactions)
 	sigCache, err := NewSigCache(uint(numTxns + 1))

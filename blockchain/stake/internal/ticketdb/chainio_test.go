@@ -388,6 +388,8 @@ func TestTicketHashesDeserializingErrors(t *testing.T) {
 
 // TestLiveDatabase tests various functions that require a live database.
 func TestLiveDatabase(t *testing.T) {
+	t.Parallel()
+
 	// Create a new database to store the accepted stake node data into.
 	dbName := "ffldb_ticketdb_test"
 	dbPath, err := ioutil.TempDir("", dbName)

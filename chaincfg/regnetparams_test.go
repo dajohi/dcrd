@@ -16,6 +16,8 @@ import (
 // TestRegNetGenesisBlock tests the genesis block of the regression test network
 // for validity by checking the encoded bytes and hashes.
 func TestRegNetGenesisBlock(t *testing.T) {
+	t.Parallel()
+
 	regNetGenesisBlockBytes, _ := hex.DecodeString("0100000000000000000" +
 		"000000000000000000000000000000000000000000000000000000dc101dfc" +
 		"3c6a2eb10ca0c5374e10d28feb53f7eabcc850511ceadb99174aa660000000" +

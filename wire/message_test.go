@@ -37,6 +37,8 @@ func makeHeader(dcrnet CurrencyNet, command string,
 
 // TestMessage tests the Read/WriteMessage and Read/WriteMessageN API.
 func TestMessage(t *testing.T) {
+	t.Parallel()
+
 	pver := ProtocolVersion
 
 	// Create the various types of messages to test.
@@ -182,6 +184,8 @@ func TestMessage(t *testing.T) {
 // TestReadMessageWireErrors performs negative tests against wire decoding into
 // concrete messages to confirm error paths work correctly.
 func TestReadMessageWireErrors(t *testing.T) {
+	t.Parallel()
+
 	pver := ProtocolVersion
 	dcrnet := MainNet
 
@@ -369,6 +373,8 @@ func TestReadMessageWireErrors(t *testing.T) {
 // TestWriteMessageWireErrors performs negative tests against wire encoding from
 // concrete messages to confirm error paths work correctly.
 func TestWriteMessageWireErrors(t *testing.T) {
+	t.Parallel()
+
 	pver := ProtocolVersion
 	dcrnet := MainNet
 	wireErr := &MessageError{}

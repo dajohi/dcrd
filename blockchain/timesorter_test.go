@@ -13,6 +13,8 @@ import (
 
 // TestTimeSorter tests the timeSorter implementation.
 func TestTimeSorter(t *testing.T) {
+	t.Parallel()
+
 	tests := []struct {
 		in   []int64
 		want []int64

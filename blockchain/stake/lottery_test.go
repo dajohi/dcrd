@@ -17,6 +17,8 @@ import (
 )
 
 func TestBasicPRNG(t *testing.T) {
+	t.Parallel()
+
 	seed := chainhash.HashB([]byte{0x01})
 	prng := NewHash256PRNG(seed)
 	for i := 0; i < 100000; i++ {
@@ -66,6 +68,8 @@ func (tds TicketDataSlice) Swap(i, j int) { tds[i], tds[j] = tds[j], tds[i] }
 func (tds TicketDataSlice) Len() int { return len(tds) }
 
 func TestLotteryNumSelection(t *testing.T) {
+	t.Parallel()
+
 	// Test finding ticket indexes.
 	seed := chainhash.HashB([]byte{0x01})
 	prng := NewHash256PRNG(seed)
@@ -111,6 +115,8 @@ func TestLotteryNumSelection(t *testing.T) {
 }
 
 func TestLotteryNumErrors(t *testing.T) {
+	t.Parallel()
+
 	seed := chainhash.HashB([]byte{0x01})
 	prng := NewHash256PRNG(seed)
 
@@ -122,6 +128,8 @@ func TestLotteryNumErrors(t *testing.T) {
 }
 
 func TestFetchWinnersErrors(t *testing.T) {
+	t.Parallel()
+
 	treap := new(tickettreap.Immutable)
 	for i := 0; i < 0xff; i++ {
 		h := chainhash.HashH([]byte{byte(i)})
@@ -161,6 +169,8 @@ func TestFetchWinnersErrors(t *testing.T) {
 }
 
 func TestTicketSorting(t *testing.T) {
+	t.Parallel()
+
 	ticketsPerBlock := 5
 	ticketPoolSize := uint16(8192)
 	totalTickets := uint32(ticketPoolSize) * uint32(5)

@@ -17,6 +17,8 @@ import (
 
 // TestCFilter tests the MsgCFilter API.
 func TestCFilter(t *testing.T) {
+	t.Parallel()
+
 	pver := ProtocolVersion
 
 	// Block 200,000 hash.
@@ -78,6 +80,8 @@ func TestCFilter(t *testing.T) {
 // TestCFilterWire tests the MsgCFilter wire encode and decode for various
 // protocol versions.
 func TestCFilterWire(t *testing.T) {
+	t.Parallel()
+
 	// Block 200,000 hash.
 	hashStr := "000000000000007a59f30586c1003752956a8b55e6f741fd5f24c800cd5e5e8c"
 	blockHash, err := chainhash.NewHashFromStr(hashStr)
@@ -159,6 +163,8 @@ func TestCFilterWire(t *testing.T) {
 // TestCFilterWireErrors performs negative tests against wire encode and
 // decode of MsgCFilter to confirm error paths work correctly.
 func TestCFilterWireErrors(t *testing.T) {
+	t.Parallel()
+
 	pver := ProtocolVersion
 	oldPver := NodeCFVersion - 1
 
@@ -254,6 +260,8 @@ func TestCFilterWireErrors(t *testing.T) {
 // TestCFilter performs negative tests against wire decode of MsgCFilter to
 // confirm malformed encoded data doesn't pass through.
 func TestCFilterMalformedErrors(t *testing.T) {
+	t.Parallel()
+
 	pver := ProtocolVersion
 
 	tests := []struct {

@@ -11,6 +11,8 @@ import (
 )
 
 func TestGenerateSharedSecret(t *testing.T) {
+	t.Parallel()
+
 	privKey1, err := GeneratePrivateKey()
 	if err != nil {
 		t.Errorf("private key generation error: %s", err)

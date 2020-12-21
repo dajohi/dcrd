@@ -25,6 +25,8 @@ import (
 //
 //
 func TestMiningView(t *testing.T) {
+	t.Parallel()
+
 	harness, spendableOuts, err := newMiningHarness(chaincfg.MainNetParams())
 	if err != nil {
 		t.Fatalf("unable to create mining harness: %v", err)
@@ -431,6 +433,8 @@ func TestMiningView(t *testing.T) {
 // TestAncestorTrackingLimits ensures that ancestor tracking is disabled for
 // transactions that have too many ancestors.
 func TestAncestorTrackingLimits(t *testing.T) {
+	t.Parallel()
+
 	harness, spendableOuts, err := newMiningHarness(chaincfg.MainNetParams())
 	if err != nil {
 		t.Fatalf("unable to create mining harness: %v", err)

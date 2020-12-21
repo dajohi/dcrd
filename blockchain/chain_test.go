@@ -49,6 +49,8 @@ func cloneParams(params *chaincfg.Params) *chaincfg.Params {
 // TestBlockchainFunction tests the various blockchain API to ensure proper
 // functionality.
 func TestBlockchainFunctions(t *testing.T) {
+	t.Parallel()
+
 	// Update parameters to reflect what is expected by the legacy data.
 	params := chaincfg.RegNetParams()
 	params.GenesisBlock.Header.MerkleRoot = *mustParseHash("a216ea043f0d481a072424af646787794c32bcefd3ed181a090319bbf8a37105")
@@ -147,6 +149,8 @@ func TestBlockchainFunctions(t *testing.T) {
 
 // TestForceHeadReorg ensures forcing header reorganization works as expected.
 func TestForceHeadReorg(t *testing.T) {
+	t.Parallel()
+
 	// Create a test harness initialized with the genesis block as the tip.
 	params := chaincfg.RegNetParams()
 	g, teardownFunc := newChaingenHarness(t, params, "forceheadreorgtest")
@@ -450,6 +454,8 @@ func nodeHeaders(nodes []*blockNode, indexes ...int) []wire.BlockHeader {
 // TestLocateInventory ensures that locating inventory via the LocateHeaders and
 // LocateBlocks functions behaves as expected.
 func TestLocateInventory(t *testing.T) {
+	t.Parallel()
+
 	// Construct a synthetic block chain with a block index consisting of
 	// the following structure.
 	// 	genesis -> 1 -> 2 -> ... -> 15 -> 16  -> 17  -> 18

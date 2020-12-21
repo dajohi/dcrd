@@ -13,6 +13,8 @@ import (
 // TestCalcCommitmentRootV1 ensures the expected version 1 commitment root is
 // produced for known values.
 func TestCalcCommitmentRootV1(t *testing.T) {
+	t.Parallel()
+
 	tests := []struct {
 		name       string // test description
 		filterHash string // filter hash to commit to

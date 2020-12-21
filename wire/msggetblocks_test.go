@@ -18,6 +18,8 @@ import (
 
 // TestGetBlocks tests the MsgGetBlocks API.
 func TestGetBlocks(t *testing.T) {
+	t.Parallel()
+
 	pver := ProtocolVersion
 
 	// Block 99500 hash.
@@ -92,6 +94,8 @@ func TestGetBlocks(t *testing.T) {
 // TestGetBlocksWire tests the MsgGetBlocks wire encode and decode for various
 // numbers of block locator hashes and protocol versions.
 func TestGetBlocksWire(t *testing.T) {
+	t.Parallel()
+
 	// Set protocol inside getblocks message.
 	pver := uint32(60002)
 
@@ -207,6 +211,8 @@ func TestGetBlocksWire(t *testing.T) {
 // TestGetBlocksWireErrors performs negative tests against wire encode and
 // decode of MsgGetBlocks to confirm error paths work correctly.
 func TestGetBlocksWireErrors(t *testing.T) {
+	t.Parallel()
+
 	// Set protocol inside getheaders message.  Use protocol version 60002
 	// specifically here instead of the latest because the test data is
 	// using bytes encoded with that protocol version.

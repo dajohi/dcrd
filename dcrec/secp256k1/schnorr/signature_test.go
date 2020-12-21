@@ -18,6 +18,8 @@ import (
 // TestSignatureParsing ensures that signatures are properly parsed including
 // error paths.
 func TestSignatureParsing(t *testing.T) {
+	t.Parallel()
+
 	tests := []struct {
 		name string // test description
 		sig  string // hex encoded signature to parse
@@ -83,6 +85,8 @@ func TestSignatureParsing(t *testing.T) {
 // that have been independently verified with the Sage computer algebra system.
 // It also ensures verifying the signature works as expected.
 func TestSchnorrSignAndVerify(t *testing.T) {
+	t.Parallel()
+
 	tests := []struct {
 		name     string // test description
 		key      string // hex encded private key
@@ -317,6 +321,8 @@ func TestSchnorrSignAndVerify(t *testing.T) {
 // ensures invalid signatures are not improperly verified by mutating the valid
 // signature and changing the message the signature covers.
 func TestSchnorrSignAndVerifyRandom(t *testing.T) {
+	t.Parallel()
+
 	// Use a unique random seed each test instance and log it if the tests fail.
 	seed := time.Now().Unix()
 	rng := rand.New(rand.NewSource(seed))
@@ -395,6 +401,8 @@ func TestSchnorrSignAndVerifyRandom(t *testing.T) {
 // the exception of the specific failure to ensure it's robust against things
 // like fault attacks.
 func TestVerifyErrors(t *testing.T) {
+	t.Parallel()
+
 	tests := []struct {
 		name string // test description
 		sigR string // hex encoded r component of signature to verify against

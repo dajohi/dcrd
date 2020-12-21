@@ -225,6 +225,8 @@ func TestOpcodeDisasm(t *testing.T) {
 }
 
 func TestNewlyEnabledOpCodes(t *testing.T) {
+	t.Parallel()
+
 	sigScriptMath := []byte{
 		0x04,
 		0xff, 0xff, 0xff, 0x7f,
@@ -539,6 +541,8 @@ func randByteSliceSlice(i int, maxLen int, src int) [][]byte {
 // crashes. Try increasing the number of iterations or the length of the
 // byte string to sample a greater space.
 func TestForVMFailure(t *testing.T) {
+	t.Parallel()
+
 	numTests := 2
 	bsLength := 11
 

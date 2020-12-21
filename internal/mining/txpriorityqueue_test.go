@@ -17,6 +17,8 @@ import (
 // both transaction fees per KB and transaction priority.  It ensures that the
 // primary sorting is first by stake type, and then by the priority type.
 func TestStakeTxFeePrioHeap(t *testing.T) {
+	t.Parallel()
+
 	numTestItems := 1000
 
 	// Create some fake priority items that exercise the expected sort

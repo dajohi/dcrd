@@ -126,6 +126,8 @@ func tstAddressPubKey(serializedPubKey []byte, pubKeyFormat PubKeyFormat, netID 
 }
 
 func TestAddresses(t *testing.T) {
+	t.Parallel()
+
 	mainNetParams := mockMainNetParams()
 	testNetParams := mockTestNetParams()
 	regNetParams := mockRegNetParams()

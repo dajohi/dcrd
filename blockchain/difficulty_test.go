@@ -981,6 +981,8 @@ nextTest:
 // minimum required difficulty, when the network params allow it, works as
 // expected.
 func TestMinDifficultyReduction(t *testing.T) {
+	t.Parallel()
+
 	// Create chain params based on regnet params, but set the fields related to
 	// proof-of-work difficulty to specific values expected by the tests.
 	params := chaincfg.RegNetParams()

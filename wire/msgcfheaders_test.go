@@ -18,6 +18,8 @@ import (
 
 // TestCFHeaders tests the MsgCFHeaders API.
 func TestCFHeaders(t *testing.T) {
+	t.Parallel()
+
 	pver := ProtocolVersion
 
 	// Block 200,000 hash.
@@ -85,6 +87,8 @@ func TestCFHeaders(t *testing.T) {
 // TestCFHeadersWire tests the MsgCFHeaders wire encode and decode for various
 // numbers of CF headers and protocol versions.
 func TestCFHeadersWire(t *testing.T) {
+	t.Parallel()
+
 	// Empty MsgCFHeaders message.
 	emptyCFHeader := NewMsgCFHeaders()
 	emptyCFHeaderEncoded := []byte{
@@ -197,6 +201,8 @@ func TestCFHeadersWire(t *testing.T) {
 // TestCFHeadersWireErrors performs negative tests against wire encode and decode
 // of MsgCFHeaders to confirm error paths work correctly.
 func TestCFHeadersWireErrors(t *testing.T) {
+	t.Parallel()
+
 	pver := ProtocolVersion
 	oldPver := NodeCFVersion - 1
 
@@ -290,6 +296,8 @@ func TestCFHeadersWireErrors(t *testing.T) {
 // TestCFHeadersMalformedErrors performs negative tests against decode
 // of MsgCFHeaders to confirm malformed encoded data doesn't pass through.
 func TestCFHeadersMalformedErrors(t *testing.T) {
+	t.Parallel()
+
 	pver := ProtocolVersion
 
 	tests := []struct {

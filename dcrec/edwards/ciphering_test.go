@@ -13,6 +13,8 @@ import (
 )
 
 func TestGenerateSharedSecret(t *testing.T) {
+	t.Parallel()
+
 	privKey1, err := GeneratePrivateKey()
 	if err != nil {
 		t.Errorf("private key generation error: %s", err)
@@ -39,6 +41,8 @@ func TestGenerateSharedSecret(t *testing.T) {
 
 // Test 1: Encryption and decryption
 func TestCipheringBasic(t *testing.T) {
+	t.Parallel()
+
 	privkey, err := GeneratePrivateKey()
 	if err != nil {
 		t.Fatal("failed to generate private key")
@@ -64,6 +68,8 @@ func TestCipheringBasic(t *testing.T) {
 }
 
 func TestCiphering(t *testing.T) {
+	t.Parallel()
+
 	c := Edwards()
 
 	pb, _ := hex.DecodeString("fe38240982f313ae5afb3e904fb8215fb11af1200592b" +
@@ -103,6 +109,8 @@ func TestCiphering(t *testing.T) {
 }
 
 func TestCipheringErrors(t *testing.T) {
+	t.Parallel()
+
 	privkey, err := GeneratePrivateKey()
 	if err != nil {
 		t.Fatal("failed to generate private key")

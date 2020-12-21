@@ -15,6 +15,8 @@ import (
 // TestSimNetGenesisBlock tests the genesis block of the simulation test network
 // for validity by checking the encoded bytes and hashes.
 func TestSimNetGenesisBlock(t *testing.T) {
+	t.Parallel()
+
 	simNetGenesisBlockBytes := hexDecode("010000000000000000000000000000000" +
 		"000000000000000000000000000000000000000925629c5582bbfc3609d71a2f4a" +
 		"887443c80d54a1fe31e95e95d42f3e288945c00000000000000000000000000000" +

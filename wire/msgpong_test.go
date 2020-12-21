@@ -17,6 +17,8 @@ import (
 
 // TestPongLatest tests the MsgPong API against the latest protocol version.
 func TestPongLatest(t *testing.T) {
+	t.Parallel()
+
 	pver := ProtocolVersion
 
 	nonce, err := RandomUint64()
@@ -75,6 +77,8 @@ func TestPongLatest(t *testing.T) {
 // TestPongWire tests the MsgPong wire encode and decode for various protocol
 // versions.
 func TestPongWire(t *testing.T) {
+	t.Parallel()
+
 	tests := []struct {
 		in   MsgPong // Message to encode
 		out  MsgPong // Expected decoded message
@@ -124,6 +128,8 @@ func TestPongWire(t *testing.T) {
 // TestPongWireErrors performs negative tests against wire encode and decode
 // of MsgPong to confirm error paths work correctly.
 func TestPongWireErrors(t *testing.T) {
+	t.Parallel()
+
 	pver := ProtocolVersion
 
 	basePong := NewMsgPong(123123) // 0x1e0f3

@@ -31,6 +31,8 @@ func mustLockTimeToSeq(isSeconds bool, lockTime uint32) uint32 {
 // CalcSequenceLock function in order to ensure the returned sequence locks are
 // as expected.
 func TestCalcSequenceLock(t *testing.T) {
+	t.Parallel()
+
 	// Generate a synthetic simnet chain with enough nodes to properly test
 	// the sequence lock functionality.
 	numBlocks := uint32(20)
@@ -397,6 +399,8 @@ func TestCalcSequenceLock(t *testing.T) {
 // TestLockTimeToSequence ensure the convenience function to convert relative
 // lock times to a sequence number works as expected.
 func TestLockTimeToSequence(t *testing.T) {
+	t.Parallel()
+
 	const (
 		// The following constants are used over the package-level
 		// definitions to ensure tests correctly detect any changes to

@@ -17,6 +17,8 @@ import (
 // works as intended for various combinations of disapproval states for the tip
 // block itself as well as when the tip block disapproves its parent.
 func TestFetchUtxoView(t *testing.T) {
+	t.Parallel()
+
 	const (
 		// voteBitNo and voteBitYes represent no and yes votes, respectively, on
 		// whether or not to approve the previous block.

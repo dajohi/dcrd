@@ -11,6 +11,8 @@ type intkey int
 // eviction of least-recently used entries, specific entry removal, and
 // existence tests.
 func TestKVCache(t *testing.T) {
+	t.Parallel()
+
 	// Create a bunch of fake nonces and keys to use in testing the lru nonce code.
 	numNonces := 10
 	nonces := make([]uint64, 0, numNonces)

@@ -51,6 +51,8 @@ func randIntAndModNScalar(t *testing.T, rng *rand.Rand) (*big.Int, *ModNScalar) 
 // TestModNScalarZero ensures that zeroing a scalar modulo the group order works
 // as expected.
 func TestModNScalarZero(t *testing.T) {
+	t.Parallel()
+
 	var s ModNScalar
 	s.SetHex("a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5")
 	s.Zero()
@@ -65,6 +67,8 @@ func TestModNScalarZero(t *testing.T) {
 // TestModNScalarIsZero ensures that checking if a scalar is zero works as
 // expected.
 func TestModNScalarIsZero(t *testing.T) {
+	t.Parallel()
+
 	var s ModNScalar
 	if !s.IsZero() {
 		t.Errorf("new scalar is not zero - got %v (rawints %x)", s, s.n)
@@ -90,6 +94,8 @@ func TestModNScalarIsZero(t *testing.T) {
 // TestModNScalarSetInt ensures that setting a scalar to various native integers
 // works as expected.
 func TestModNScalarSetInt(t *testing.T) {
+	t.Parallel()
+
 	tests := []struct {
 		name     string    // test description
 		in       uint32    // test value
@@ -126,6 +132,8 @@ func TestModNScalarSetInt(t *testing.T) {
 // unsigned integer via both the slice and array methods works as expected for
 // edge cases.  Random cases are tested via the various other tests.
 func TestModNScalarSetBytes(t *testing.T) {
+	t.Parallel()
+
 	tests := []struct {
 		name     string    // test description
 		in       string    // hex encoded test value
@@ -264,6 +272,8 @@ func TestModNScalarSetBytes(t *testing.T) {
 // big-endian unsigned integer via the various methods works as expected for
 // edge cases.  Random cases are tested via the various other tests.
 func TestModNScalarBytes(t *testing.T) {
+	t.Parallel()
+
 	tests := []struct {
 		name     string // test description
 		in       string // hex encoded test value
@@ -358,6 +368,8 @@ func TestModNScalarBytes(t *testing.T) {
 // TestModNScalarIsOdd ensures that checking if a scalar is odd works as
 // expected.
 func TestModNScalarIsOdd(t *testing.T) {
+	t.Parallel()
+
 	tests := []struct {
 		name     string // test description
 		in       string // hex encoded value
@@ -405,6 +417,8 @@ func TestModNScalarIsOdd(t *testing.T) {
 // TestModNScalarEquals ensures that checking two scalars for equality works as
 // expected for edge cases.
 func TestModNScalarEquals(t *testing.T) {
+	t.Parallel()
+
 	tests := []struct {
 		name     string // test description
 		in1      string // hex encoded value
@@ -462,6 +476,8 @@ func TestModNScalarEquals(t *testing.T) {
 // TestModNScalarEqualsRandom ensures that scalars for random values works as
 // expected.
 func TestModNScalarEqualsRandom(t *testing.T) {
+	t.Parallel()
+
 	// Use a unique random seed each test instance and log it if the tests fail.
 	seed := time.Now().Unix()
 	rng := rand.New(rand.NewSource(seed))
@@ -492,6 +508,8 @@ func TestModNScalarEqualsRandom(t *testing.T) {
 // TestModNScalarAdd ensures that adding two scalars works as expected for edge
 // cases.
 func TestModNScalarAdd(t *testing.T) {
+	t.Parallel()
+
 	tests := []struct {
 		name     string // test description
 		in1      string // first hex encoded test value
@@ -589,6 +607,8 @@ func TestModNScalarAdd(t *testing.T) {
 // values works as expected by also performing the same operation with big ints
 // and comparing the results.
 func TestModNScalarAddRandom(t *testing.T) {
+	t.Parallel()
+
 	// Use a unique random seed each test instance and log it if the tests fail.
 	seed := time.Now().Unix()
 	rng := rand.New(rand.NewSource(seed))
@@ -625,6 +645,8 @@ func TestModNScalarAddRandom(t *testing.T) {
 // TestModNScalarMul ensures that multiplying two scalars together works as
 // expected for edge cases.
 func TestModNScalarMul(t *testing.T) {
+	t.Parallel()
+
 	tests := []struct {
 		name     string // test description
 		in1      string // first hex encoded value
@@ -745,6 +767,8 @@ func TestModNScalarMul(t *testing.T) {
 // random values works as expected by also performing the same operation with
 // big ints and comparing the results.
 func TestModNScalarMulRandom(t *testing.T) {
+	t.Parallel()
+
 	// Use a unique random seed each test instance and log it if the tests fail.
 	seed := time.Now().Unix()
 	rng := rand.New(rand.NewSource(seed))
@@ -781,6 +805,8 @@ func TestModNScalarMulRandom(t *testing.T) {
 // TestModNScalarSquare ensures that squaring scalars works as expected for edge
 // cases.
 func TestModNScalarSquare(t *testing.T) {
+	t.Parallel()
+
 	tests := []struct {
 		name     string // test description
 		in       string // hex encoded test value
@@ -869,6 +895,8 @@ func TestModNScalarSquare(t *testing.T) {
 // works as expected by also performing the same operation with big ints and
 // comparing the results.
 func TestModNScalarSquareRandom(t *testing.T) {
+	t.Parallel()
+
 	// Use a unique random seed each test instance and log it if the tests fail.
 	seed := time.Now().Unix()
 	rng := rand.New(rand.NewSource(seed))
@@ -903,6 +931,8 @@ func TestModNScalarSquareRandom(t *testing.T) {
 // TestModNScalarNegate ensures that negating scalars works as expected for edge
 // cases.
 func TestModNScalarNegate(t *testing.T) {
+	t.Parallel()
+
 	tests := []struct {
 		name     string // test description
 		in       string // hex encoded test value
@@ -979,6 +1009,8 @@ func TestModNScalarNegate(t *testing.T) {
 // works as expected by also performing the same operation with big ints and
 // comparing the results.
 func TestModNScalarNegateRandom(t *testing.T) {
+	t.Parallel()
+
 	// Use a unique random seed each test instance and log it if the tests fail.
 	seed := time.Now().Unix()
 	rng := rand.New(rand.NewSource(seed))
@@ -1013,6 +1045,8 @@ func TestModNScalarNegateRandom(t *testing.T) {
 // TestModNScalarInverseNonConst ensures that calculating the multiplicative
 // inverse of scalars in *non-constant* time works as expected for edge cases.
 func TestModNScalarInverseNonConst(t *testing.T) {
+	t.Parallel()
+
 	tests := []struct {
 		name     string // test description
 		in       string // hex encoded test value
@@ -1092,6 +1126,8 @@ func TestModNScalarInverseNonConst(t *testing.T) {
 // works as expected by also performing the same operation with big ints and
 // comparing the results.
 func TestModNScalarInverseNonConstRandom(t *testing.T) {
+	t.Parallel()
+
 	// Use a unique random seed each test instance and log it if the tests fail.
 	seed := time.Now().Unix()
 	rng := rand.New(rand.NewSource(seed))
@@ -1125,6 +1161,8 @@ func TestModNScalarInverseNonConstRandom(t *testing.T) {
 // TestModNScalarIsOverHalfOrder ensures that scalars report whether or not they
 // exceeed the half order works as expected for edge cases.
 func TestModNScalarIsOverHalfOrder(t *testing.T) {
+	t.Parallel()
+
 	tests := []struct {
 		name     string // test description
 		in       string // hex encoded test value
@@ -1182,6 +1220,8 @@ func TestModNScalarIsOverHalfOrder(t *testing.T) {
 // expected by also performing the same operation with big ints and comparing
 // the results.
 func TestModNScalarIsOverHalfOrderRandom(t *testing.T) {
+	t.Parallel()
+
 	// Use a unique random seed each test instance and log it if the tests fail.
 	seed := time.Now().Unix()
 	rng := rand.New(rand.NewSource(seed))

@@ -65,6 +65,8 @@ func mockTestNetParams() *mockNetParams {
 // TestBIP0032Vectors tests the vectors provided by [BIP32] to ensure the
 // derivation works as intended.
 func TestBIP0032Vectors(t *testing.T) {
+	t.Parallel()
+
 	// The master seeds for each of the two test vectors in [BIP32].
 	//
 	// Note that the 3rd seed has been changed to ensure the condition it is
@@ -321,6 +323,8 @@ tests:
 // TestPrivateDerivation tests several vectors which derive private keys from
 // other private keys works as intended.
 func TestPrivateDerivation(t *testing.T) {
+	t.Parallel()
+
 	// The private extended keys for test vectors in [BIP32].
 	testVec1MasterPrivKey := "dprv3hCznBesA6jBucms1ZhyGeFfvJfBSwfs7ZFrxS8tdYzbjDZe2UwSaL7EbYo1qa88DmtyyG5cL9tdGxHkD89JmeZTbz5sVYU4Dgtijiio4Sc"
 	testVec2MasterPrivKey := "dprv3hCznBesA6jBtPKJbQTxRZAKG2gyj8tZKEPaCsV4e9YYFBAgRP2eTSPAeu4r8dTMt9q51j2Vdt5zNqj7jbtovvocrP1qLj6WUTLF9xYQt4y"
@@ -450,6 +454,8 @@ tests:
 // TestPublicDerivation tests several vectors which derive public keys from
 // other public keys works as intended.
 func TestPublicDerivation(t *testing.T) {
+	t.Parallel()
+
 	// The public extended keys for test vectors in [BIP32].
 	testVec1MasterPubKey := "dpubZF8BRmciAzYoTjXZ3bbRWLVCwUKtTquact3Tr6ye77Rgmw76VyqMb9TB9KpfrvUYEM5d1Au4fQzE2BbtxRjwzGsqnWHmtQP9UV1kxZaqvb6"
 	testVec2MasterPubKey := "dpubZF4LSCdF9YKZfNzTVYhz4RBxsjYXqms8AQnMBHXZ8GUKoRSigG7kQnKiJt5pzk93Q8FxcdVBEkQZruSXduGtWnkwXzGnjbSovQ97dCxqaXc"
@@ -569,6 +575,8 @@ tests:
 
 // TestGenenerateSeed ensures the GenerateSeed function works as intended.
 func TestGenenerateSeed(t *testing.T) {
+	t.Parallel()
+
 	tests := []struct {
 		name   string
 		length uint8
@@ -605,6 +613,8 @@ func TestGenenerateSeed(t *testing.T) {
 
 // TestExtendedKeyAPI ensures the API on the ExtendedKey type works as intended.
 func TestExtendedKeyAPI(t *testing.T) {
+	t.Parallel()
+
 	tests := []struct {
 		name       string
 		extKey     string
@@ -694,6 +704,8 @@ func TestExtendedKeyAPI(t *testing.T) {
 // TestErrors performs some negative tests for various invalid cases to ensure
 // the errors are handled properly.
 func TestErrors(t *testing.T) {
+	t.Parallel()
+
 	// Should get an error when seed has too few bytes.
 	net := mockMainNetParams()
 	_, err := NewMaster(bytes.Repeat([]byte{0x00}, 15), net)
@@ -771,6 +783,8 @@ func TestErrors(t *testing.T) {
 
 // TestZero ensures that zeroing an extended key works as intended.
 func TestZero(t *testing.T) {
+	t.Parallel()
+
 	mainNetParams := mockMainNetParams()
 	tests := []struct {
 		name   string

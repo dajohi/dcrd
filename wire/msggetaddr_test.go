@@ -15,6 +15,8 @@ import (
 
 // TestGetAddr tests the MsgGetAddr API.
 func TestGetAddr(t *testing.T) {
+	t.Parallel()
+
 	pver := ProtocolVersion
 
 	// Ensure the command is expected value.
@@ -46,6 +48,8 @@ func TestGetAddr(t *testing.T) {
 // TestGetAddrWire tests the MsgGetAddr wire encode and decode for various
 // protocol versions.
 func TestGetAddrWire(t *testing.T) {
+	t.Parallel()
+
 	msgGetAddr := NewMsgGetAddr()
 	msgGetAddrEncoded := []byte{}
 

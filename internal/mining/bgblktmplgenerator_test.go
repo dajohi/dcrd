@@ -12,6 +12,8 @@ import (
 // TestWaitGroup ensures the API for the local waitGroup implementation behaves
 // correctly.
 func TestWaitGroup(t *testing.T) {
+	t.Parallel()
+
 	// goWait is a helper that calls wg.Wait() on a gorutine and closes the
 	// returned chan once Wait() returns.
 	goWait := func(wg *waitGroup) chan struct{} {

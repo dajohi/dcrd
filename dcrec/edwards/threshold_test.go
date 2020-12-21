@@ -13,6 +13,8 @@ import (
 )
 
 func TestSchnorrThreshold(t *testing.T) {
+	t.Parallel()
+
 	tRand := rand.New(rand.NewSource(543212345))
 	maxSignatories := 10
 	numTests := 5

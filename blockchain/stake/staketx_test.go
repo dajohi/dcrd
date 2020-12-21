@@ -34,6 +34,8 @@ const (
 // TestSStx ensures the CheckSStx and IsSStx functions correctly recognize stake
 // submission transactions.
 func TestSStx(t *testing.T) {
+	t.Parallel()
+
 	var sstx = dcrutil.NewTx(sstxMsgTx)
 	sstx.SetTree(wire.TxTreeStake)
 	sstx.SetIndex(0)
@@ -79,6 +81,8 @@ func TestSStx(t *testing.T) {
 // TestSSTxErrors ensures the CheckSStx and IsSStx functions correctly identify
 // errors in stake submission transactions and does not report them as valid.
 func TestSSTxErrors(t *testing.T) {
+	t.Parallel()
+
 	// Initialize the buffer for later manipulation
 	var buf bytes.Buffer
 	buf.Grow(sstxMsgTx.SerializeSize())
@@ -293,6 +297,8 @@ func TestSSTxErrors(t *testing.T) {
 // TestSSGen ensures the CheckSSGen and IsSSGen functions correctly recognize
 // stake submission generation transactions.
 func TestSSGen(t *testing.T) {
+	t.Parallel()
+
 	var ssgen = dcrutil.NewTx(ssgenMsgTx)
 	ssgen.SetTree(wire.TxTreeStake)
 	ssgen.SetIndex(0)
@@ -338,6 +344,8 @@ func TestSSGen(t *testing.T) {
 // identify errors in stake submission generation transactions and does not
 // report them as valid.
 func TestSSGenErrors(t *testing.T) {
+	t.Parallel()
+
 	// Initialize the buffer for later manipulation
 	var buf bytes.Buffer
 	buf.Grow(ssgenMsgTx.SerializeSize())
@@ -836,6 +844,8 @@ func TestSSGenErrors(t *testing.T) {
 
 // TestSSGenTreasuryVotes verifies that valid treasury votes return hashes.
 func TestSSGenTreasuryVotes(t *testing.T) {
+	t.Parallel()
+
 	var ssgenValidVote = dcrutil.NewTx(ssgenMsgTxValid)
 	ssgenValidVote.SetVersion(wire.TxVersionTreasury)
 	ssgenValidVote.SetTree(wire.TxTreeStake)
@@ -888,6 +898,8 @@ func TestSSGenTreasuryVotes(t *testing.T) {
 // TestSSRtx ensures the CheckSSRtx and IsSSRtx functions correctly recognize
 // stake submission revocation transactions.
 func TestSSRtx(t *testing.T) {
+	t.Parallel()
+
 	var ssrtx = dcrutil.NewTx(ssrtxMsgTx)
 	ssrtx.SetTree(wire.TxTreeStake)
 	ssrtx.SetIndex(0)
@@ -905,6 +917,8 @@ func TestSSRtx(t *testing.T) {
 // identify errors in stake submission revocation transactions and does not
 // report them as valid.
 func TestIsSSRtxErrors(t *testing.T) {
+	t.Parallel()
+
 	// Initialize the buffer for later manipulation
 	var buf bytes.Buffer
 	buf.Grow(ssrtxMsgTx.SerializeSize())
@@ -1028,6 +1042,8 @@ func TestIsSSRtxErrors(t *testing.T) {
 // --------------------------------------------------------------------------------
 // Minor function testing
 func TestGetSSGenBlockVotedOn(t *testing.T) {
+	t.Parallel()
+
 	var ssgen = dcrutil.NewTx(ssgenMsgTx)
 	ssgen.SetTree(wire.TxTreeStake)
 	ssgen.SetIndex(0)
@@ -1060,6 +1076,8 @@ func TestGetSSGenBlockVotedOn(t *testing.T) {
 }
 
 func TestGetSStxStakeOutputInfo(t *testing.T) {
+	t.Parallel()
+
 	var sstx = dcrutil.NewTx(sstxMsgTx)
 	sstx.SetTree(wire.TxTreeStake)
 	sstx.SetIndex(0)
@@ -1116,6 +1134,8 @@ func TestGetSStxStakeOutputInfo(t *testing.T) {
 }
 
 func TestGetSSGenVoteBits(t *testing.T) {
+	t.Parallel()
+
 	var ssgen = dcrutil.NewTx(ssgenMsgTx)
 	ssgen.SetTree(wire.TxTreeStake)
 	ssgen.SetIndex(0)
@@ -1131,6 +1151,8 @@ func TestGetSSGenVoteBits(t *testing.T) {
 }
 
 func TestGetSSGenVersion(t *testing.T) {
+	t.Parallel()
+
 	var ssgen = ssgenMsgTx.Copy()
 
 	missingVersion := uint32(VoteConsensusVersionAbsent)
@@ -1156,6 +1178,8 @@ func TestGetSSGenVersion(t *testing.T) {
 }
 
 func TestGetSStxNullOutputAmounts(t *testing.T) {
+	t.Parallel()
+
 	commitAmts := []int64{
 		0x2122e300,
 		0x12000000,
@@ -1235,6 +1259,8 @@ func TestGetSStxNullOutputAmounts(t *testing.T) {
 }
 
 func TestGetStakeRewards(t *testing.T) {
+	t.Parallel()
+
 	// SSGen example with >0 subsidy
 	amounts := []int64{
 		21000000,
@@ -1260,6 +1286,8 @@ func TestGetStakeRewards(t *testing.T) {
 }
 
 func TestIsNullDataScript(t *testing.T) {
+	t.Parallel()
+
 	var hash160 = dcrutil.Hash160([]byte("test"))
 	var overMaxDataCarrierSize = make([]byte, txscript.MaxDataCarrierSize+1)
 	var underMaxDataCarrierSize = make([]byte, txscript.MaxDataCarrierSize/2)

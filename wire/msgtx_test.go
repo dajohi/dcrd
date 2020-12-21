@@ -19,6 +19,8 @@ import (
 
 // TestTx tests the MsgTx API.
 func TestTx(t *testing.T) {
+	t.Parallel()
+
 	pver := ProtocolVersion
 
 	// Block 100000 hash.
@@ -145,6 +147,8 @@ func TestTx(t *testing.T) {
 
 // TestTxHash tests the ability to generate the hash of a transaction accurately.
 func TestTxHash(t *testing.T) {
+	t.Parallel()
+
 	// Hash of first transaction from block 113875.
 	hashStr := "4538fc1618badd058ee88fd020984451024858796be0a1ed111877f887e1bd53"
 	wantHash, err := chainhash.NewHashFromStr(hashStr)
@@ -199,6 +203,8 @@ func TestTxHash(t *testing.T) {
 // TestTxWire tests the MsgTx wire encode and decode for various numbers
 // of transaction inputs and outputs and protocol versions.
 func TestTxWire(t *testing.T) {
+	t.Parallel()
+
 	// Empty tx message.
 	noTx := NewMsgTx()
 	noTx.Version = 1
@@ -268,6 +274,8 @@ func TestTxWire(t *testing.T) {
 // TestTxWireErrors performs negative tests against wire encode and decode
 // of MsgTx to confirm error paths work correctly.
 func TestTxWireErrors(t *testing.T) {
+	t.Parallel()
+
 	// Use protocol version 60002 specifically here instead of the latest
 	// because the test data is using bytes encoded with that protocol
 	// version.
@@ -346,6 +354,8 @@ func TestTxWireErrors(t *testing.T) {
 
 // TestTxSerialize tests MsgTx serialize and deserialize.
 func TestTxSerialize(t *testing.T) {
+	t.Parallel()
+
 	noTx := NewMsgTx()
 	noTx.Version = 1
 	noTxEncoded := []byte{
@@ -440,6 +450,8 @@ func TestTxSerialize(t *testing.T) {
 
 // TestTxSerializePrefix tests MsgTx serialize and deserialize.
 func TestTxSerializePrefix(t *testing.T) {
+	t.Parallel()
+
 	noTx := NewMsgTx()
 	noTx.SerType = TxSerializeNoWitness
 	noTx.Version = 1
@@ -534,6 +546,8 @@ func TestTxSerializePrefix(t *testing.T) {
 
 // TestTxSerializeWitness tests MsgTx serialize and deserialize.
 func TestTxSerializeWitness(t *testing.T) {
+	t.Parallel()
+
 	noTx := NewMsgTx()
 	noTx.SerType = TxSerializeOnlyWitness
 	noTx.Version = 1
@@ -626,6 +640,8 @@ func TestTxSerializeWitness(t *testing.T) {
 // TestTxSerializeErrors performs negative tests against wire encode and decode
 // of MsgTx to confirm error paths work correctly.
 func TestTxSerializeErrors(t *testing.T) {
+	t.Parallel()
+
 	tests := []struct {
 		in       *MsgTx // Value to encode
 		buf      []byte // Serialized data
@@ -701,6 +717,8 @@ func TestTxSerializeErrors(t *testing.T) {
 // of inputs and outputs are handled properly.  This could otherwise potentially
 // be used as an attack vector.
 func TestTxOverflowErrors(t *testing.T) {
+	t.Parallel()
+
 	// Use protocol version 1 and transaction version 1 specifically
 	// here instead of the latest values because the test data is using
 	// bytes encoded with those versions.
@@ -827,6 +845,8 @@ func TestTxOverflowErrors(t *testing.T) {
 // TestTxSerializeSize performs tests to ensure the serialize size for various
 // transactions is accurate.
 func TestTxSerializeSize(t *testing.T) {
+	t.Parallel()
+
 	// Empty tx message.
 	noTx := NewMsgTx()
 	noTx.Version = 1

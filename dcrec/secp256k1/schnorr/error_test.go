@@ -11,6 +11,8 @@ import (
 
 // TestErrorKindStringer tests the stringized output for the ErrorKind type.
 func TestErrorKindStringer(t *testing.T) {
+	t.Parallel()
+
 	tests := []struct {
 		in   ErrorKind
 		want string
@@ -39,6 +41,8 @@ func TestErrorKindStringer(t *testing.T) {
 
 // TestError tests the error output for the Error type.
 func TestError(t *testing.T) {
+	t.Parallel()
+
 	tests := []struct {
 		in   Error
 		want string
@@ -62,6 +66,8 @@ func TestError(t *testing.T) {
 // TestErrorKindIsAs ensures both ErrorKind and Error can be identified
 // as being a specific error via errors.Is and unwrapped via errors.As.
 func TestErrorCodeIsAs(t *testing.T) {
+	t.Parallel()
+
 	tests := []struct {
 		name      string
 		err       error

@@ -51,6 +51,8 @@ var (
 
 // TestHashB ensure HashB returns the correct hashed bytes for given bytes
 func TestHashB(t *testing.T) {
+	t.Parallel()
+
 	for _, test := range hashTests {
 		h := fmt.Sprintf("%x", HashB([]byte(test.in)))
 		if h != test.out {
@@ -63,6 +65,8 @@ func TestHashB(t *testing.T) {
 // TestHashH ensure HashH returns a hash with the correct hashed bytes for
 // given bytes
 func TestHashH(t *testing.T) {
+	t.Parallel()
+
 	for _, test := range hashTests {
 		hash := HashH([]byte(test.in))
 		h := fmt.Sprintf("%x", hash[:])
@@ -76,6 +80,8 @@ func TestHashH(t *testing.T) {
 // TestHashFunc ensure HashFunc returns the correct hashed bytes for given
 // bytes
 func TestHashFunc(t *testing.T) {
+	t.Parallel()
+
 	for _, test := range hashTests {
 		h := fmt.Sprintf("%x", HashFunc([]byte(test.in)))
 		if h != test.out {

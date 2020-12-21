@@ -14,6 +14,8 @@ import (
 // TestScriptTokenizer ensures a wide variety of behavior provided by the script
 // tokenizer performs as expected.
 func TestScriptTokenizer(t *testing.T) {
+	t.Parallel()
+
 	type expectedResult struct {
 		op    byte   // expected parsed opcode
 		data  []byte // expected parsed data
@@ -246,6 +248,8 @@ func TestScriptTokenizer(t *testing.T) {
 // TestScriptTokenizerUnsupportedVersion ensures the tokenizer fails immediately
 // with an unsupported script version.
 func TestScriptTokenizerUnsupportedVersion(t *testing.T) {
+	t.Parallel()
+
 	const scriptVersion = 65535
 	tokenizer := MakeScriptTokenizer(scriptVersion, nil)
 	if !errors.Is(tokenizer.Err(), ErrUnsupportedScriptVersion) {

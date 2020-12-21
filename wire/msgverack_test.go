@@ -15,6 +15,8 @@ import (
 
 // TestVerAck tests the MsgVerAck API.
 func TestVerAck(t *testing.T) {
+	t.Parallel()
+
 	pver := ProtocolVersion
 
 	// Ensure the command is expected value.
@@ -45,6 +47,8 @@ func TestVerAck(t *testing.T) {
 // TestVerAckWire tests the MsgVerAck wire encode and decode for various
 // protocol versions.
 func TestVerAckWire(t *testing.T) {
+	t.Parallel()
+
 	msgVerAck := NewMsgVerAck()
 	msgVerAckEncoded := []byte{}
 

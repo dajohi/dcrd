@@ -18,6 +18,8 @@ import (
 // duplicate block handling, and out-of-order reorgs to invalid blocks works as
 // expected.
 func TestProcessOrder(t *testing.T) {
+	t.Parallel()
+
 	// Create a test harness initialized with the genesis block as the tip.
 	params := chaincfg.RegNetParams()
 	g, teardownFunc := newChaingenHarness(t, params, "processordertest")

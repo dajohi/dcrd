@@ -251,6 +251,8 @@ func nodesEqual(a *Node, b *Node) error {
 }
 
 func TestTicketDBLongChain(t *testing.T) {
+	t.Parallel()
+
 	// Declare some useful variables.
 	params := mockRegNetParams()
 	testBCHeight := int64(1001)
@@ -631,6 +633,8 @@ func TestTicketDBLongChain(t *testing.T) {
 }
 
 func TestTicketDBGeneral(t *testing.T) {
+	t.Parallel()
+
 	// Declare some useful variables.
 	params := mockRegNetParams()
 	testBCHeight := int64(168)

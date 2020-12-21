@@ -16,6 +16,8 @@ import (
 
 // TestCFTypes tests the MsgCFTypes API.
 func TestCFTypes(t *testing.T) {
+	t.Parallel()
+
 	pver := ProtocolVersion
 
 	// MsgCFTypes can use more than one filter, in here we are testing
@@ -89,6 +91,8 @@ func TestCFTypes(t *testing.T) {
 // TestCFTypesWire tests the CFTypesWire wire encode and decode for
 // various protocol versions and number of filter types.
 func TestCFTypesWire(t *testing.T) {
+	t.Parallel()
+
 	// Test cases for correctness of various combination of protocol
 	// versions and different number of filter types.
 	tests := []struct {
@@ -168,6 +172,8 @@ func TestCFTypesWire(t *testing.T) {
 // TestCFTypesWireErrors performs negative tests against wire encode and decode
 // of CFTypes to confirm error paths work correctly.
 func TestCFTypesWireErrors(t *testing.T) {
+	t.Parallel()
+
 	pver := ProtocolVersion
 	oldPver := NodeCFVersion - 1
 
@@ -240,6 +246,8 @@ func TestCFTypesWireErrors(t *testing.T) {
 // TestCFTypesMalformedErrors performs negative tests against decode
 // of CFTypes to confirm malformed encoded data doesn't pass through.
 func TestCFTypesMalformedErrors(t *testing.T) {
+	t.Parallel()
+
 	pver := ProtocolVersion
 
 	tests := []struct {

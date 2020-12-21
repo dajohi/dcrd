@@ -573,6 +573,8 @@ func testCorruption(tc *testContext) bool {
 // corruption, block file write failures, and rollback failures are handled
 // correctly.
 func TestFailureScenarios(t *testing.T) {
+	t.Parallel()
+
 	// Create a new database to run tests against.
 	dbPath := filepath.Join(os.TempDir(), "ffldb-failurescenarios-v2")
 	_ = os.RemoveAll(dbPath)

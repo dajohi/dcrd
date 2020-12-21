@@ -11,6 +11,8 @@ import "testing"
 // command specified also has result types defined and the one-line usage and
 // help text can be generated for them.
 func TestHelp(t *testing.T) {
+	t.Parallel()
+
 	// Ensure there are result types specified for every handler.
 	for k := range rpcHandlers {
 		if _, ok := rpcResultTypes[k]; !ok {

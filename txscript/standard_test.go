@@ -972,6 +972,8 @@ func TestStringifyClass(t *testing.T) {
 
 // TestGenerateProvablyPruneableOut tests whether GenerateProvablyPruneableOut returns a valid script.
 func TestGenerateProvablyPruneableOut(t *testing.T) {
+	t.Parallel()
+
 	const scriptVersion = 0
 	tests := []struct {
 		name     string
@@ -1086,6 +1088,8 @@ func TestGenerateProvablyPruneableOut(t *testing.T) {
 
 // TestGenerateSStxAddrPush ensures an expected OP_RETURN push is generated.
 func TestGenerateSStxAddrPush(t *testing.T) {
+	t.Parallel()
+
 	testNetParams := chaincfg.TestNet3Params()
 	var tests = []struct {
 		addrStr  string
@@ -1131,6 +1135,8 @@ func TestGenerateSStxAddrPush(t *testing.T) {
 
 // TestGenerateSSGenBlockRef ensures an expected OP_RETURN push is generated.
 func TestGenerateSSGenBlockRef(t *testing.T) {
+	t.Parallel()
+
 	var tests = []struct {
 		blockHash string
 		height    uint32
@@ -1169,6 +1175,8 @@ func TestGenerateSSGenBlockRef(t *testing.T) {
 
 // TestGenerateSSGenVotes ensures an expected OP_RETURN push is generated.
 func TestGenerateSSGenVotes(t *testing.T) {
+	t.Parallel()
+
 	var tests = []struct {
 		votebits uint16
 		expected []byte
@@ -1210,6 +1218,8 @@ func mustExpectedAtomicSwapData(recipientHash, refundHash, secretHash string, se
 // TestExtractAtomicSwapDataPushes ensures atomic swap scripts are recognized
 // properly and the correct information is extracted from them.
 func TestExtractAtomicSwapDataPushes(t *testing.T) {
+	t.Parallel()
+
 	// Define some values shared in the tests for convenience.
 	secret := "9f86d081884c7d659a2feaa0c55ad015a3bf4f1b2b0b822cd15d6c15b0f00a08"
 	recipient := "0000000000000000000000000000000000000001"

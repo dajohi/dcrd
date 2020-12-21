@@ -16,6 +16,8 @@ import (
 // TestCertCreationWithHosts creates a certificate pair with extra hosts and
 // ensures the extra hosts are present in the generated files.
 func TestCertCreationWithHosts(t *testing.T) {
+	t.Parallel()
+
 	certFile, err := ioutil.TempFile("", "certfile")
 	if err != nil {
 		t.Fatalf("Unable to create temp certfile: %s", err)
@@ -58,6 +60,8 @@ func TestCertCreationWithHosts(t *testing.T) {
 // TestCertCreationWithOutHosts ensures the creating a certificate pair without
 // any hosts works as intended.
 func TestCertCreationWithOutHosts(t *testing.T) {
+	t.Parallel()
+
 	certFile, err := ioutil.TempFile("", "certfile")
 	if err != nil {
 		t.Fatalf("Unable to create temp certfile: %s", err)

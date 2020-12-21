@@ -17,6 +17,8 @@ import (
 
 // TestGetInitState tests the MsgGetInitState API.
 func TestGetInitState(t *testing.T) {
+	t.Parallel()
+
 	pver := ProtocolVersion
 
 	// Ensure Command() returns the expected value.
@@ -73,6 +75,8 @@ func TestGetInitState(t *testing.T) {
 // TestGetInitStateWire tests the MsgGetInitState wire encode and decode for
 // various numbers of types.
 func TestGetInitStateWire(t *testing.T) {
+	t.Parallel()
+
 	pver := ProtocolVersion
 
 	// MsgGetInitState message with no types.
@@ -146,6 +150,8 @@ func TestGetInitStateWire(t *testing.T) {
 // TestGetInitState performs negative tests against wire encode and decode of
 // MsgGetInitState to confirm error paths work correctly.
 func TestGetInitStateWireErrors(t *testing.T) {
+	t.Parallel()
+
 	pver := ProtocolVersion
 
 	baseMsg := NewMsgGetInitState()

@@ -29,6 +29,8 @@ import (
 // TestBlockchainSpendJournal tests for whether or not the spend journal is being
 // written to disk correctly on a live blockchain.
 func TestBlockchainSpendJournal(t *testing.T) {
+	t.Parallel()
+
 	// Update parameters to reflect what is expected by the legacy data.
 	params := chaincfg.RegNetParams()
 	params.GenesisBlock.Header.MerkleRoot = *mustParseHash("a216ea043f0d481a072424af646787794c32bcefd3ed181a090319bbf8a37105")
@@ -140,6 +142,8 @@ func TestBlockchainSpendJournal(t *testing.T) {
 // TestSequenceLocksActive ensure the sequence locks are detected as active or
 // not as expected in all possible scenarios.
 func TestSequenceLocksActive(t *testing.T) {
+	t.Parallel()
+
 	now := time.Now().Unix()
 	tests := []struct {
 		name          string
@@ -260,6 +264,8 @@ func quickVoteActivationParams() *chaincfg.Params {
 // expected according to the legacy semantics in previous version of the
 // software.
 func TestLegacySequenceLocks(t *testing.T) {
+	t.Parallel()
+
 	// Use a set of test chain parameters which allow for quicker vote
 	// activation as compared to various existing network params.
 	params := quickVoteActivationParams()
@@ -529,6 +535,8 @@ func TestLegacySequenceLocks(t *testing.T) {
 // TestCheckBlockSanity tests the context free block sanity checks with blocks
 // not on a chain.
 func TestCheckBlockSanity(t *testing.T) {
+	t.Parallel()
+
 	params := chaincfg.RegNetParams()
 	timeSource := NewMedianTime()
 	block := dcrutil.NewBlock(&badBlock)
@@ -541,6 +549,8 @@ func TestCheckBlockSanity(t *testing.T) {
 // TestCheckBlockHeaderContext tests that genesis block passes context headers
 // because its parent is nil.
 func TestCheckBlockHeaderContext(t *testing.T) {
+	t.Parallel()
+
 	// Create a new database for the blocks.
 	params := chaincfg.RegNetParams()
 	dbPath := filepath.Join(os.TempDir(), "examplecheckheadercontext")
@@ -586,6 +596,8 @@ func TestCheckBlockHeaderContext(t *testing.T) {
 // TestTxValidationErrors ensures certain malformed freestanding transactions
 // are rejected as as expected.
 func TestTxValidationErrors(t *testing.T) {
+	t.Parallel()
+
 	// Create a transaction that is too large
 	tx := wire.NewMsgTx()
 	prevOut := wire.NewOutPoint(&chainhash.Hash{0x01}, 0, wire.TxTreeRegular)
@@ -634,6 +646,8 @@ var badBlock = wire.MsgBlock{
 // TestCheckConnectBlockTemplate ensures that the code which deals with
 // checking block templates works as expected.
 func TestCheckConnectBlockTemplate(t *testing.T) {
+	t.Parallel()
+
 	// Create a test harness initialized with the genesis block as the tip.
 	params := chaincfg.RegNetParams()
 	g, teardownFunc := newChaingenHarness(t, params, "connectblktemplatetest")
@@ -1021,6 +1035,8 @@ func TestCheckConnectBlockTemplate(t *testing.T) {
 // various corner cases such as before, after, and straddling stake validation
 // height.
 func TestCheckTicketExhaustion(t *testing.T) {
+	t.Parallel()
+
 	// Hardcoded values expected by the tests so they remain valid if network
 	// parameters change.
 	const (

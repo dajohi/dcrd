@@ -12,6 +12,8 @@ import (
 )
 
 func TestEncodeDecodeWIF(t *testing.T) {
+	t.Parallel()
+
 	mainNetPrivKeyID := [2]byte{0x22, 0xde} // starts with Pm
 	testNetPrivKeyID := [2]byte{0x23, 0x0e} // starts with Pt
 	simNetPrivKeyID := [2]byte{0x23, 0x07}  // starts with Ps

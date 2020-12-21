@@ -63,6 +63,8 @@ func (b *BlockChain) isVoterMajorityVersion(minVer uint32, prevNode *blockNode) 
 }
 
 func TestCalcWantHeight(t *testing.T) {
+	t.Parallel()
+
 	// For example, if StakeVersionInterval = 11 and StakeValidationHeight = 13 the
 	// windows start at 13 + (11 * 2) 25 and are as follows: 24-34, 35-45, 46-56 ...
 	// If height comes in at 35 we use the 24-34 window, up to height 45.
@@ -151,6 +153,8 @@ func TestCalcWantHeight(t *testing.T) {
 // TestCalcStakeVersionCorners ensures that stake version calculation works as
 // intended under various corner cases such as attempting to go back backwards.
 func TestCalcStakeVersionCorners(t *testing.T) {
+	t.Parallel()
+
 	params := chaincfg.SimNetParams()
 	svh := params.StakeValidationHeight
 	svi := params.StakeVersionInterval
@@ -309,6 +313,8 @@ func TestCalcStakeVersionCorners(t *testing.T) {
 // TestCalcStakeVersion ensures that stake version calculation works as
 // intended when
 func TestCalcStakeVersion(t *testing.T) {
+	t.Parallel()
+
 	params := chaincfg.SimNetParams()
 	svh := params.StakeValidationHeight
 	svi := params.StakeVersionInterval
@@ -367,6 +373,8 @@ func TestCalcStakeVersion(t *testing.T) {
 // TestIsStakeMajorityVersion ensures that determining the current majority
 // stake version works as intended under a wide variety of scenarios.
 func TestIsStakeMajorityVersion(t *testing.T) {
+	t.Parallel()
+
 	params := chaincfg.RegNetParams()
 	svh := params.StakeValidationHeight
 	svi := params.StakeVersionInterval
@@ -712,6 +720,8 @@ func TestIsStakeMajorityVersion(t *testing.T) {
 }
 
 func TestLarge(t *testing.T) {
+	t.Parallel()
+
 	params := chaincfg.MainNetParams()
 
 	numRuns := 5

@@ -13,6 +13,8 @@ import (
 
 // TestMedianTime tests the medianTime implementation.
 func TestMedianTime(t *testing.T) {
+	t.Parallel()
+
 	tests := []struct {
 		in         []int64
 		wantOffset int64

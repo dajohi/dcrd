@@ -17,6 +17,8 @@ import (
 
 // TestMsgGetCFilter tests the MsgGetCFilter API.
 func TestGetCFilter(t *testing.T) {
+	t.Parallel()
+
 	pver := ProtocolVersion
 
 	// Block 200,000 hash.
@@ -67,6 +69,8 @@ func TestGetCFilter(t *testing.T) {
 // TestGetCFilterWire tests the MsgGetCFilter wire encode and decode for various
 // protocol versions.
 func TestGetCFilterWire(t *testing.T) {
+	t.Parallel()
+
 	// Block 200,000 hash.
 	hashStr := "000000000000007a59f30586c1003752956a8b55e6f741fd5f24c800cd5e5e8c"
 	blockHash, err := chainhash.NewHashFromStr(hashStr)
@@ -160,6 +164,8 @@ func TestGetCFilterWire(t *testing.T) {
 // TestGetCFilterWireErrors performs negative tests against wire encode and
 // decode of MsgGetCFilter to confirm error paths work correctly.
 func TestGetCFilterWireErrors(t *testing.T) {
+	t.Parallel()
+
 	pver := ProtocolVersion
 	oldPver := NodeCFVersion - 1
 
@@ -226,6 +232,8 @@ func TestGetCFilterWireErrors(t *testing.T) {
 // TestGetCFilterMalformedErrors performs negative tests against wire decode
 // of MsgGetCFilter to confirm malformed encoded data doesn't pass through.
 func TestGetCFilterMalformedErrors(t *testing.T) {
+	t.Parallel()
+
 	pver := ProtocolVersion
 
 	tests := []struct {

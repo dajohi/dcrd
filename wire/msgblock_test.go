@@ -19,6 +19,8 @@ import (
 
 // TestBlock tests the MsgBlock API.
 func TestBlock(t *testing.T) {
+	t.Parallel()
+
 	pver := ProtocolVersion
 
 	// Test block header.
@@ -118,6 +120,8 @@ func TestBlock(t *testing.T) {
 // TestBlockTxHashes tests the ability to generate a slice of all transaction
 // hashes from a block accurately.
 func TestBlockTxHashes(t *testing.T) {
+	t.Parallel()
+
 	// Block 1, transaction 1 hash.
 	hashStr := "55a25248c04dd8b6599ca2a708413c00d79ae90ce075c54e8a967a647d7e4bea"
 	wantHash, err := chainhash.NewHashFromStr(hashStr)
@@ -137,6 +141,8 @@ func TestBlockTxHashes(t *testing.T) {
 // TestBlockSTxHashes tests the ability to generate a slice of all stake
 // transaction hashes from a block accurately.
 func TestBlockSTxHashes(t *testing.T) {
+	t.Parallel()
+
 	// Block 1, transaction 1 hash.
 	hashStr := "ae208a69f3ee088d0328126e3d9bef7652b108d1904f27b166c5999233a801d4"
 	wantHash, err := chainhash.NewHashFromStr(hashStr)
@@ -155,6 +161,8 @@ func TestBlockSTxHashes(t *testing.T) {
 
 // TestBlockHash tests the ability to generate the hash of a block accurately.
 func TestBlockHash(t *testing.T) {
+	t.Parallel()
+
 	// Block 1 hash.
 	hashStr := "6b73b6f6faebbfd6a541f38820593e43c50ce1abf64602ab8ac7d5502991c37f"
 	wantHash, err := chainhash.NewHashFromStr(hashStr)
@@ -173,6 +181,8 @@ func TestBlockHash(t *testing.T) {
 // TestBlockWire tests the MsgBlock wire encode and decode for various numbers
 // of transaction inputs and outputs and protocol versions.
 func TestBlockWire(t *testing.T) {
+	t.Parallel()
+
 	tests := []struct {
 		in      *MsgBlock // Message to encode
 		out     *MsgBlock // Expected decoded message
@@ -226,6 +236,8 @@ func TestBlockWire(t *testing.T) {
 // TestBlockWireErrors performs negative tests against wire encode and decode
 // of MsgBlock to confirm error paths work correctly.
 func TestBlockWireErrors(t *testing.T) {
+	t.Parallel()
+
 	// Use protocol version 60002 specifically here instead of the latest
 	// because the test data is using bytes encoded with that protocol
 	// version.
@@ -301,6 +313,8 @@ func TestBlockWireErrors(t *testing.T) {
 
 // TestBlockSerialize tests MsgBlock serialize and deserialize.
 func TestBlockSerialize(t *testing.T) {
+	t.Parallel()
+
 	tests := []struct {
 		in      *MsgBlock // Message to encode
 		out     *MsgBlock // Expected decoded message
@@ -376,6 +390,8 @@ func TestBlockSerialize(t *testing.T) {
 // TestBlockSerializeErrors performs negative tests against wire encode and
 // decode of MsgBlock to confirm error paths work correctly.
 func TestBlockSerializeErrors(t *testing.T) {
+	t.Parallel()
+
 	tests := []struct {
 		in       *MsgBlock // Value to encode
 		buf      []byte    // Serialized data
@@ -457,6 +473,8 @@ func TestBlockSerializeErrors(t *testing.T) {
 // are handled properly.  This could otherwise potentially be used as an attack
 // vector.
 func TestBlockOverflowErrors(t *testing.T) {
+	t.Parallel()
+
 	// Use protocol version 70001 specifically here instead of the latest
 	// protocol version because the test data is using bytes encoded with
 	// that version.
@@ -541,6 +559,8 @@ func TestBlockOverflowErrors(t *testing.T) {
 // TestBlockSerializeSize performs tests to ensure the serialize size for
 // various blocks is accurate.
 func TestBlockSerializeSize(t *testing.T) {
+	t.Parallel()
+
 	// Block with no transactions.
 	noTxBlock := NewMsgBlock(&testBlock.Header)
 

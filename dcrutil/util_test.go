@@ -10,6 +10,8 @@ import (
 
 // TestVerifyMessage ensures the verifying a message works as intended.
 func TestVerifyMessage(t *testing.T) {
+	t.Parallel()
+
 	mainNetParams := mockMainNetParams()
 	testNetParams := mockTestNetParams()
 

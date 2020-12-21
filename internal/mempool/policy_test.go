@@ -29,6 +29,8 @@ const (
 
 // TestCalcMinRequiredTxRelayFee tests the calcMinRequiredTxRelayFee API.
 func TestCalcMinRequiredTxRelayFee(t *testing.T) {
+	t.Parallel()
+
 	tests := []struct {
 		name     string         // test description.
 		size     int64          // Transaction size in bytes.
@@ -106,6 +108,8 @@ func TestCalcMinRequiredTxRelayFee(t *testing.T) {
 
 // TestCheckPkScriptStandard tests the checkPkScriptStandard API.
 func TestCheckPkScriptStandard(t *testing.T) {
+	t.Parallel()
+
 	var pubKeys [][]byte
 	for i := 0; i < 4; i++ {
 		pk := secp256k1.NewPrivateKey(new(secp256k1.ModNScalar).SetInt(0))
@@ -211,6 +215,8 @@ func TestCheckPkScriptStandard(t *testing.T) {
 
 // TestDust tests the isDust API.
 func TestDust(t *testing.T) {
+	t.Parallel()
+
 	pkScript := []byte{0x76, 0xa9, 0x14, 0xb1, 0x2d, 0x0f, 0xca,
 		0xeb, 0x46, 0x14, 0xa3, 0x4b, 0x1e, 0x88, 0x61, 0xe7,
 		0x55, 0x4f, 0xd4, 0x13, 0xf7, 0xa6, 0x47, 0x88, 0xac}
@@ -306,6 +312,8 @@ func TestDust(t *testing.T) {
 
 // TestCheckTransactionStandard tests the checkTransactionStandard API.
 func TestCheckTransactionStandard(t *testing.T) {
+	t.Parallel()
+
 	// maxTxVersion is used as the maximum support transaction version for
 	// the policy in these tests.
 	const maxTxVersion = 1

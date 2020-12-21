@@ -13,6 +13,8 @@ import (
 
 // TestErrorKindStringer tests the stringized output for the ErrorKind type.
 func TestErrorKindStringer(t *testing.T) {
+	t.Parallel()
+
 	tests := []struct {
 		in   ErrorKind
 		want string
@@ -122,6 +124,8 @@ func TestError(t *testing.T) {
 // TestIsDERSigError ensures IsDERSigError returns true for all error kinds that
 // can be returned as a result of non-canonically-encoded DER signatures.
 func TestIsDERSigError(t *testing.T) {
+	t.Parallel()
+
 	tests := []struct {
 		kind ErrorKind
 		want bool
@@ -157,6 +161,8 @@ func TestIsDERSigError(t *testing.T) {
 // TestErrorKindIsAs ensures both ErrorKind and Error can be identified as being
 // a specific error kind via errors.Is and unwrapped via errors.As.
 func TestErrorKindIsAs(t *testing.T) {
+	t.Parallel()
+
 	tests := []struct {
 		name      string
 		err       error

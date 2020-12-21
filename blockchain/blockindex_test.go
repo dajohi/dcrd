@@ -31,6 +31,8 @@ func mustParseHash(s string) *chainhash.Hash {
 // TestBlockNodeHeader ensures that block nodes reconstruct the correct header
 // and fetching the header from the chain reconstructs it from memory.
 func TestBlockNodeHeader(t *testing.T) {
+	t.Parallel()
+
 	// Create a fake chain and block header with all fields set to nondefault
 	// values.
 	params := chaincfg.RegNetParams()
@@ -84,6 +86,8 @@ func TestBlockNodeHeader(t *testing.T) {
 // intended including when there are less than the typical number of blocks
 // which happens near the beginning of the chain.
 func TestCalcPastMedianTime(t *testing.T) {
+	t.Parallel()
+
 	tests := []struct {
 		name       string
 		timestamps []int64
@@ -184,6 +188,8 @@ func TestCalcPastMedianTime(t *testing.T) {
 // TestChainTips ensures the chain tip tracking in the block index works
 // as expected.
 func TestChainTips(t *testing.T) {
+	t.Parallel()
+
 	params := chaincfg.RegNetParams()
 	bc := newFakeChain(params)
 	genesis := bc.bestChain.NodeByHeight(0)
@@ -256,6 +262,8 @@ func TestChainTips(t *testing.T) {
 // TestAncestorSkipList ensures the skip list functionality and ancestor
 // traversal that makes use of it works as expected.
 func TestAncestorSkipList(t *testing.T) {
+	t.Parallel()
+
 	// Create fake nodes to use for skip list traversal.
 	nodes := chainedFakeSkipListNodes(nil, 250000)
 

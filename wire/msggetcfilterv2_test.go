@@ -34,6 +34,8 @@ func baseMsgGetCFilterV2(t *testing.T) *MsgGetCFilterV2 {
 // TestGetCFilterV2 tests the MsgGetCFilterV2 API against the latest protocol
 // version.
 func TestGetCFilterV2(t *testing.T) {
+	t.Parallel()
+
 	pver := ProtocolVersion
 
 	// Ensure the command is expected value.
@@ -64,6 +66,8 @@ func TestGetCFilterV2(t *testing.T) {
 // TestGetCFilterV2PreviousProtocol tests the MsgGetCFilterV2 API against the
 // protocol prior to version CFilterV2Version.
 func TestGetCFilterV2PreviousProtocol(t *testing.T) {
+	t.Parallel()
+
 	// Use the protocol version just prior to CFilterV2Version changes.
 	pver := CFilterV2Version - 1
 
@@ -89,6 +93,8 @@ func TestGetCFilterV2PreviousProtocol(t *testing.T) {
 // TestGetCFilterV2CrossProtocol tests the MsgGetCFilterV2 API when encoding
 // with the latest protocol version and decoding with CFilterV2Version.
 func TestGetCFilterV2CrossProtocol(t *testing.T) {
+	t.Parallel()
+
 	msg := baseMsgGetCFilterV2(t)
 
 	// Encode with latest protocol version.
@@ -109,6 +115,8 @@ func TestGetCFilterV2CrossProtocol(t *testing.T) {
 // TestGetCFilterV2Wire tests the MsgGetCFilterV2 wire encode and decode for
 // various commitment names and protocol versions.
 func TestGetCFilterV2Wire(t *testing.T) {
+	t.Parallel()
+
 	// MsgGetCFilterV2 message with mock block hash.
 	msgGetCFilterV2 := baseMsgGetCFilterV2(t)
 	msgGetCFilterV2Encoded := []byte{
@@ -177,6 +185,8 @@ func TestGetCFilterV2Wire(t *testing.T) {
 // TestGetCFilterV2WireErrors performs negative tests against wire encode and
 // decode of MsgGetCFilterV2 to confirm error paths work correctly.
 func TestGetCFilterV2WireErrors(t *testing.T) {
+	t.Parallel()
+
 	pver := ProtocolVersion
 
 	// MsgGetCFilterV2 message with mock block hash.

@@ -98,6 +98,8 @@ func mockDialerAddr(ctx context.Context, addr net.Addr) (net.Conn, error) {
 
 // TestNewConfig tests that new ConnManager config is validated as expected.
 func TestNewConfig(t *testing.T) {
+	t.Parallel()
+
 	_, err := New(&Config{})
 	if err == nil {
 		t.Fatal("New expected error: 'Dial can't be nil', got nil")
@@ -151,6 +153,8 @@ func assertConnReqState(t *testing.T, connReq *ConnReq, wantState ConnState) {
 // In connect mode, automatic connections are disabled, so we test that
 // requests using Connect are handled and that no other connections are made.
 func TestConnectMode(t *testing.T) {
+	t.Parallel()
+
 	connected := make(chan *ConnReq)
 	cmgr, err := New(&Config{
 		TargetOutbound: 2,
@@ -199,6 +203,8 @@ func TestConnectMode(t *testing.T) {
 // configuration option by waiting until all connections are established and
 // ensuring they are the only connections made.
 func TestTargetOutbound(t *testing.T) {
+	t.Parallel()
+
 	targetOutbound := uint32(10)
 	connected := make(chan *ConnReq)
 	cmgr, err := New(&Config{
@@ -241,6 +247,8 @@ func TestTargetOutbound(t *testing.T) {
 // any address object returned by GetNewAddress will be correctly passed along
 // to DialAddr to be used for connecting to a host.
 func TestPassAddrAlongDialAddr(t *testing.T) {
+	t.Parallel()
+
 	connected := make(chan *ConnReq)
 
 	// targetAddr will be the specific address we'll use to connect. It _could_
@@ -289,6 +297,8 @@ func TestPassAddrAlongDialAddr(t *testing.T) {
 // We make a permanent connection request using Connect, disconnect it using
 // Disconnect and we wait for it to be connected back.
 func TestRetryPermanent(t *testing.T) {
+	t.Parallel()
+
 	connected := make(chan *ConnReq)
 	disconnected := make(chan *ConnReq)
 	cmgr, err := New(&Config{
@@ -343,6 +353,8 @@ func TestRetryPermanent(t *testing.T) {
 // We have a timed dialer which initially returns err but after RetryDuration
 // hits maxRetryDuration returns a mock conn.
 func TestMaxRetryDuration(t *testing.T) {
+	t.Parallel()
+
 	// This test relies on the current value of the max retry duration defined
 	// in the tests, so assert it.
 	if maxRetryDuration != 2*time.Millisecond {
@@ -402,6 +414,8 @@ func TestMaxRetryDuration(t *testing.T) {
 // TestNetworkFailure tests that the connection manager handles a network
 // failure gracefully.
 func TestNetworkFailure(t *testing.T) {
+	t.Parallel()
+
 	var closeOnce sync.Once
 	const targetOutbound = 5
 	const retryTimeout = time.Millisecond * 5
@@ -459,6 +473,7 @@ func TestNetworkFailure(t *testing.T) {
 // responsive when there are multiple simultaneous failed connections for
 // persistent peers in the retry state.
 func TestMultipleFailedConns(t *testing.T) {
+	t.Parallel()
 	// Override the max retry duration for this test since it relies on having
 	// multiple connections in the retry state.
 	curMaxRetryDuration := maxRetryDuration
@@ -533,6 +548,8 @@ func TestMultipleFailedConns(t *testing.T) {
 // err so that the handler assumes that the conn manager is stopped and ignores
 // the failure.
 func TestShutdownFailedConns(t *testing.T) {
+	t.Parallel()
+
 	var closeOnce sync.Once
 	dialed := make(chan struct{})
 	waitDialer := func(ctx context.Context, network, addr string) (net.Conn, error) {
@@ -573,6 +590,8 @@ func TestShutdownFailedConns(t *testing.T) {
 // TestRemovePendingConnection tests that it's possible to cancel a pending
 // connection, removing its internal state from the ConnMgr.
 func TestRemovePendingConnection(t *testing.T) {
+	t.Parallel()
+
 	// Create a ConnMgr instance with an instance of a dialer that'll never
 	// succeed.
 	dialed := make(chan struct{})
@@ -704,6 +723,8 @@ func TestCancelIgnoreDelayedConnection(t *testing.T) {
 // by creating a dialer that blocks for three times the configured dial timeout
 // before connecting and ensuring the connection fails as expected.
 func TestDialTimeout(t *testing.T) {
+	t.Parallel()
+
 	// Create a connection manager instance with a dialer that blocks for twice
 	// the configured dial timeout before connecting.
 	const dialTimeout = time.Millisecond * 20
@@ -755,6 +776,8 @@ func TestDialTimeout(t *testing.T) {
 // TestConnectContext ensures the Connect method works as intended when provided
 // with a context that times out before a dial attempt succeeds.
 func TestConnectContext(t *testing.T) {
+	t.Parallel()
+
 	// Create a connection manager instance with a dialer that blocks until its
 	// provided context is canceled.
 	dialed := make(chan struct{})
@@ -865,6 +888,8 @@ func newMockListener(localAddr string) *mockListener {
 // TestListeners ensures providing listeners to the connection manager along
 // with an accept callback works properly.
 func TestListeners(t *testing.T) {
+	t.Parallel()
+
 	// Setup a connection manager with a couple of mock listeners that
 	// notify a channel when they receive mock connections.
 	receivedConns := make(chan net.Conn)

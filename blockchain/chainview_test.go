@@ -30,6 +30,8 @@ func zipLocators(locators ...BlockLocator) BlockLocator {
 // as intended with the exception of some special cases which are handled in
 // other tests.
 func TestChainView(t *testing.T) {
+	t.Parallel()
+
 	// Construct a synthetic block index consisting of the following
 	// structure.
 	// 0 -> 1 -> 2  -> 3  -> 4
@@ -262,6 +264,8 @@ testLoop:
 // works in some corner cases such as when the two chains have completely
 // unrelated histories.
 func TestChainViewForkCorners(t *testing.T) {
+	t.Parallel()
+
 	// Construct two unrelated single branch synthetic block indexes.
 	branchNodes := chainedFakeNodes(nil, 5)
 	unrelatedBranchNodes := chainedFakeNodes(nil, 7)
@@ -295,6 +299,8 @@ func TestChainViewForkCorners(t *testing.T) {
 // TestChainViewSetTip ensures changing the tip works as intended including
 // capacity changes.
 func TestChainViewSetTip(t *testing.T) {
+	t.Parallel()
+
 	// Construct a synthetic block index consisting of the following
 	// structure.
 	// 0 -> 1 -> 2  -> 3  -> 4
@@ -374,6 +380,8 @@ testLoop:
 // TestChainViewNil ensures that creating and accessing a nil chain view behaves
 // as expected.
 func TestChainViewNil(t *testing.T) {
+	t.Parallel()
+
 	// Ensure two uninitialized views are considered equal.
 	view := newChainView(nil)
 	if !view.Equals(newChainView(nil)) {

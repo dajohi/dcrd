@@ -29,6 +29,8 @@ func hexToBytes(s string) []byte {
 // providing extra data and version information, short hashes, and multiple
 // iterations.
 func TestNonceRFC6979(t *testing.T) {
+	t.Parallel()
+
 	tests := []struct {
 		name       string
 		key        string
@@ -165,6 +167,8 @@ func TestNonceRFC6979(t *testing.T) {
 // NonceRFC6979 produces the expected nonces for known values from other
 // implementations.
 func TestRFC6979Compat(t *testing.T) {
+	t.Parallel()
+
 	// Test vectors matching Trezor and CoreBitcoin implementations.
 	// - https://github.com/trezor/trezor-crypto/blob/9fea8f8ab377dc514e40c6fd1f7c89a74c1d8dc6/tests.c#L432-L453
 	// - https://github.com/oleganza/CoreBitcoin/blob/e93dd71207861b5bf044415db5fa72405e7d8fbc/CoreBitcoin/BTCKey%2BTests.m#L23-L49

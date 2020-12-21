@@ -7,6 +7,8 @@ package rpcclient
 import "testing"
 
 func TestClientStringer(t *testing.T) {
+	t.Parallel()
+
 	type test struct {
 		url      string
 		host     string

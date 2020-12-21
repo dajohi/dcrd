@@ -166,6 +166,7 @@ func testLNFeaturesDeployment(t *testing.T, params *chaincfg.Params) {
 // TestLNFeaturesDeployment ensures the deployment of the LN features agenda
 // activate the expected changes.
 func TestLNFeaturesDeployment(t *testing.T) {
+	t.Parallel()
 	testLNFeaturesDeployment(t, chaincfg.MainNetParams())
 	testLNFeaturesDeployment(t, chaincfg.RegNetParams())
 }
@@ -289,6 +290,8 @@ func testFixSeqLocksDeployment(t *testing.T, params *chaincfg.Params) {
 // TestFixSeqLocksDeployment ensures the deployment of the fix sequence locks
 // agenda activates as expected.
 func TestFixSeqLocksDeployment(t *testing.T) {
+	t.Parallel()
+
 	testFixSeqLocksDeployment(t, chaincfg.MainNetParams())
 	testFixSeqLocksDeployment(t, chaincfg.RegNetParams())
 }
@@ -296,6 +299,8 @@ func TestFixSeqLocksDeployment(t *testing.T) {
 // TestFixedSequenceLocks ensures that sequence locks within blocks behave as
 // expected once the fix sequence locks agenda is active.
 func TestFixedSequenceLocks(t *testing.T) {
+	t.Parallel()
+
 	// Use a set of test chain parameters which allow for quicker vote
 	// activation as compared to various existing network params.
 	params := quickVoteActivationParams()
@@ -687,6 +692,8 @@ func testHeaderCommitmentsDeployment(t *testing.T, params *chaincfg.Params) {
 // TestHeaderCommitmentsDeployment ensures the deployment of the header
 // commitments agenda activates as expected.
 func TestHeaderCommitmentsDeployment(t *testing.T) {
+	t.Parallel()
+
 	testHeaderCommitmentsDeployment(t, chaincfg.MainNetParams())
 	testHeaderCommitmentsDeployment(t, chaincfg.RegNetParams())
 }
@@ -846,6 +853,8 @@ func testTreasuryFeaturesDeployment(t *testing.T, params *chaincfg.Params) {
 // TestTreasuryFeaturesDeployment ensures the deployment of the Treasury
 // features agenda activate the expected changes.
 func TestTreasuryFeaturesDeployment(t *testing.T) {
+	t.Parallel()
+
 	testTreasuryFeaturesDeployment(t, chaincfg.MainNetParams())
 	testTreasuryFeaturesDeployment(t, chaincfg.TestNet3Params())
 	testTreasuryFeaturesDeployment(t, chaincfg.RegNetParams())

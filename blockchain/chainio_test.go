@@ -76,6 +76,8 @@ func isNotInMainChainErr(err error) bool {
 // TestErrNotInMainChain ensures the functions related to errNotInMainChain work
 // as expected.
 func TestErrNotInMainChain(t *testing.T) {
+	t.Parallel()
+
 	errStr := "no block at height 1 exists"
 	err := error(errNotInMainChain(errStr))
 

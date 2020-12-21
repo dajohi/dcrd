@@ -13,6 +13,8 @@ import (
 )
 
 func TestAmountCreation(t *testing.T) {
+	t.Parallel()
+
 	tests := []struct {
 		name     string
 		amount   float64
@@ -112,6 +114,8 @@ func TestAmountCreation(t *testing.T) {
 }
 
 func TestAmountUnitConversions(t *testing.T) {
+	t.Parallel()
+
 	tests := []struct {
 		name      string
 		amount    Amount
@@ -203,6 +207,8 @@ func TestAmountUnitConversions(t *testing.T) {
 }
 
 func TestAmountMulF64(t *testing.T) {
+	t.Parallel()
+
 	tests := []struct {
 		name string
 		amt  Amount
@@ -310,6 +316,8 @@ func TestAmountMulF64(t *testing.T) {
 }
 
 func TestAmountSorter(t *testing.T) {
+	t.Parallel()
+
 	tests := []struct {
 		name string
 		as   []Amount

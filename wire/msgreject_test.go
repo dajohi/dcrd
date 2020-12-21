@@ -17,6 +17,8 @@ import (
 
 // TestRejectCodeStringer tests the stringized output for the reject code type.
 func TestRejectCodeStringer(t *testing.T) {
+	t.Parallel()
+
 	tests := []struct {
 		in   RejectCode
 		want string
@@ -45,6 +47,8 @@ func TestRejectCodeStringer(t *testing.T) {
 
 // TestRejectLatest tests the MsgPong API against the latest protocol version.
 func TestRejectLatest(t *testing.T) {
+	t.Parallel()
+
 	pver := ProtocolVersion
 
 	// Create reject message data.
@@ -122,6 +126,8 @@ func TestRejectLatest(t *testing.T) {
 // TestRejectWire tests the MsgReject wire encode and decode for various
 // protocol versions.
 func TestRejectWire(t *testing.T) {
+	t.Parallel()
+
 	tests := []struct {
 		msg  MsgReject // Message to encode
 		buf  []byte    // Wire encoding
@@ -199,6 +205,8 @@ func TestRejectWire(t *testing.T) {
 // TestRejectWireErrors performs negative tests against wire encode and decode
 // of MsgReject to confirm error paths work correctly.
 func TestRejectWireErrors(t *testing.T) {
+	t.Parallel()
+
 	pver := ProtocolVersion
 
 	baseReject := NewMsgReject("block", RejectDuplicate, "duplicate block")

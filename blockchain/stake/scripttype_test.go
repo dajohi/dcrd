@@ -16,6 +16,8 @@ var (
 )
 
 func TestIsRevocationScript(t *testing.T) {
+	t.Parallel()
+
 	tests := []struct {
 		name         string
 		scriptSource *txscript.ScriptBuilder
@@ -100,6 +102,8 @@ func TestIsRevocationScript(t *testing.T) {
 }
 
 func TestIsTicketPurchaseScript(t *testing.T) {
+	t.Parallel()
+
 	tests := []struct {
 		name         string
 		scriptSource *txscript.ScriptBuilder
@@ -184,6 +188,8 @@ func TestIsTicketPurchaseScript(t *testing.T) {
 }
 
 func TestIsVoteScript(t *testing.T) {
+	t.Parallel()
+
 	tests := []struct {
 		name         string
 		scriptSource *txscript.ScriptBuilder
@@ -268,6 +274,8 @@ func TestIsVoteScript(t *testing.T) {
 }
 
 func TestIsStakeChangeScript(t *testing.T) {
+	t.Parallel()
+
 	tests := []struct {
 		name         string
 		scriptSource *txscript.ScriptBuilder

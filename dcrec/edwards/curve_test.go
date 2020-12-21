@@ -39,6 +39,8 @@ func testPointXRecoveryVectors() []XRecoveryVector {
 //   extendedToBigAffine
 //   EncodedBytesToBigIntPoint
 func TestXRecovery(t *testing.T) {
+	t.Parallel()
+
 	curve := Edwards()
 
 	for _, vector := range testPointXRecoveryVectors() {
@@ -95,6 +97,8 @@ func TestXRecovery(t *testing.T) {
 //   extendedToBigAffine
 //   encodedBytesToBigIntPoint
 func TestAdd(t *testing.T) {
+	t.Parallel()
+
 	pointHexStrIdx := 0
 	pointHexStrSet := []string{
 		"4a3f2684abc42977fe50adbb158a9939cc31b210a7c6e6ea4856395ef3e51bf4",
@@ -211,6 +215,8 @@ func testVectorsScalarMult() []ScalarMultVector {
 //   Double
 //   ScalarMult
 func TestScalarMult(t *testing.T) {
+	t.Parallel()
+
 	curve := Edwards()
 
 	for _, vector := range testVectorsScalarMult() {

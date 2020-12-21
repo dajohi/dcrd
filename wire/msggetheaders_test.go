@@ -18,6 +18,8 @@ import (
 
 // TestGetHeaders tests the MsgGetHeader API.
 func TestGetHeaders(t *testing.T) {
+	t.Parallel()
+
 	pver := ProtocolVersion
 
 	// Block 99500 hash.
@@ -79,6 +81,8 @@ func TestGetHeaders(t *testing.T) {
 // TestGetHeadersWire tests the MsgGetHeaders wire encode and decode for various
 // numbers of block locator hashes and protocol versions.
 func TestGetHeadersWire(t *testing.T) {
+	t.Parallel()
+
 	// Set protocol inside getheaders message.  Use protocol version 60002
 	// specifically here instead of the latest because the test data is
 	// using bytes encoded with that protocol version.
@@ -197,6 +201,8 @@ func TestGetHeadersWire(t *testing.T) {
 // TestGetHeadersWireErrors performs negative tests against wire encode and
 // decode of MsgGetHeaders to confirm error paths work correctly.
 func TestGetHeadersWireErrors(t *testing.T) {
+	t.Parallel()
+
 	// Set protocol inside getheaders message.  Use protocol version 60002
 	// specifically here instead of the latest because the test data is
 	// using bytes encoded with that protocol version.

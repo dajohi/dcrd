@@ -645,6 +645,8 @@ func pickRandWinners(sz int, r rand.Source, perBlock int) []int {
 // modified in the memory analogous to what is actually seen in the Decred
 // mainnet, then analyzes the relative memory usage with runtime stats.
 func TestImmutableMemory(t *testing.T) {
+	t.Parallel()
+
 	// Collect information about memory at the start.
 	runtime.GC()
 	memStats := new(runtime.MemStats)

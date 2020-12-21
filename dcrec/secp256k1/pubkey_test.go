@@ -14,6 +14,8 @@ import (
 // TestParsePubKey ensures that public keys are properly parsed according
 // to the spec including both the positive and negative cases.
 func TestParsePubKey(t *testing.T) {
+	t.Parallel()
+
 	tests := []struct {
 		name  string // test description
 		key   string // hex encoded public key
@@ -233,6 +235,8 @@ func TestParsePubKey(t *testing.T) {
 // TestPubKeySerialize ensures that serializing public keys works as expected
 // for both the compressed and uncompressed cases.
 func TestPubKeySerialize(t *testing.T) {
+	t.Parallel()
+
 	tests := []struct {
 		name     string // test description
 		pubX     string // hex encoded x coordinate for pubkey to serialize
@@ -338,6 +342,8 @@ func TestPubKeySerialize(t *testing.T) {
 // TestPublicKeyIsEqual ensures that equality testing between two public keys
 // works as expected.
 func TestPublicKeyIsEqual(t *testing.T) {
+	t.Parallel()
+
 	pubKey1 := &PublicKey{
 		x: *hexToFieldVal("2689c7c2dab13309fb143e0e8fe396342521887e976690b6b47f5b2a4b7d448e"),
 		y: *hexToFieldVal("499dd7852849a38aa23ed9f306f07794063fe7904e0f347bc209fdddaf37691f"),
@@ -369,6 +375,8 @@ func TestPublicKeyIsEqual(t *testing.T) {
 // TestPublicKeyAsJacobian ensures converting a public key to a jacobian point
 // with a Z coordinate of 1 works as expected.
 func TestPublicKeyAsJacobian(t *testing.T) {
+	t.Parallel()
+
 	tests := []struct {
 		name   string // test description
 		pubKey string // hex encoded serialized compressed pubkey
@@ -428,6 +436,8 @@ func TestPublicKeyAsJacobian(t *testing.T) {
 // TestPublicKeyIsOnCurve ensures testing if a public key is on the curve works
 // as expected.
 func TestPublicKeyIsOnCurve(t *testing.T) {
+	t.Parallel()
+
 	tests := []struct {
 		name string // test description
 		pubX string // hex encoded x coordinate for pubkey to serialize

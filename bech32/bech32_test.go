@@ -17,6 +17,8 @@ import (
 // vectors works and if decoding invalid test vectors fails for the correct
 // reason.
 func TestBech32(t *testing.T) {
+	t.Parallel()
+
 	tests := []struct {
 		str           string
 		expectedError error
@@ -90,6 +92,8 @@ func TestBech32(t *testing.T) {
 // expected when encoding and that decoding the produced encoding when converted
 // to all uppercase produces the lowercase HRP and original data.
 func TestMixedCaseEncode(t *testing.T) {
+	t.Parallel()
+
 	tests := []struct {
 		name    string
 		hrp     string
@@ -178,6 +182,8 @@ func TestMixedCaseEncode(t *testing.T) {
 // TestCanDecodeUnlimtedBech32 tests whether decoding a large bech32 string works
 // when using the DecodeNoLimit version
 func TestCanDecodeUnlimtedBech32(t *testing.T) {
+	t.Parallel()
+
 	input := "11qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqsqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq5kx0yd"
 
 	// Sanity check that an input of this length errors on regular Decode()
@@ -208,6 +214,8 @@ func TestCanDecodeUnlimtedBech32(t *testing.T) {
 // DecodeToBase256.  It includes tests for proper handling of case
 // manipulations.
 func TestBech32Base256(t *testing.T) {
+	t.Parallel()
+
 	tests := []struct {
 		name    string // test name
 		encoded string // bech32 string to decode
@@ -410,6 +418,8 @@ func BenchmarkEncodeDecodeCycle(b *testing.B) {
 
 // TestConvertBits tests whether base conversion works using TestConvertBits().
 func TestConvertBits(t *testing.T) {
+	t.Parallel()
+
 	tests := []struct {
 		input    string
 		output   string
@@ -491,6 +501,8 @@ func TestConvertBits(t *testing.T) {
 // TestConvertBitsFailures tests for the expected conversion failures of
 // ConvertBits().
 func TestConvertBitsFailures(t *testing.T) {
+	t.Parallel()
+
 	tests := []struct {
 		input    string
 		fromBits uint8

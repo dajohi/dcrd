@@ -57,6 +57,8 @@ func (r *fakeRandReader) Read(p []byte) (int, error) {
 // is mainly to test the "fast" paths in readElement and writeElement which use
 // type assertions to avoid reflection when possible.
 func TestElementWire(t *testing.T) {
+	t.Parallel()
+
 	type writeElementReflect int32
 
 	tests := []struct {
@@ -179,6 +181,8 @@ func TestElementWire(t *testing.T) {
 // TestElementWireErrors performs negative tests against wire encode and decode
 // of various element types to confirm error paths work correctly.
 func TestElementWireErrors(t *testing.T) {
+	t.Parallel()
+
 	tests := []struct {
 		in       interface{} // Value to encode
 		max      int         // Max size of fixed buffer to induce errors
@@ -246,6 +250,8 @@ func TestElementWireErrors(t *testing.T) {
 
 // TestVarIntWire tests wire encode and decode for variable length integers.
 func TestVarIntWire(t *testing.T) {
+	t.Parallel()
+
 	pver := ProtocolVersion
 
 	tests := []struct {
@@ -314,6 +320,8 @@ func TestVarIntWire(t *testing.T) {
 // TestVarIntWireErrors performs negative tests against wire encode and decode
 // of variable length integers to confirm error paths work correctly.
 func TestVarIntWireErrors(t *testing.T) {
+	t.Parallel()
+
 	pver := ProtocolVersion
 
 	tests := []struct {
@@ -359,6 +367,8 @@ func TestVarIntWireErrors(t *testing.T) {
 // TestVarIntNonCanonical ensures variable length integers that are not encoded
 // canonically return the expected error.
 func TestVarIntNonCanonical(t *testing.T) {
+	t.Parallel()
+
 	pver := ProtocolVersion
 
 	tests := []struct {
@@ -419,6 +429,8 @@ func TestVarIntNonCanonical(t *testing.T) {
 
 // TestVarIntWire tests the serialize size for variable length integers.
 func TestVarIntSerializeSize(t *testing.T) {
+	t.Parallel()
+
 	tests := []struct {
 		val  uint64 // Value to get the serialized size for
 		size int    // Expected serialized size
@@ -454,6 +466,8 @@ func TestVarIntSerializeSize(t *testing.T) {
 
 // TestVarStringWire tests wire encode and decode for variable length strings.
 func TestVarStringWire(t *testing.T) {
+	t.Parallel()
+
 	pver := ProtocolVersion
 
 	// str256 is a string that takes a 2-byte varint to encode.
@@ -507,6 +521,8 @@ func TestVarStringWire(t *testing.T) {
 // TestVarStringWireErrors performs negative tests against wire encode and
 // decode of variable length strings to confirm error paths work correctly.
 func TestVarStringWireErrors(t *testing.T) {
+	t.Parallel()
+
 	pver := ProtocolVersion
 
 	// str256 is a string that takes a 2-byte varint to encode.
@@ -556,6 +572,8 @@ func TestVarStringWireErrors(t *testing.T) {
 // length are handled properly.  This could otherwise potentially be used as an
 // attack vector.
 func TestVarStringOverflowErrors(t *testing.T) {
+	t.Parallel()
+
 	pver := ProtocolVersion
 
 	tests := []struct {
@@ -588,6 +606,8 @@ func TestVarStringOverflowErrors(t *testing.T) {
 
 // TestAsciiVarStringWire tests wire decode for variable length ascii strings.
 func TestAsciiVarStringWire(t *testing.T) {
+	t.Parallel()
+
 	pver := ProtocolVersion
 
 	// str256 is a string that takes a 2-byte varint to encode.
@@ -638,6 +658,8 @@ func TestAsciiVarStringWire(t *testing.T) {
 // TestAsciiVarStringWireErrors performs negative tests against wire decode of
 // variable length ascii strings to confirm error paths work correctly.
 func TestAsciiVarStringWireErrors(t *testing.T) {
+	t.Parallel()
+
 	pver := ProtocolVersion
 
 	tests := []struct {
@@ -678,6 +700,8 @@ func TestAsciiVarStringWireErrors(t *testing.T) {
 // the string length are handled properly.  This could otherwise potentially be
 // used as an attack vector.
 func TestAsciiVarStringOverflowErrors(t *testing.T) {
+	t.Parallel()
+
 	pver := ProtocolVersion
 
 	tests := []struct {
@@ -723,6 +747,8 @@ func TestAsciiVarStringOverflowErrors(t *testing.T) {
 
 // TestVarBytesWire tests wire encode and decode for variable length byte array.
 func TestVarBytesWire(t *testing.T) {
+	t.Parallel()
+
 	pver := ProtocolVersion
 
 	// bytes256 is a byte array that takes a 2-byte varint to encode.
@@ -776,6 +802,8 @@ func TestVarBytesWire(t *testing.T) {
 // TestVarBytesWireErrors performs negative tests against wire encode and
 // decode of variable length byte arrays to confirm error paths work correctly.
 func TestVarBytesWireErrors(t *testing.T) {
+	t.Parallel()
+
 	pver := ProtocolVersion
 
 	// bytes256 is a byte array that takes a 2-byte varint to encode.
@@ -826,6 +854,8 @@ func TestVarBytesWireErrors(t *testing.T) {
 // length are handled properly.  This could otherwise potentially be used as an
 // attack vector.
 func TestVarBytesOverflowErrors(t *testing.T) {
+	t.Parallel()
+
 	pver := ProtocolVersion
 
 	tests := []struct {
@@ -866,6 +896,8 @@ func TestVarBytesOverflowErrors(t *testing.T) {
 // use a higher number of 5 to really ensure the test doesn't fail unless the
 // RNG is just horrendous.
 func TestRandomUint64(t *testing.T) {
+	t.Parallel()
+
 	tries := 1 << 8              // 2^8
 	watermark := uint64(1 << 56) // 2^56
 	maxHits := 5
@@ -896,6 +928,8 @@ func TestRandomUint64(t *testing.T) {
 // TestRandomUint64Errors uses a fake reader to force error paths to be executed
 // and checks the results accordingly.
 func TestRandomUint64Errors(t *testing.T) {
+	t.Parallel()
+
 	// Test short reads.
 	fr := &fakeRandReader{n: 2, err: io.EOF}
 	nonce, err := randomUint64(fr)

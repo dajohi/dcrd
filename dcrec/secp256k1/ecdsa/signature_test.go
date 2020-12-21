@@ -31,6 +31,8 @@ func hexToBytes(s string) []byte {
 // TestSignatureParsing ensures that signatures are properly parsed according
 // to DER rules.  The error paths are tested as well.
 func TestSignatureParsing(t *testing.T) {
+	t.Parallel()
+
 	tests := []struct {
 		name string
 		sig  []byte
@@ -211,6 +213,8 @@ func TestSignatureParsing(t *testing.T) {
 
 // TestSignatureSerialize ensures that serializing signatures works as expected.
 func TestSignatureSerialize(t *testing.T) {
+	t.Parallel()
+
 	tests := []struct {
 		name     string
 		ecsig    *Signature
@@ -331,6 +335,8 @@ func testSignCompact(t *testing.T, tag string, data []byte, isCompressed bool) {
 // TestSignCompact ensures the public key can be recovered from recoverable
 // public key signatures over random data with random private keys.
 func TestSignCompact(t *testing.T) {
+	t.Parallel()
+
 	for i := 0; i < 256; i++ {
 		name := fmt.Sprintf("test %d", i)
 		data := make([]byte, 32)
@@ -347,6 +353,8 @@ func TestSignCompact(t *testing.T) {
 // TestSignatureIsEqual ensures that equality testing between to signatures
 // works as expected.
 func TestSignatureIsEqual(t *testing.T) {
+	t.Parallel()
+
 	sig1 := &Signature{
 		r: *hexToModNScalar("82235e21a2300022738dabb8e1bbd9d19cfb1e7ab8c30a23b0afbb8d178abcf3"),
 		s: *hexToModNScalar("24bf68e256c534ddfaf966bf908deb944305596f7bdcc38d69acad7f9c868724"),

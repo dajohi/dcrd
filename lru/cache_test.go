@@ -12,6 +12,8 @@ import (
 // eviction of least-recently used entries, specific entry removal, and
 // existence tests.
 func TestCache(t *testing.T) {
+	t.Parallel()
+
 	// Create a bunch of fake nonces to use in testing the lru nonce code.
 	numNonces := 10
 	nonces := make([]uint64, 0, numNonces)

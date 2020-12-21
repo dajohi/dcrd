@@ -52,6 +52,8 @@ func (m mockPrioInputSource) PriorityInput(prevOut *wire.OutPoint) (int64, int64
 
 // TestCheckTransactionStandard tests the checkTransactionStandard API.
 func TestCalcPriority(t *testing.T) {
+	t.Parallel()
+
 	// Create some dummy, but otherwise standard, data for transactions.
 	prevOutHash, err := chainhash.NewHashFromStr("01")
 	if err != nil {

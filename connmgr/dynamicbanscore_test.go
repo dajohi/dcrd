@@ -15,6 +15,8 @@ import (
 // TestDynamicBanScoreDecay tests the exponential decay implemented in
 // DynamicBanScore.
 func TestDynamicBanScoreDecay(t *testing.T) {
+	t.Parallel()
+
 	var bs DynamicBanScore
 	base := time.Now()
 
@@ -37,6 +39,8 @@ func TestDynamicBanScoreDecay(t *testing.T) {
 // TestDynamicBanScoreLifetime tests that DynamicBanScore properly yields zero
 // once the maximum age is reached.
 func TestDynamicBanScoreLifetime(t *testing.T) {
+	t.Parallel()
+
 	var bs DynamicBanScore
 	base := time.Now()
 
@@ -54,6 +58,8 @@ func TestDynamicBanScoreLifetime(t *testing.T) {
 // TestDynamicBanScore tests exported functions of DynamicBanScore. Exponential
 // decay or other time based behavior is tested by other functions.
 func TestDynamicBanScoreReset(t *testing.T) {
+	t.Parallel()
+
 	var bs DynamicBanScore
 	if bs.Int() != 0 {
 		t.Errorf("Initial state is not zero.")
@@ -72,6 +78,8 @@ func TestDynamicBanScoreReset(t *testing.T) {
 // TestDynamicBanScoreStringer ensure the stringer for a dynamic ban score
 // produces the expected result.
 func TestDynamicBanScoreStringer(t *testing.T) {
+	t.Parallel()
+
 	var bs DynamicBanScore
 	persistent := uint32(100)
 	transient := uint32(50)

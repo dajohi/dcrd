@@ -9,6 +9,8 @@ import "testing"
 
 // TestServiceFlagStringer tests the stringized output for service flag types.
 func TestServiceFlagStringer(t *testing.T) {
+	t.Parallel()
+
 	tests := []struct {
 		in   ServiceFlag
 		want string
@@ -33,6 +35,8 @@ func TestServiceFlagStringer(t *testing.T) {
 
 // TestCurrencyNetStringer tests the stringized output for Decred net types.
 func TestCurrencyNetStringer(t *testing.T) {
+	t.Parallel()
+
 	tests := []struct {
 		in   CurrencyNet
 		want string

@@ -16,6 +16,8 @@ import (
 // TestVarIntSerializeSize ensures the serialize size for variable length
 // integers works as intended.
 func TestVarIntSerializeSize(t *testing.T) {
+	t.Parallel()
+
 	tests := []struct {
 		val  uint64 // Value to get the serialized size for
 		size int    // Expected serialized size
@@ -43,6 +45,8 @@ func TestVarIntSerializeSize(t *testing.T) {
 
 // TestPutVarInt ensures encoding variable length integers works as intended.
 func TestPutVarInt(t *testing.T) {
+	t.Parallel()
+
 	tests := []struct {
 		val     uint64 // Value to encode
 		encoded []byte // expected encoding
@@ -77,6 +81,8 @@ func TestPutVarInt(t *testing.T) {
 
 // TestCalcSignatureHash does some rudimentary testing of msg hash calculation.
 func TestCalcSignatureHash(t *testing.T) {
+	t.Parallel()
+
 	tx := new(wire.MsgTx)
 	tx.SerType = wire.TxSerializeFull
 	tx.Version = 1

@@ -96,6 +96,8 @@ func TestMessageError(t *testing.T) {
 // TestErrorCodeIsAs ensures both ErrorCode and MessageError can be identified
 // as being a specific error code via errors.Is and unwrapped via errors.As.
 func TestErrorCodeIsAs(t *testing.T) {
+	t.Parallel()
+
 	tests := []struct {
 		name      string
 		err       error

@@ -21,6 +21,8 @@ func decodeHash(reversedHash string) chainhash.Hash {
 }
 
 func TestEncodeConcatenatedHashes(t *testing.T) {
+	t.Parallel()
+
 	// Input Hash slice. Data taken from Decred's first three mainnet blocks.
 	hashSlice := []chainhash.Hash{
 		decodeHash("298e5cc3d985bfe7f81dc135f360abe089edd4396b86d2de66b0cef42b21d980"),
@@ -54,6 +56,8 @@ func TestEncodeConcatenatedHashes(t *testing.T) {
 }
 
 func TestDecodeConcatenatedHashes(t *testing.T) {
+	t.Parallel()
+
 	// Test data taken from Decred's first three mainnet blocks
 	testHashes := []chainhash.Hash{
 		decodeHash("298e5cc3d985bfe7f81dc135f360abe089edd4396b86d2de66b0cef42b21d980"),

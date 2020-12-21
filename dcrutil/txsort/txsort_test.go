@@ -17,6 +17,8 @@ import (
 
 // TestSort ensures the transaction sorting works as expected.
 func TestSort(t *testing.T) {
+	t.Parallel()
+
 	tests := []struct {
 		name         string
 		hexFile      string

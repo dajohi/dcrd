@@ -125,6 +125,8 @@ func checkAddressPrefixesAreConsistent(t *testing.T, privateKeyPrefix string, pa
 
 // TestDecredNetworkSettings checks Network-specific settings
 func TestDecredNetworkSettings(t *testing.T) {
+	t.Parallel()
+
 	mainNetParams := chaincfg.MainNetParams()
 	testNet3Params := chaincfg.TestNet3Params()
 	simNetParams := chaincfg.SimNetParams()

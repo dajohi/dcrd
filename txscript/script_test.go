@@ -123,6 +123,8 @@ func TestHasCanonicalPush(t *testing.T) {
 
 // TestGetSigOpCount tests that the GetSigOpCount function behaves as expected.
 func TestGetSigOpCount(t *testing.T) {
+	t.Parallel()
+
 	// This should correspond to MaxPubKeysPerMultiSig. It's intentionally
 	// not referred to here so that any changes to MaxPubKeysPerMultisig
 	// are flagged during tests.
@@ -209,6 +211,8 @@ func TestGetSigOpCount(t *testing.T) {
 	for _, tc := range testCases {
 		tc := tc
 		t.Run(tc.name, func(t *testing.T) {
+			t.Parallel()
+
 			script := mustParseShortForm(tc.script)
 			gotCount := GetSigOpCount(script, false)
 			if gotCount != tc.wantCount {

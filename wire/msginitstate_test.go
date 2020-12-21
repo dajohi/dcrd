@@ -17,6 +17,8 @@ import (
 
 // TestInitState tests the MsgInitState API.
 func TestInitState(t *testing.T) {
+	t.Parallel()
+
 	pver := ProtocolVersion
 
 	// Ensure Command() returns the expected value.
@@ -111,6 +113,8 @@ func TestInitState(t *testing.T) {
 // TestInitStateWire tests the MsgInitState wire encode and decode for various
 // numbers of responses.
 func TestInitStateWire(t *testing.T) {
+	t.Parallel()
+
 	pver := ProtocolVersion
 
 	// MsgInitState message with no response data.
@@ -237,6 +241,8 @@ func TestInitStateWire(t *testing.T) {
 // TestInitState performs negative tests against wire encode and decode of
 // MsgInitState to confirm error paths work correctly.
 func TestInitStateWireErrors(t *testing.T) {
+	t.Parallel()
+
 	pver := ProtocolVersion
 
 	fakeBlock1, _ := chainhash.NewHashFromStr("4433221144332211443322114" +

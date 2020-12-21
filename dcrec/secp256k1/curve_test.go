@@ -53,6 +53,8 @@ func (p *JacobianPoint) IsStrictlyEqual(other *JacobianPoint) bool {
 
 // TestAddJacobian tests addition of points projected in Jacobian coordinates.
 func TestAddJacobian(t *testing.T) {
+	t.Parallel()
+
 	tests := []struct {
 		x1, y1, z1 string // Coordinates (in hex) of first point to add
 		x2, y2, z2 string // Coordinates (in hex) of second point to add
@@ -281,6 +283,8 @@ func TestAddJacobian(t *testing.T) {
 
 // TestAddAffine tests addition of points in affine coordinates.
 func TestAddAffine(t *testing.T) {
+	t.Parallel()
+
 	tests := []struct {
 		x1, y1 string // Coordinates (in hex) of first point to add
 		x2, y2 string // Coordinates (in hex) of second point to add
@@ -378,6 +382,8 @@ func TestAddAffine(t *testing.T) {
 // TestDoubleJacobian tests doubling of points projected in Jacobian
 // coordinates.
 func TestDoubleJacobian(t *testing.T) {
+	t.Parallel()
+
 	tests := []struct {
 		x1, y1, z1 string // Coordinates (in hex) of point to double
 		x3, y3, z3 string // Coordinates (in hex) of expected point
@@ -455,6 +461,8 @@ func TestDoubleJacobian(t *testing.T) {
 
 // TestDoubleAffine tests doubling of points in affine coordinates.
 func TestDoubleAffine(t *testing.T) {
+	t.Parallel()
+
 	tests := []struct {
 		x1, y1 string // Coordinates (in hex) of point to double
 		x3, y3 string // Coordinates (in hex) of expected point
@@ -528,6 +536,8 @@ func TestDoubleAffine(t *testing.T) {
 }
 
 func TestBaseMultVerify(t *testing.T) {
+	t.Parallel()
+
 	s256 := S256()
 	for bytes := 1; bytes < 40; bytes++ {
 		for i := 0; i < 30; i++ {
@@ -550,6 +560,8 @@ func TestBaseMultVerify(t *testing.T) {
 }
 
 func TestScalarMult(t *testing.T) {
+	t.Parallel()
+
 	tests := []struct {
 		x  string
 		y  string
@@ -590,6 +602,8 @@ func TestScalarMult(t *testing.T) {
 }
 
 func TestScalarMultRand(t *testing.T) {
+	t.Parallel()
+
 	// Strategy for this test:
 	//
 	// Get a random exponent from the generator point at first
@@ -626,6 +640,8 @@ func TestScalarMultRand(t *testing.T) {
 }
 
 func TestSplitK(t *testing.T) {
+	t.Parallel()
+
 	tests := []struct {
 		k      string
 		k1, k2 string
@@ -711,6 +727,8 @@ func TestSplitK(t *testing.T) {
 }
 
 func TestSplitKRand(t *testing.T) {
+	t.Parallel()
+
 	for i := 0; i < 1024; i++ {
 		bytesK := make([]byte, 32)
 		_, err := rand.Read(bytesK)
@@ -749,10 +767,14 @@ func testKeyGeneration(t *testing.T, tag string) {
 }
 
 func TestKeyGeneration(t *testing.T) {
+	t.Parallel()
+
 	testKeyGeneration(t, "S256")
 }
 
 func TestNAF(t *testing.T) {
+	t.Parallel()
+
 	tests := []string{
 		"6df2b5d30854069ccdec40ae022f5c948936324a4e9ebed8eb82cfd5a6b6d766",
 		"b776e53fb55f6b006a270d42d64ec2b1",
@@ -789,6 +811,8 @@ func TestNAF(t *testing.T) {
 }
 
 func TestNAFRand(t *testing.T) {
+	t.Parallel()
+
 	negOne := big.NewInt(-1)
 	one := big.NewInt(1)
 	two := big.NewInt(2)
@@ -826,6 +850,8 @@ func TestNAFRand(t *testing.T) {
 // TestDecompressY ensures that decompressY works as expected for some edge
 // cases.
 func TestDecompressY(t *testing.T) {
+	t.Parallel()
+
 	tests := []struct {
 		name      string // test description
 		x         string // hex encoded x coordinate
@@ -932,6 +958,8 @@ func TestDecompressY(t *testing.T) {
 // TestDecompressYRandom ensures that decompressY works as expected with
 // randomly-generated x coordinates.
 func TestDecompressYRandom(t *testing.T) {
+	t.Parallel()
+
 	// Use a unique random seed each test instance and log it if the tests fail.
 	seed := time.Now().Unix()
 	rng := mrand.New(mrand.NewSource(seed))

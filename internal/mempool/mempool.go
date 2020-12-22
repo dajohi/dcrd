@@ -1232,6 +1232,19 @@ func (mp *TxPool) maybeAcceptTransaction(tx *dcrutil.Tx, isNew, rateLimit, allow
 	}
 	isVote := txType == stake.TxTypeSSGen
 
+	// Votes that are on too old of blocks are rejected.
+	if isVote {
+		_, voteHeight := stake.SSGenBlockVotedOn(msgTx)
+		if int64(voteHeight) < nextBlockHeight-int64(mp.cfg.Policy.MaxVoteAge) &&
+			!mp.cfg.Policy.AllowOldVotes {
+			str := fmt.Sprintf("transaction %v votes on old "+
+				"block height of %d which is before the "+
+				"current cutoff height of %v", tx.Hash(),
+				voteHeight, nextBlockHeight-int64(mp.cfg.Policy.MaxVoteAge))
+			return nil, txRuleError(ErrOldVote, str)
+		}
+	}
+
 	var isTreasuryBase, isTSpend bool
 	if isTreasuryEnabled {
 		isTSpend = txType == stake.TxTypeTSpend
@@ -1346,19 +1359,6 @@ func (mp *TxPool) maybeAcceptTransaction(tx *dcrutil.Tx, isNew, rateLimit, allow
 					return nil, txRuleError(ErrDuplicateRevocation, str)
 				}
 			}
-		}
-	}
-
-	// Votes that are on too old of blocks are rejected.
-	if isVote {
-		_, voteHeight := stake.SSGenBlockVotedOn(msgTx)
-		if int64(voteHeight) < nextBlockHeight-int64(mp.cfg.Policy.MaxVoteAge) &&
-			!mp.cfg.Policy.AllowOldVotes {
-			str := fmt.Sprintf("transaction %v votes on old "+
-				"block height of %d which is before the "+
-				"current cutoff height of %v", tx.Hash(),
-				voteHeight, nextBlockHeight-int64(mp.cfg.Policy.MaxVoteAge))
-			return nil, txRuleError(ErrOldVote, str)
 		}
 	}
 

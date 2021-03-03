@@ -132,7 +132,7 @@ func newMemWallet(t *testing.T, net *chaincfg.Params, harnessID uint32) (*memWal
 
 	hdRoot, err := hdkeychain.NewMaster(harnessHDSeed[:], net)
 	if err != nil {
-		return nil, nil
+		return nil, err
 	}
 
 	// The first child key from the hd root is reserved as the coinbase

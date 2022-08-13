@@ -217,7 +217,7 @@ func New(t *testing.T, activeNet *chaincfg.Params, handlers *rpcclient.Notificat
 	h := &Harness{
 		handlers:       handlers,
 		node:           node,
-		maxConnRetries: 20,
+		maxConnRetries: 2000,
 		testNodeDir:    nodeTestData,
 		ActiveNet:      activeNet,
 		nodeNum:        nodeNum,

@@ -44,6 +44,7 @@ for module in $MODPATHS; do
       --enable=govet \
       --enable=misspell \
       --enable=deadcode \
+      --enable=reassign \
   )
 done
 

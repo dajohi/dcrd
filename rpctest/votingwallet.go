@@ -205,7 +205,7 @@ func NewVotingWallet(ctx context.Context, hn *Harness) (*VotingWallet, error) {
 
 	rpcConf := hn.RPCConfig()
 	for i := 0; i < 20; i++ {
-		if w.c, err = rpcclient.New(&rpcConf, handlers); err != nil {
+		if w.c, err = rpcclient.New(ctx, &rpcConf, handlers); err != nil {
 			time.Sleep(time.Duration(i) * 50 * time.Millisecond)
 			continue
 		}
@@ -246,7 +246,7 @@ func (w *VotingWallet) Start(ctx context.Context) error {
 		outputs[i] = wire.NewTxOut(value, w.p2pkh)
 	}
 
-	txid, err := w.hn.SendOutputs(outputs, feeRate)
+	txid, err := w.hn.SendOutputs(ctx, outputs, feeRate)
 	if err != nil {
 		return fmt.Errorf("unable to fund voting wallet: %v", err)
 	}

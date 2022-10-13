@@ -239,16 +239,15 @@ func New(t *testing.T, activeNet *chaincfg.Params, handlers *rpcclient.Notificat
 //
 // NOTE: This method and TearDown should always be called from the same
 // goroutine as they are not concurrent safe.
-func (h *Harness) SetUp(createTestChain bool, numMatureOutputs uint32) error {
+func (h *Harness) SetUp(ctx context.Context, createTestChain bool, numMatureOutputs uint32) error {
 	// Start the dcrd node itself. This spawns a new process which will be
 	// managed
 	if err := h.node.start(); err != nil {
 		return err
 	}
-	if err := h.connectRPCClient(); err != nil {
+	if err := h.connectRPCClient(ctx); err != nil {
 		return err
 	}
-	ctx := context.Background()
 	h.wallet.Start()
 
 	// Filter transactions that pay to the coinbase associated with the
@@ -335,13 +334,13 @@ func (h *Harness) TearDown() error {
 // the time between subsequent attempts. If after h.maxConnRetries attempts,
 // we're not able to establish a connection, this function returns with an
 // error.
-func (h *Harness) connectRPCClient() error {
+func (h *Harness) connectRPCClient(ctx context.Context) error {
 	var client *rpcclient.Client
 	var err error
 
 	rpcConf := h.node.config.rpcConnConfig()
 	for i := 0; i < h.maxConnRetries; i++ {
-		if client, err = rpcclient.New(&rpcConf, h.handlers); err != nil {
+		if client, err = rpcclient.New(ctx, &rpcConf, h.handlers); err != nil {
 			time.Sleep(time.Duration(i) * 50 * time.Millisecond)
 			continue
 		}
@@ -361,8 +360,8 @@ func (h *Harness) connectRPCClient() error {
 // wallet.
 //
 // This function is safe for concurrent access.
-func (h *Harness) NewAddress() (stdaddr.Address, error) {
-	return h.wallet.NewAddress()
+func (h *Harness) NewAddress(ctx context.Context) (stdaddr.Address, error) {
+	return h.wallet.NewAddress(ctx)
 }
 
 // ConfirmedBalance returns the confirmed balance of the Harness' internal
@@ -378,8 +377,8 @@ func (h *Harness) ConfirmedBalance() dcrutil.Amount {
 // according to targetOutputs.
 //
 // This function is safe for concurrent access.
-func (h *Harness) SendOutputs(targetOutputs []*wire.TxOut, feeRate dcrutil.Amount) (*chainhash.Hash, error) {
-	return h.wallet.SendOutputs(targetOutputs, feeRate)
+func (h *Harness) SendOutputs(ctx context.Context, targetOutputs []*wire.TxOut, feeRate dcrutil.Amount) (*chainhash.Hash, error) {
+	return h.wallet.SendOutputs(ctx, targetOutputs, feeRate)
 }
 
 // CreateTransaction returns a fully signed transaction paying to the specified
@@ -392,8 +391,8 @@ func (h *Harness) SendOutputs(targetOutputs []*wire.TxOut, feeRate dcrutil.Amoun
 // returned to the pool of spendable outputs.
 //
 // This function is safe for concurrent access.
-func (h *Harness) CreateTransaction(targetOutputs []*wire.TxOut, feeRate dcrutil.Amount) (*wire.MsgTx, error) {
-	return h.wallet.CreateTransaction(targetOutputs, feeRate)
+func (h *Harness) CreateTransaction(ctx context.Context, targetOutputs []*wire.TxOut, feeRate dcrutil.Amount) (*wire.MsgTx, error) {
+	return h.wallet.CreateTransaction(ctx, targetOutputs, feeRate)
 }
 
 // UnlockOutputs unlocks any outputs which were previously marked as

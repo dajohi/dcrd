@@ -690,7 +690,7 @@ out:
 			default:
 			}
 
-			wsConn, err := dial(c.config)
+			wsConn, err := dial(ctx, c.config)
 			if err != nil {
 				retryCount++
 				log.Infof("Failed to connect to %s: %v",
@@ -1204,7 +1204,7 @@ func newHTTPClient(config *ConnConfig) (*http.Client, error) {
 
 // dial opens a websocket connection using the passed connection configuration
 // details.
-func dial(config *ConnConfig) (*websocket.Conn, error) {
+func dial(ctx context.Context, config *ConnConfig) (*websocket.Conn, error) {
 	// Setup TLS if not disabled.
 	var tlsConfig *tls.Config
 	var scheme = "ws"
@@ -1231,7 +1231,7 @@ func dial(config *ConnConfig) (*websocket.Conn, error) {
 			Username: config.ProxyUser,
 			Password: config.ProxyPass,
 		}
-		dialer.NetDial = proxy.Dial
+		dialer.NetDialContext = proxy.DialContext
 	}
 
 	// The RPC server requires basic authorization, so create a custom
@@ -1243,7 +1243,7 @@ func dial(config *ConnConfig) (*websocket.Conn, error) {
 
 	// Dial the connection.
 	url := fmt.Sprintf("%s://%s/%s", scheme, config.Host, config.Endpoint)
-	wsConn, resp, err := dialer.Dial(url, requestHeader)
+	wsConn, resp, err := dialer.DialContext(ctx, url, requestHeader)
 	if resp != nil {
 		resp.Body.Close()
 	}
@@ -1301,7 +1301,7 @@ func (c *Client) keepAlive() {
 // details.  The notification handlers parameter may be nil if you are not
 // interested in receiving notifications and will be ignored if the
 // configuration is set to run in HTTP POST mode.
-func New(config *ConnConfig, ntfnHandlers *NotificationHandlers) (*Client, error) {
+func New(ctx context.Context, config *ConnConfig, ntfnHandlers *NotificationHandlers) (*Client, error) {
 	// Either open a websocket connection or create an HTTP client depending
 	// on the HTTP POST mode.  Also, set the notification handlers to nil
 	// when running in HTTP POST mode.
@@ -1321,7 +1321,7 @@ func New(config *ConnConfig, ntfnHandlers *NotificationHandlers) (*Client, error
 	} else {
 		if !config.DisableConnectOnNew {
 			var err error
-			wsConn, err = dial(config)
+			wsConn, err = dial(ctx, config)
 			if err != nil {
 				return nil, err
 			}
@@ -1350,7 +1350,7 @@ func New(config *ConnConfig, ntfnHandlers *NotificationHandlers) (*Client, error
 		client.start()
 		if !client.config.HTTPPostMode && !client.config.DisableAutoReconnect {
 			client.wg.Add(2)
-			go client.wsReconnectHandler(context.TODO())
+			go client.wsReconnectHandler(ctx)
 			go client.keepAlive()
 		}
 	}
@@ -1393,7 +1393,7 @@ func (c *Client) Connect(ctx context.Context, retry bool) error {
 	// attempt, up to a maximum of one minute.
 	var backoff time.Duration
 	for {
-		wsConn, err := dial(c.config)
+		wsConn, err := dial(ctx, c.config)
 		if err != nil {
 			if !retry {
 				return err

@@ -43,13 +43,13 @@ func main() {
 		Pass:         "yourrpcpass",
 		Certificates: certs,
 	}
-	client, err := rpcclient.New(connCfg, &ntfnHandlers)
+	ctx := context.Background()
+	client, err := rpcclient.New(ctx, connCfg, &ntfnHandlers)
 	if err != nil {
 		log.Fatal(err)
 	}
 
 	// Register for block connect and disconnect notifications.
-	ctx := context.Background()
 	if err := client.NotifyBlocks(ctx); err != nil {
 		log.Fatal(err)
 	}

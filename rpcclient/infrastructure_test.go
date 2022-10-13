@@ -4,7 +4,10 @@
 
 package rpcclient
 
-import "testing"
+import (
+	"context"
+	"testing"
+)
 
 func TestClientStringer(t *testing.T) {
 	type test struct {
@@ -25,7 +28,7 @@ func TestClientStringer(t *testing.T) {
 			DisableTLS:          false,
 			DisableConnectOnNew: true,
 		}
-		c, err := New(cfg, nil)
+		c, err := New(context.Background(), cfg, nil)
 		if err != nil {
 			t.Errorf("%v rpcclient.New: %v", test.url, err)
 			continue

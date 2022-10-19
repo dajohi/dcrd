@@ -734,7 +734,7 @@ func (g *BgBlkTmplGenerator) genTemplateAsync(ctx context.Context, reason Templa
 		// pays to it.
 		prng := rand.New(rand.NewSource(time.Now().Unix()))
 		payToAddr := g.cfg.MiningAddrs[prng.Intn(len(g.cfg.MiningAddrs))]
-		template, err := g.tg.NewBlockTemplate(payToAddr)
+		template, err := g.tg.NewBlockTemplate(ctx, payToAddr)
 		// NOTE: err is handled below.
 		if err != nil {
 			log.Tracef("NewBlockTemplate: %v", err)
@@ -1093,7 +1093,7 @@ func (g *BgBlkTmplGenerator) handleVote(ctx context.Context, state *regenHandler
 		log.Debugf("Received vote %s for side chain block %s (%d total)",
 			voteTx.Hash(), votedOnHash, numVotes)
 		if numVotes >= g.minVotesRequired {
-			err := g.tg.cfg.ForceHeadReorganization(chainTip.Hash, votedOnHash)
+			err := g.tg.cfg.ForceHeadReorganization(ctx, chainTip.Hash, votedOnHash)
 			if err != nil {
 				return
 			}
@@ -1298,7 +1298,7 @@ func (g *BgBlkTmplGenerator) handleTrackSideChainsTimeout(ctx context.Context, s
 	sortedSiblings := g.tipSiblingsSortedByVotes(state)
 	for _, sibling := range sortedSiblings {
 		if sibling.NumVotes >= g.minVotesRequired {
-			err := g.tg.cfg.ForceHeadReorganization(*state.awaitingMinVotesHash,
+			err := g.tg.cfg.ForceHeadReorganization(ctx, *state.awaitingMinVotesHash,
 				sibling.Hash)
 			if err != nil {
 				// Try the next block in the case of failure to reorg.

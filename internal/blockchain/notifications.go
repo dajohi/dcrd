@@ -6,6 +6,7 @@
 package blockchain
 
 import (
+	"context"
 	"fmt"
 
 	"github.com/decred/dcrd/chaincfg/chainhash"
@@ -17,7 +18,7 @@ type NotificationType int
 
 // NotificationCallback is used for a caller to provide a callback for
 // notifications about various chain events.
-type NotificationCallback func(*Notification)
+type NotificationCallback func(context.Context, *Notification)
 
 // Constants for the type of a notification message.
 const (
@@ -180,7 +181,7 @@ type Notification struct {
 // sendNotification sends a notification with the passed type and data if the
 // caller requested notifications by providing a callback function in the call
 // to New.
-func (b *BlockChain) sendNotification(typ NotificationType, data interface{}) {
+func (b *BlockChain) sendNotification(ctx context.Context, typ NotificationType, data interface{}) {
 	// Ignore it if the caller didn't request notifications.
 	if b.notifications == nil {
 		return
@@ -188,5 +189,5 @@ func (b *BlockChain) sendNotification(typ NotificationType, data interface{}) {
 
 	// Generate and send the notification.
 	n := Notification{Type: typ, Data: data}
-	b.notifications(&n)
+	b.notifications(ctx, &n)
 }

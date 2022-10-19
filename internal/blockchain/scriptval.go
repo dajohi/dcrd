@@ -109,7 +109,7 @@ out:
 
 // Validate validates the scripts for all of the passed transaction inputs using
 // multiple goroutines.
-func (v *txValidator) Validate(items []*txValidateItem) error {
+func (v *txValidator) Validate(ctx context.Context, items []*txValidateItem) error {
 	if len(items) == 0 {
 		return nil
 	}
@@ -127,7 +127,7 @@ func (v *txValidator) Validate(items []*txValidateItem) error {
 
 	// Start up validation handlers that are used to asynchronously
 	// validate each transaction input.
-	ctx, cancel := context.WithCancel(context.Background())
+	ctx, cancel := context.WithCancel(ctx)
 	for i := 0; i < maxGoRoutines; i++ {
 		go v.validateHandler(ctx)
 	}
@@ -180,9 +180,9 @@ func newTxValidator(prevScripts PrevScripter, flags txscript.ScriptFlags, sigCac
 
 // ValidateTransactionScripts validates the scripts for the passed transaction
 // using multiple goroutines.
-func ValidateTransactionScripts(tx *dcrutil.Tx, prevScripts PrevScripter,
-	flags txscript.ScriptFlags, sigCache *txscript.SigCache,
-	isAutoRevocationsEnabled bool) error {
+func ValidateTransactionScripts(ctx context.Context, tx *dcrutil.Tx,
+	prevScripts PrevScripter, flags txscript.ScriptFlags,
+	sigCache *txscript.SigCache, isAutoRevocationsEnabled bool) error {
 
 	// Skip revocations if the automatic ticket revocations agenda is active and
 	// the transaction version is greater than or equal to 2.  This is allowed
@@ -215,15 +215,15 @@ func ValidateTransactionScripts(tx *dcrutil.Tx, prevScripts PrevScripter,
 	}
 
 	// Validate all of the inputs.
-	return newTxValidator(prevScripts, flags, sigCache).Validate(txValItems)
+	return newTxValidator(prevScripts, flags, sigCache).Validate(ctx, txValItems)
 }
 
 // checkBlockScripts executes and validates the scripts for all transactions in
 // the passed block using multiple goroutines.
 // txTree = true is TxTreeRegular, txTree = false is TxTreeStake.
-func checkBlockScripts(block *dcrutil.Block, utxoView *UtxoViewpoint, txTree bool,
-	scriptFlags txscript.ScriptFlags, sigCache *txscript.SigCache,
-	isAutoRevocationsEnabled bool) error {
+func checkBlockScripts(ctx context.Context, block *dcrutil.Block,
+	utxoView *UtxoViewpoint, txTree bool, scriptFlags txscript.ScriptFlags,
+	sigCache *txscript.SigCache, isAutoRevocationsEnabled bool) error {
 
 	// Collect all of the transaction inputs and required information for
 	// validation for all transactions in the block into a single slice.
@@ -270,5 +270,5 @@ func checkBlockScripts(block *dcrutil.Block, utxoView *UtxoViewpoint, txTree boo
 	}
 
 	// Validate all of the inputs.
-	return newTxValidator(utxoView, scriptFlags, sigCache).Validate(txValItems)
+	return newTxValidator(utxoView, scriptFlags, sigCache).Validate(ctx, txValItems)
 }

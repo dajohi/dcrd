@@ -6,6 +6,7 @@
 package mempool
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"sync"
@@ -1186,8 +1187,8 @@ func (mp *TxPool) MaybeAcceptDependents(tx *dcrutil.Tx, isTreasuryEnabled bool) 
 // so that we can easily pick different stake tx types from the mempool later.
 // This should probably be done at the bottom using "IsSStx" etc functions.
 // It should also set the dcrutil tree type for the tx as well.
-func (mp *TxPool) maybeAcceptTransaction(tx *dcrutil.Tx, isNew, allowHighFees,
-	rejectDupOrphans bool,
+func (mp *TxPool) maybeAcceptTransaction(ctx context.Context, tx *dcrutil.Tx,
+	isNew, allowHighFees, rejectDupOrphans bool,
 	checkTxFlags blockchain.AgendaFlags) ([]*chainhash.Hash, error) {
 
 	msgTx := tx.MsgTx()
@@ -1626,7 +1627,7 @@ func (mp *TxPool) maybeAcceptTransaction(tx *dcrutil.Tx, isNew, allowHighFees,
 	if err != nil {
 		return nil, err
 	}
-	err = blockchain.ValidateTransactionScripts(tx, utxoView, flags,
+	err = blockchain.ValidateTransactionScripts(ctx, tx, utxoView, flags,
 		mp.cfg.SigCache, isAutoRevocationsEnabled)
 	if err != nil {
 		var cerr blockchain.RuleError
@@ -1806,7 +1807,7 @@ func (mp *TxPool) determineCheckTxFlags() (blockchain.AgendaFlags, error) {
 // rules, orphan transaction handling, and insertion into the memory pool.
 //
 // This function is safe for concurrent access.
-func (mp *TxPool) MaybeAcceptTransaction(tx *dcrutil.Tx, isNew bool) ([]*chainhash.Hash, error) {
+func (mp *TxPool) MaybeAcceptTransaction(ctx context.Context, tx *dcrutil.Tx, isNew bool) ([]*chainhash.Hash, error) {
 	// Create agenda flags for checking transactions based on which ones are
 	// active or should otherwise always be enforced.
 	checkTxFlags, err := mp.determineCheckTxFlags()
@@ -1816,7 +1817,7 @@ func (mp *TxPool) MaybeAcceptTransaction(tx *dcrutil.Tx, isNew bool) ([]*chainha
 
 	// Protect concurrent access.
 	mp.mtx.Lock()
-	hashes, err := mp.maybeAcceptTransaction(tx, isNew, true, true,
+	hashes, err := mp.maybeAcceptTransaction(ctx, tx, isNew, true, true,
 		checkTxFlags)
 	mp.mtx.Unlock()
 
@@ -1849,7 +1850,7 @@ func isDoubleSpendOrDuplicateError(err error) bool {
 // use other mempool functions when adding new transactions to the mempool.
 //
 // This function is safe for concurrent access.
-func (mp *TxPool) MaybeAcceptTransactions(txns []*dcrutil.Tx) error {
+func (mp *TxPool) MaybeAcceptTransactions(ctx context.Context, txns []*dcrutil.Tx) error {
 	// Create agenda flags for checking transactions based on which ones are
 	// active or should otherwise always be enforced.
 	checkTxFlags, err := mp.determineCheckTxFlags()
@@ -1867,7 +1868,7 @@ func (mp *TxPool) MaybeAcceptTransactions(txns []*dcrutil.Tx) error {
 	for i := len(txns) - 1; i >= 0; i-- {
 		tx := txns[i]
 		delete(transientPool, *tx.Hash())
-		_, err := mp.maybeAcceptTransaction(tx, false, true, true, checkTxFlags)
+		_, err := mp.maybeAcceptTransaction(ctx, tx, false, true, true, checkTxFlags)
 		if err != nil && !isDoubleSpendOrDuplicateError(err) {
 			mp.removeTransaction(tx, true)
 			continue
@@ -1892,7 +1893,7 @@ func (mp *TxPool) MaybeAcceptTransactions(txns []*dcrutil.Tx) error {
 // ProcessOrphans.  See the comment for ProcessOrphans for more details.
 //
 // This function MUST be called with the mempool lock held (for writes).
-func (mp *TxPool) processOrphans(acceptedTx *dcrutil.Tx, checkTxFlags blockchain.AgendaFlags) []*dcrutil.Tx {
+func (mp *TxPool) processOrphans(ctx context.Context, acceptedTx *dcrutil.Tx, checkTxFlags blockchain.AgendaFlags) []*dcrutil.Tx {
 	var acceptedTxns []*dcrutil.Tx
 
 	// Start with processing at least the passed transaction.
@@ -1930,8 +1931,8 @@ func (mp *TxPool) processOrphans(acceptedTx *dcrutil.Tx, checkTxFlags blockchain
 
 			// Potentially accept an orphan into the tx pool.
 			for _, tx := range orphans {
-				missing, err := mp.maybeAcceptTransaction(tx, true, true, false,
-					checkTxFlags)
+				missing, err := mp.maybeAcceptTransaction(ctx, tx,
+					true, true, false, checkTxFlags)
 				if err != nil {
 					// The orphan is now invalid, so there
 					// is no way any other orphans which
@@ -2102,9 +2103,9 @@ func (mp *TxPool) PruneExpiredTx() {
 // no transactions were moved from the orphan pool to the mempool.
 //
 // This function is safe for concurrent access.
-func (mp *TxPool) ProcessOrphans(acceptedTx *dcrutil.Tx, checkTxFlags blockchain.AgendaFlags) []*dcrutil.Tx {
+func (mp *TxPool) ProcessOrphans(ctx context.Context, acceptedTx *dcrutil.Tx, checkTxFlags blockchain.AgendaFlags) []*dcrutil.Tx {
 	mp.mtx.Lock()
-	acceptedTxns := mp.processOrphans(acceptedTx, checkTxFlags)
+	acceptedTxns := mp.processOrphans(ctx, acceptedTx, checkTxFlags)
 	mp.mtx.Unlock()
 	return acceptedTxns
 }
@@ -2120,7 +2121,7 @@ func (mp *TxPool) ProcessOrphans(acceptedTx *dcrutil.Tx, checkTxFlags blockchain
 // passed one being accepted.
 //
 // This function is safe for concurrent access.
-func (mp *TxPool) ProcessTransaction(tx *dcrutil.Tx, allowOrphan, allowHighFees bool, tag Tag) ([]*dcrutil.Tx, error) {
+func (mp *TxPool) ProcessTransaction(ctx context.Context, tx *dcrutil.Tx, allowOrphan, allowHighFees bool, tag Tag) ([]*dcrutil.Tx, error) {
 	// Create agenda flags for checking transactions based on which ones are
 	// active or should otherwise always be enforced.
 	checkTxFlags, err := mp.determineCheckTxFlags()
@@ -2139,7 +2140,7 @@ func (mp *TxPool) ProcessTransaction(tx *dcrutil.Tx, allowOrphan, allowHighFees 
 	}()
 
 	// Potentially accept the transaction to the memory pool.
-	missingParents, err := mp.maybeAcceptTransaction(tx, true, allowHighFees,
+	missingParents, err := mp.maybeAcceptTransaction(ctx, tx, true, allowHighFees,
 		true, checkTxFlags)
 	if err != nil {
 		return nil, err
@@ -2151,7 +2152,7 @@ func (mp *TxPool) ProcessTransaction(tx *dcrutil.Tx, allowOrphan, allowHighFees 
 		// transaction (they may no longer be orphans if all inputs
 		// are now available) and repeat for those accepted
 		// transactions until there are no more.
-		newTxs := mp.processOrphans(tx, checkTxFlags)
+		newTxs := mp.processOrphans(ctx, tx, checkTxFlags)
 		acceptedTxs := make([]*dcrutil.Tx, len(newTxs)+1)
 
 		// Add the parent transaction first so remote nodes

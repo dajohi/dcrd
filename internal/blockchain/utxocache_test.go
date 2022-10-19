@@ -1301,7 +1301,8 @@ func TestMaybeFlush(t *testing.T) {
 func TestInitialize(t *testing.T) {
 	// Create a test harness initialized with the genesis block as the tip.
 	params := chaincfg.RegNetParams()
-	g := newChaingenHarness(t, params)
+	ctx := context.Background()
+	g := newChaingenHarness(ctx, t, params)
 
 	// -------------------------------------------------------------------------
 	// Create some convenience functions to improve test readability.
@@ -1355,7 +1356,7 @@ func TestInitialize(t *testing.T) {
 
 	// Disable flushing and advance the chain.
 	testUtxoCache.disableFlush = true
-	g.AdvanceToStakeValidationHeight()
+	g.AdvanceToStakeValidationHeight(ctx)
 
 	// Validate that the tip is at stake validation height but the utxo set
 	// state is still at the genesis block.
@@ -1377,12 +1378,12 @@ func TestInitialize(t *testing.T) {
 	outs := g.OldestCoinbaseOuts()
 	g.NextBlock("b0", &outs[0], outs[1:])
 	g.SaveTipCoinbaseOuts()
-	g.AcceptTipBlock()
+	g.AcceptTipBlock(ctx)
 
 	outs = g.OldestCoinbaseOuts()
 	b1 := g.NextBlock("b1", &outs[0], outs[1:])
 	g.SaveTipCoinbaseOuts()
-	g.AcceptTipBlock()
+	g.AcceptTipBlock(ctx)
 
 	// Force a cache flush and validate that the cache is caught up to block b1.
 	forceFlush(testUtxoCache)
@@ -1429,8 +1430,8 @@ func TestInitialize(t *testing.T) {
 	// Force a reorg as described above.
 	g.SetTip("b0")
 	g.NextBlock("b1a", &outs[0], outs[1:])
-	g.AcceptedToSideChainWithExpectedTip("b1")
-	g.ForceTipReorg("b1", "b1a")
+	g.AcceptedToSideChainWithExpectedTip(ctx, "b1")
+	g.ForceTipReorg(ctx, "b1", "b1a")
 
 	// Restore the spend journal entry for block b1.
 	err = g.chain.db.Update(func(dbTx database.Tx) error {
@@ -1471,7 +1472,7 @@ func TestInitialize(t *testing.T) {
 	outs = g.OldestCoinbaseOuts()
 	g.SetTip("b1")
 	b2bad := g.NextBlock("b2bad", &outs[0], outs[1:])
-	g.AcceptTipBlock()
+	g.AcceptTipBlock(ctx)
 	forceFlush(testUtxoCache)
 	g.ExpectUtxoSetState("b2bad")
 
@@ -1500,7 +1501,7 @@ func TestInitialize(t *testing.T) {
 
 	// Invalidate the previously connected block so that it is disconnected and
 	// ensure the flushed utxo cache state is still at the invalidated block.
-	g.InvalidateBlockAndExpectTip("b2bad", nil, "b1")
+	g.InvalidateBlockAndExpectTip(ctx, "b2bad", nil, "b1")
 	g.ExpectUtxoSetState("b2bad")
 
 	// Restore the spend journal entry for the invalidated block per the above.
@@ -1523,7 +1524,8 @@ func TestInitialize(t *testing.T) {
 func TestShutdownUtxoCache(t *testing.T) {
 	// Create a test harness initialized with the genesis block as the tip.
 	params := chaincfg.RegNetParams()
-	g := newChaingenHarness(t, params)
+	ctx := context.Background()
+	g := newChaingenHarness(ctx, t, params)
 
 	// Replace the chain utxo cache with a test cache so that flushing can be
 	// disabled.
@@ -1558,7 +1560,7 @@ func TestShutdownUtxoCache(t *testing.T) {
 
 	// Disable flushing and advance the chain.
 	testUtxoCache.disableFlush = true
-	g.AdvanceToStakeValidationHeight()
+	g.AdvanceToStakeValidationHeight(ctx)
 
 	// Validate that the tip is at stake validation height but the utxo set
 	// state is still at the genesis block.

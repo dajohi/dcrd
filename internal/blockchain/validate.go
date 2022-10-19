@@ -7,6 +7,7 @@ package blockchain
 
 import (
 	"bytes"
+	"context"
 	"encoding/binary"
 	"errors"
 	"fmt"
@@ -3806,7 +3807,10 @@ func (b *BlockChain) tspendChecks(prevNode *blockNode, block *dcrutil.Block) err
 // the bulk of its work.
 //
 // This function MUST be called with the chain state lock held (for writes).
-func (b *BlockChain) checkConnectBlock(node *blockNode, block, parent *dcrutil.Block, view *UtxoViewpoint, stxos *[]spentTxOut, hdrCommitments *headerCommitmentData) error {
+func (b *BlockChain) checkConnectBlock(ctx context.Context, node *blockNode,
+	block, parent *dcrutil.Block, view *UtxoViewpoint, stxos *[]spentTxOut,
+	hdrCommitments *headerCommitmentData) error {
+
 	// Ensure the view is for the node being checked.
 	parentHash := &block.MsgBlock().Header.PrevBlock
 	if !view.BestHash().IsEqual(parentHash) {
@@ -3950,7 +3954,7 @@ func (b *BlockChain) checkConnectBlock(node *blockNode, block, parent *dcrutil.B
 	}
 
 	if runScripts {
-		err = checkBlockScripts(block, view, false, scriptFlags,
+		err = checkBlockScripts(ctx, block, view, false, scriptFlags,
 			b.sigCache, isAutoRevocationsEnabled)
 		if err != nil {
 			log.Tracef("checkBlockScripts failed; error returned "+
@@ -4042,7 +4046,7 @@ func (b *BlockChain) checkConnectBlock(node *blockNode, block, parent *dcrutil.B
 	}
 
 	if runScripts {
-		err = checkBlockScripts(block, view, true, scriptFlags,
+		err = checkBlockScripts(ctx, block, view, true, scriptFlags,
 			b.sigCache, isAutoRevocationsEnabled)
 		if err != nil {
 			log.Tracef("checkBlockScripts failed; error returned "+
@@ -4073,7 +4077,7 @@ func (b *BlockChain) checkConnectBlock(node *blockNode, block, parent *dcrutil.B
 // the current tip of the main chain or its parent.
 //
 // This function is safe for concurrent access.
-func (b *BlockChain) CheckConnectBlockTemplate(block *dcrutil.Block) error {
+func (b *BlockChain) CheckConnectBlockTemplate(ctx context.Context, block *dcrutil.Block) error {
 	b.chainLock.Lock()
 	defer b.chainLock.Unlock()
 
@@ -4139,7 +4143,7 @@ func (b *BlockChain) CheckConnectBlockTemplate(block *dcrutil.Block) error {
 		view := NewUtxoViewpoint(b.utxoCache)
 		view.SetBestHash(&tip.hash)
 
-		return b.checkConnectBlock(newNode, block, parent, view, nil, nil)
+		return b.checkConnectBlock(ctx, newNode, block, parent, view, nil, nil)
 	}
 
 	// At this point, the block template must be building on the parent of the
@@ -4182,7 +4186,7 @@ func (b *BlockChain) CheckConnectBlockTemplate(block *dcrutil.Block) error {
 	// The view is now from the point of view of the parent of the current tip
 	// block.  Ensure the block template can be connected without violating any
 	// rules.
-	return b.checkConnectBlock(newNode, block, parent, view, nil, nil)
+	return b.checkConnectBlock(ctx, newNode, block, parent, view, nil, nil)
 }
 
 // checkTicketExhaustion ensures that extending the provided block with a block

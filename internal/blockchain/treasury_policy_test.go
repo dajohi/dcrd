@@ -5,6 +5,7 @@
 package blockchain
 
 import (
+	"context"
 	"fmt"
 	"testing"
 
@@ -74,7 +75,8 @@ func TestTSpendLegacyExpendituresPolicy(t *testing.T) {
 		params.TreasuryExpenditureBootstrap/2)
 
 	// Create a test harness initialized with the genesis block as the tip.
-	g := newChaingenHarness(t, params)
+	ctx := context.Background()
+	g := newChaingenHarness(ctx, t, params)
 
 	// Helper to verify the tip balance.
 	assertTipTreasuryBalance := func(wantBalance int64) {
@@ -103,8 +105,8 @@ func TestTSpendLegacyExpendituresPolicy(t *testing.T) {
 	// to reach one block prior to the treasury agenda becoming active.
 	// ---------------------------------------------------------------------
 
-	g.AdvanceToStakeValidationHeight()
-	g.AdvanceFromSVHToActiveAgendas(tVoteID)
+	g.AdvanceToStakeValidationHeight(ctx)
+	g.AdvanceFromSVHToActiveAgendas(ctx, tVoteID)
 
 	// Ensure treasury agenda is active.
 	tipHash := &g.chain.BestSnapshot().Hash
@@ -145,7 +147,7 @@ func TestTSpendLegacyExpendituresPolicy(t *testing.T) {
 		g.NextBlock(name, nil, outs[1:], replaceTreasuryVersions,
 			replaceCoinbase)
 		g.SaveTipCoinbaseOutsWithTreasury()
-		g.AcceptTipBlock()
+		g.AcceptTipBlock(ctx)
 		outs = g.OldestCoinbaseOuts()
 		tbaseBlocks++
 	}
@@ -161,7 +163,7 @@ func TestTSpendLegacyExpendituresPolicy(t *testing.T) {
 	g.NextBlock("btfund", nil, outs[1:], replaceTreasuryVersions,
 		replaceCoinbase)
 	g.SaveTipCoinbaseOutsWithTreasury()
-	g.AcceptTipBlock()
+	g.AcceptTipBlock(ctx)
 	outs = g.OldestCoinbaseOuts()
 	tbaseBlocks++
 
@@ -188,7 +190,7 @@ func TestTSpendLegacyExpendituresPolicy(t *testing.T) {
 		g.NextBlock(name, nil, outs[1:], replaceTreasuryVersions,
 			replaceCoinbase)
 		g.SaveTipCoinbaseOutsWithTreasury()
-		g.AcceptTipBlock()
+		g.AcceptTipBlock(ctx)
 		outs = g.OldestCoinbaseOuts()
 		tbaseBlocks++
 	}
@@ -241,7 +243,7 @@ func TestTSpendLegacyExpendituresPolicy(t *testing.T) {
 			addTSpendVotes(t, tspendHashes, tspendVotes, voteCount,
 				false))
 		g.SaveTipCoinbaseOutsWithTreasury()
-		g.AcceptTipBlock()
+		g.AcceptTipBlock(ctx)
 		outs = g.OldestCoinbaseOuts()
 		tbaseBlocks++
 	}
@@ -260,7 +262,7 @@ func TestTSpendLegacyExpendituresPolicy(t *testing.T) {
 			b.AddSTransaction(tadd)
 		})
 	g.SaveTipCoinbaseOutsWithTreasury()
-	g.AcceptTipBlock()
+	g.AcceptTipBlock(ctx)
 	outs = g.OldestCoinbaseOuts()
 	tbaseBlocks++
 	tspendsMinedHeight := g.Tip().Header.Height
@@ -278,7 +280,7 @@ func TestTSpendLegacyExpendituresPolicy(t *testing.T) {
 		g.NextBlock(name, nil, outs[1:], replaceTreasuryVersions,
 			replaceCoinbase)
 		g.SaveTipCoinbaseOutsWithTreasury()
-		g.AcceptTipBlock()
+		g.AcceptTipBlock(ctx)
 		outs = g.OldestCoinbaseOuts()
 		tbaseBlocks++
 	}
@@ -321,7 +323,7 @@ func TestTSpendLegacyExpendituresPolicy(t *testing.T) {
 			addTSpendVotes(t, tspendHashes, tspendVotes, voteCount,
 				false))
 		g.SaveTipCoinbaseOutsWithTreasury()
-		g.AcceptTipBlock()
+		g.AcceptTipBlock(ctx)
 		outs = g.OldestCoinbaseOuts()
 		tbaseBlocks++
 	}
@@ -337,7 +339,7 @@ func TestTSpendLegacyExpendituresPolicy(t *testing.T) {
 		func(b *wire.MsgBlock) {
 			b.AddSTransaction(smallTSpend)
 		})
-	g.RejectTipBlock(ErrInvalidExpenditure)
+	g.RejectTipBlock(ctx, ErrInvalidExpenditure)
 	g.SetTip(tipName)
 
 	// The next part of the test will attempt to mine some tspends on the
@@ -365,7 +367,7 @@ func TestTSpendLegacyExpendituresPolicy(t *testing.T) {
 			addTSpendVotes(t, tspendHashes, tspendVotes, voteCount,
 				false))
 		g.SaveTipCoinbaseOutsWithTreasury()
-		g.AcceptTipBlock()
+		g.AcceptTipBlock(ctx)
 		outs = g.OldestCoinbaseOuts()
 		tbaseBlocks++
 	}
@@ -425,7 +427,7 @@ func TestTSpendLegacyExpendituresPolicy(t *testing.T) {
 			addTSpendVotes(t, tspendHashes, tspendVotes, voteCount,
 				false))
 		g.SaveTipCoinbaseOutsWithTreasury()
-		g.AcceptTipBlock()
+		g.AcceptTipBlock(ctx)
 		outs = g.OldestCoinbaseOuts()
 		tbaseBlocks++
 	}
@@ -453,11 +455,11 @@ func TestTSpendLegacyExpendituresPolicy(t *testing.T) {
 			})
 		if tc.wantAccept {
 			g.SaveTipCoinbaseOutsWithTreasury()
-			g.AcceptTipBlock()
+			g.AcceptTipBlock(ctx)
 			outs = g.OldestCoinbaseOuts()
 			tbaseBlocks++
 		} else {
-			g.RejectTipBlock(ErrInvalidExpenditure)
+			g.RejectTipBlock(ctx, ErrInvalidExpenditure)
 
 			// Switch back to the pre-tspends block to execute the
 			// next test case.
@@ -478,7 +480,7 @@ func TestTSpendLegacyExpendituresPolicy(t *testing.T) {
 		g.NextBlock(name, nil, outs[1:], replaceTreasuryVersions,
 			replaceCoinbase)
 		g.SaveTipCoinbaseOutsWithTreasury()
-		g.AcceptTipBlock()
+		g.AcceptTipBlock(ctx)
 		outs = g.OldestCoinbaseOuts()
 		tbaseBlocks++
 	}
@@ -501,7 +503,7 @@ func TestTSpendLegacyExpendituresPolicy(t *testing.T) {
 		g.NextBlock(name, nil, outs[1:], replaceTreasuryVersions,
 			replaceCoinbase)
 		g.SaveTipCoinbaseOutsWithTreasury()
-		g.AcceptTipBlock()
+		g.AcceptTipBlock(ctx)
 		outs = g.OldestCoinbaseOuts()
 		tbaseBlocks++
 	}
@@ -535,7 +537,7 @@ func TestTSpendLegacyExpendituresPolicy(t *testing.T) {
 			addTSpendVotes(t, tspendHashes, tspendVotes, voteCount,
 				false))
 		g.SaveTipCoinbaseOutsWithTreasury()
-		g.AcceptTipBlock()
+		g.AcceptTipBlock(ctx)
 		outs = g.OldestCoinbaseOuts()
 		tbaseBlocks++
 	}
@@ -550,7 +552,7 @@ func TestTSpendLegacyExpendituresPolicy(t *testing.T) {
 		func(b *wire.MsgBlock) {
 			b.AddSTransaction(tspend)
 		})
-	g.AcceptTipBlock()
+	g.AcceptTipBlock(ctx)
 }
 
 // TestTSpendExpendituresPolicyDCP0007 performs tests against the treasury
@@ -618,7 +620,8 @@ func TestTSpendExpendituresPolicyDCP0007(t *testing.T) {
 	}
 
 	// Create a test harness initialized with the genesis block as the tip.
-	g := newChaingenHarness(t, params)
+	ctx := context.Background()
+	g := newChaingenHarness(ctx, t, params)
 
 	// Helper to verify the tip balance.
 	assertTipTreasuryBalance := func(wantBalance int64) {
@@ -639,8 +642,8 @@ func TestTSpendExpendituresPolicyDCP0007(t *testing.T) {
 	// agendas.
 	// ---------------------------------------------------------------------
 
-	g.AdvanceToStakeValidationHeight()
-	g.AdvanceFromSVHToActiveAgendas(tVoteID, tPolVoteID)
+	g.AdvanceToStakeValidationHeight(ctx)
+	g.AdvanceFromSVHToActiveAgendas(ctx, tVoteID, tPolVoteID)
 
 	// Ensure treasury and revert expenditure policy agendas are active.
 	tipHash := &g.chain.BestSnapshot().Hash
@@ -683,7 +686,7 @@ func TestTSpendExpendituresPolicyDCP0007(t *testing.T) {
 		g.NextBlock(name, nil, outs[1:], replaceTreasuryVersions,
 			replaceCoinbase)
 		g.SaveTipCoinbaseOutsWithTreasury()
-		g.AcceptTipBlock()
+		g.AcceptTipBlock(ctx)
 		outs = g.OldestCoinbaseOuts()
 		tbaseBlocks++
 	}
@@ -756,7 +759,7 @@ func TestTSpendExpendituresPolicyDCP0007(t *testing.T) {
 			addTSpendVotes(t, tspendHashes, tspendVotes, voteCount,
 				false))
 		g.SaveTipCoinbaseOutsWithTreasury()
-		g.AcceptTipBlock()
+		g.AcceptTipBlock(ctx)
 		outs = g.OldestCoinbaseOuts()
 		tbaseBlocks++
 	}
@@ -772,7 +775,7 @@ func TestTSpendExpendituresPolicyDCP0007(t *testing.T) {
 			b.AddSTransaction(tadd)
 		})
 	g.SaveTipCoinbaseOutsWithTreasury()
-	g.AcceptTipBlock()
+	g.AcceptTipBlock(ctx)
 	outs = g.OldestCoinbaseOuts()
 	tbaseBlocks++
 
@@ -792,7 +795,7 @@ func TestTSpendExpendituresPolicyDCP0007(t *testing.T) {
 			}
 			b.AddSTransaction(smallTSpend)
 		})
-	g.RejectTipBlock(ErrInvalidExpenditure)
+	g.RejectTipBlock(ctx, ErrInvalidExpenditure)
 	g.SetTip(preTspendsBlock)
 
 	// ---------------------------------------------------------------------
@@ -810,7 +813,7 @@ func TestTSpendExpendituresPolicyDCP0007(t *testing.T) {
 			}
 		})
 	g.SaveTipCoinbaseOutsWithTreasury()
-	g.AcceptTipBlock()
+	g.AcceptTipBlock(ctx)
 	outs = g.OldestCoinbaseOuts()
 	tbaseBlocks++
 
@@ -827,7 +830,7 @@ func TestTSpendExpendituresPolicyDCP0007(t *testing.T) {
 		g.NextBlock(name, nil, outs[1:], replaceTreasuryVersions,
 			replaceCoinbase)
 		g.SaveTipCoinbaseOutsWithTreasury()
-		g.AcceptTipBlock()
+		g.AcceptTipBlock(ctx)
 		outs = g.OldestCoinbaseOuts()
 		tbaseBlocks++
 	}
@@ -874,7 +877,7 @@ func TestTSpendExpendituresPolicyDCP0007(t *testing.T) {
 			addTSpendVotes(t, tspendHashes, tspendVotes, voteCount,
 				false))
 		g.SaveTipCoinbaseOutsWithTreasury()
-		g.AcceptTipBlock()
+		g.AcceptTipBlock(ctx)
 		outs = g.OldestCoinbaseOuts()
 	}
 
@@ -892,7 +895,7 @@ func TestTSpendExpendituresPolicyDCP0007(t *testing.T) {
 			b.AddSTransaction(largeTSpend)
 			b.AddSTransaction(smallTSpend)
 		})
-	g.RejectTipBlock(ErrInvalidExpenditure)
+	g.RejectTipBlock(ctx, ErrInvalidExpenditure)
 	g.SetTip(preTspendsBlock)
 
 	// ---------------------------------------------------------------------
@@ -908,7 +911,7 @@ func TestTSpendExpendituresPolicyDCP0007(t *testing.T) {
 			b.AddSTransaction(largeTSpend)
 		})
 	g.SaveTipCoinbaseOutsWithTreasury()
-	g.AcceptTipBlock()
+	g.AcceptTipBlock(ctx)
 	outs = g.OldestCoinbaseOuts()
 
 	// ---------------------------------------------------------------------
@@ -924,7 +927,7 @@ func TestTSpendExpendituresPolicyDCP0007(t *testing.T) {
 		g.NextBlock(name, nil, outs[1:], replaceTreasuryVersions,
 			replaceCoinbase)
 		g.SaveTipCoinbaseOutsWithTreasury()
-		g.AcceptTipBlock()
+		g.AcceptTipBlock(ctx)
 		outs = g.OldestCoinbaseOuts()
 		tbaseBlocks++
 	}
@@ -968,7 +971,7 @@ func TestTSpendExpendituresPolicyDCP0007(t *testing.T) {
 			addTSpendVotes(t, tspendHashes, tspendVotes, voteCount,
 				false))
 		g.SaveTipCoinbaseOutsWithTreasury()
-		g.AcceptTipBlock()
+		g.AcceptTipBlock(ctx)
 		outs = g.OldestCoinbaseOuts()
 	}
 
@@ -983,7 +986,7 @@ func TestTSpendExpendituresPolicyDCP0007(t *testing.T) {
 			b.AddSTransaction(smallTSpend)
 		})
 	g.SaveTipCoinbaseOutsWithTreasury()
-	g.AcceptTipBlock()
+	g.AcceptTipBlock(ctx)
 	outs = g.OldestCoinbaseOuts()
 
 	// ---------------------------------------------------------------------
@@ -997,7 +1000,7 @@ func TestTSpendExpendituresPolicyDCP0007(t *testing.T) {
 		g.NextBlock(name, nil, outs[1:], replaceTreasuryVersions,
 			replaceCoinbase)
 		g.SaveTipCoinbaseOutsWithTreasury()
-		g.AcceptTipBlock()
+		g.AcceptTipBlock(ctx)
 		outs = g.OldestCoinbaseOuts()
 	}
 
@@ -1012,7 +1015,7 @@ func TestTSpendExpendituresPolicyDCP0007(t *testing.T) {
 			b.AddSTransaction(largeTSpend)
 		})
 	g.SaveTipCoinbaseOutsWithTreasury()
-	g.AcceptTipBlock()
+	g.AcceptTipBlock(ctx)
 	outs = g.OldestCoinbaseOuts()
 
 	// ---------------------------------------------------------------------
@@ -1026,7 +1029,7 @@ func TestTSpendExpendituresPolicyDCP0007(t *testing.T) {
 		g.NextBlock(name, nil, outs[1:], replaceTreasuryVersions,
 			replaceCoinbase)
 		g.SaveTipCoinbaseOutsWithTreasury()
-		g.AcceptTipBlock()
+		g.AcceptTipBlock(ctx)
 		outs = g.OldestCoinbaseOuts()
 	}
 

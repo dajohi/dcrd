@@ -557,7 +557,7 @@ func (b *BlockChain) isMajorityVersion(minVer int32, startNode *blockNode, numRe
 // it would be inefficient to repeat it.
 //
 // This function MUST be called with the chain state lock held (for writes).
-func (b *BlockChain) connectBlock(node *blockNode, block, parent *dcrutil.Block, view *UtxoViewpoint, stxos []spentTxOut, hdrCommitments *headerCommitmentData) error {
+func (b *BlockChain) connectBlock(ctx context.Context, node *blockNode, block, parent *dcrutil.Block, view *UtxoViewpoint, stxos []spentTxOut, hdrCommitments *headerCommitmentData) error {
 	// Make sure it's extending the end of the best chain.
 	prevHash := block.MsgBlock().Header.PrevBlock
 	tip := b.bestChain.Tip()
@@ -735,7 +735,7 @@ func (b *BlockChain) connectBlock(node *blockNode, block, parent *dcrutil.Block,
 	// The caller would typically want to react with actions such as
 	// updating wallets.
 	b.chainLock.Unlock()
-	b.sendNotification(NTBlockConnected, &BlockConnectedNtfnsData{
+	b.sendNotification(ctx, NTBlockConnected, &BlockConnectedNtfnsData{
 		Block:        block,
 		ParentBlock:  parent,
 		CheckTxFlags: checkTxFlags,
@@ -750,7 +750,7 @@ func (b *BlockChain) connectBlock(node *blockNode, block, parent *dcrutil.Block,
 		}
 
 		// Notify of new tickets.
-		b.sendNotification(NTNewTickets,
+		b.sendNotification(ctx, NTNewTickets,
 			&TicketNotificationsData{
 				Hash:            node.hash,
 				Height:          node.height,
@@ -783,7 +783,7 @@ func (b *BlockChain) connectBlock(node *blockNode, block, parent *dcrutil.Block,
 // the main (best) chain.
 //
 // This function MUST be called with the chain state lock held (for writes).
-func (b *BlockChain) disconnectBlock(node *blockNode, block, parent *dcrutil.Block, view *UtxoViewpoint) error {
+func (b *BlockChain) disconnectBlock(ctx context.Context, node *blockNode, block, parent *dcrutil.Block, view *UtxoViewpoint) error {
 	// Make sure the node being disconnected is the end of the best chain.
 	tip := b.bestChain.Tip()
 	if node.hash != tip.hash {
@@ -908,7 +908,7 @@ func (b *BlockChain) disconnectBlock(node *blockNode, block, parent *dcrutil.Blo
 	// chain.  The caller would typically want to react with actions such as
 	// updating wallets.
 	b.chainLock.Unlock()
-	b.sendNotification(NTBlockDisconnected, &BlockDisconnectedNtfnsData{
+	b.sendNotification(ctx, NTBlockDisconnected, &BlockDisconnectedNtfnsData{
 		Block:        block,
 		ParentBlock:  parent,
 		CheckTxFlags: checkTxFlags,
@@ -1015,7 +1015,7 @@ func (b *BlockChain) loadOrCreateFilter(block *dcrutil.Block, view *UtxoViewpoin
 // block failing to connect.
 //
 // This function MUST be called with the chain state lock held (for writes).
-func (b *BlockChain) reorganizeChainInternal(target *blockNode) error {
+func (b *BlockChain) reorganizeChainInternal(ctx context.Context, target *blockNode) error {
 	// Find the fork point between the current tip and target block.
 	tip := b.bestChain.Tip()
 	fork := b.bestChain.FindFork(target)
@@ -1087,7 +1087,7 @@ func (b *BlockChain) reorganizeChainInternal(target *blockNode) error {
 		}
 
 		// Update the database and chain state.
-		err = b.disconnectBlock(n, block, parent, view)
+		err = b.disconnectBlock(ctx, n, block, parent, view)
 		if err != nil {
 			return err
 		}
@@ -1199,7 +1199,7 @@ func (b *BlockChain) reorganizeChainInternal(target *blockNode) error {
 			// In the case the block is determined to be invalid due to a rule
 			// violation, mark it as invalid and mark all of its descendants as
 			// having an invalid ancestor.
-			err = b.checkConnectBlock(n, block, parent, view, &stxos,
+			err = b.checkConnectBlock(ctx, n, block, parent, view, &stxos,
 				&hdrCommitments)
 			if err != nil {
 				var rerr RuleError
@@ -1212,7 +1212,7 @@ func (b *BlockChain) reorganizeChainInternal(target *blockNode) error {
 		}
 
 		// Update the database and chain state.
-		err = b.connectBlock(n, block, parent, view, stxos, &hdrCommitments)
+		err = b.connectBlock(ctx, n, block, parent, view, stxos, &hdrCommitments)
 		if err != nil {
 			return err
 		}
@@ -1245,7 +1245,7 @@ func (b *BlockChain) reorganizeChainInternal(target *blockNode) error {
 // without flushing.
 //
 // This function MUST be called with the chain state lock held (for writes).
-func (b *BlockChain) reorganizeChain(target *blockNode) error {
+func (b *BlockChain) reorganizeChain(ctx context.Context, target *blockNode) error {
 	// Nothing to do if there is no target specified or it is already the
 	// current best chain tip.
 	tip := b.bestChain.Tip()
@@ -1273,7 +1273,7 @@ func (b *BlockChain) reorganizeChain(target *blockNode) error {
 			// Notice that the chain lock is not released before sending the
 			// notification.  This is intentional and must not be changed
 			// without understanding why!
-			b.sendNotification(NTChainReorgStarted, nil)
+			b.sendNotification(ctx, NTChainReorgStarted, nil)
 			sentReorgingNtfn = true
 
 			defer func() {
@@ -1283,14 +1283,14 @@ func (b *BlockChain) reorganizeChain(target *blockNode) error {
 				// Notice that the chain lock is not released before sending the
 				// notification.  This is intentional and must not be changed
 				// without understanding why!
-				b.sendNotification(NTChainReorgDone, nil)
+				b.sendNotification(ctx, NTChainReorgDone, nil)
 			}()
 		}
 
 		// Attempt to reorganize the chain to the new tip.  In the case it
 		// fails, attempt to reorganize to the best valid block with the most
 		// cumulative proof of work instead.
-		err := b.reorganizeChainInternal(target)
+		err := b.reorganizeChainInternal(ctx, target)
 		if err != nil {
 			// Shutting down.
 			if errors.Is(err, errInterruptRequested) {
@@ -1344,7 +1344,7 @@ func (b *BlockChain) reorganizeChain(target *blockNode) error {
 		// Notice that the chain lock is not released before sending the
 		// notification.  This is intentional and must not be changed without
 		// understanding why!
-		b.sendNotification(NTReorganization, &ReorganizationNtfnsData{
+		b.sendNotification(ctx, NTReorganization, &ReorganizationNtfnsData{
 			OldHash:   origTip.hash,
 			OldHeight: origTip.height,
 			NewHash:   newTip.hash,
@@ -1383,7 +1383,7 @@ func (b *BlockChain) reorganizeChain(target *blockNode) error {
 // without flushing.
 //
 // This function MUST be called with the chain state lock held (for writes).
-func (b *BlockChain) forceHeadReorganization(formerBest chainhash.Hash, newBest chainhash.Hash) error {
+func (b *BlockChain) forceHeadReorganization(ctx context.Context, formerBest, newBest chainhash.Hash) error {
 	// Don't try to reorganize to the same block.
 	if formerBest == newBest {
 		str := "tried to force reorg to the same block"
@@ -1421,7 +1421,7 @@ func (b *BlockChain) forceHeadReorganization(formerBest chainhash.Hash, newBest 
 	// block index to the database.  It is safe to ignore any flushing
 	// errors here as the only time the index will be modified is if the
 	// block failed to connect.
-	err := b.reorganizeChain(newBestNode)
+	err := b.reorganizeChain(ctx, newBestNode)
 	b.flushBlockIndexWarnOnly()
 	return err
 }
@@ -1431,10 +1431,10 @@ func (b *BlockChain) forceHeadReorganization(formerBest chainhash.Hash, newBest 
 // of the best chain.
 //
 // This function is safe for concurrent access.
-func (b *BlockChain) ForceHeadReorganization(formerBest chainhash.Hash, newBest chainhash.Hash) error {
+func (b *BlockChain) ForceHeadReorganization(ctx context.Context, formerBest, newBest chainhash.Hash) error {
 	b.processLock.Lock()
 	b.chainLock.Lock()
-	err := b.forceHeadReorganization(formerBest, newBest)
+	err := b.forceHeadReorganization(ctx, formerBest, newBest)
 	b.chainLock.Unlock()
 	b.processLock.Unlock()
 	return err
@@ -2252,7 +2252,7 @@ func New(ctx context.Context, config *Config) (*BlockChain, error) {
 		curNtfnCallback := b.notifications
 		b.notifications = nil
 		for _, node := range invalidateNodes {
-			if err := b.InvalidateBlock(&node.hash); err != nil {
+			if err := b.InvalidateBlock(ctx, &node.hash); err != nil {
 				b.notifications = curNtfnCallback
 				return nil, err
 			}

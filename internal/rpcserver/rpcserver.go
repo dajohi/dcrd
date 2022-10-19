@@ -3953,7 +3953,7 @@ func handleHelp(_ context.Context, s *Server, cmd interface{}) (interface{}, err
 }
 
 // handleInvalidateBlock implements the invalidateblock command.
-func handleInvalidateBlock(_ context.Context, s *Server, cmd interface{}) (interface{}, error) {
+func handleInvalidateBlock(ctx context.Context, s *Server, cmd interface{}) (interface{}, error) {
 	c := cmd.(*types.InvalidateBlockCmd)
 	hash, err := chainhash.NewHashFromStr(c.BlockHash)
 	if err != nil {
@@ -3961,7 +3961,7 @@ func handleInvalidateBlock(_ context.Context, s *Server, cmd interface{}) (inter
 	}
 
 	chain := s.cfg.Chain
-	err = chain.InvalidateBlock(hash)
+	err = chain.InvalidateBlock(ctx, hash)
 	if err != nil {
 		if errors.Is(err, blockchain.ErrUnknownBlock) {
 			return nil, &dcrjson.RPCError{
@@ -4011,7 +4011,7 @@ func handlePing(_ context.Context, s *Server, _ interface{}) (interface{}, error
 }
 
 // handleReconsiderBlock implements the reconsiderblock command.
-func handleReconsiderBlock(_ context.Context, s *Server, cmd interface{}) (interface{}, error) {
+func handleReconsiderBlock(ctx context.Context, s *Server, cmd interface{}) (interface{}, error) {
 	c := cmd.(*types.ReconsiderBlockCmd)
 	hash, err := chainhash.NewHashFromStr(c.BlockHash)
 	if err != nil {
@@ -4019,7 +4019,7 @@ func handleReconsiderBlock(_ context.Context, s *Server, cmd interface{}) (inter
 	}
 
 	chain := s.cfg.Chain
-	err = chain.ReconsiderBlock(hash)
+	err = chain.ReconsiderBlock(ctx, hash)
 	if err != nil {
 		if errors.Is(err, blockchain.ErrUnknownBlock) {
 			return nil, &dcrjson.RPCError{
@@ -4073,7 +4073,7 @@ func handleRegenTemplate(_ context.Context, s *Server, _ interface{}) (interface
 }
 
 // handleSendRawTransaction implements the sendrawtransaction command.
-func handleSendRawTransaction(_ context.Context, s *Server, cmd interface{}) (interface{}, error) {
+func handleSendRawTransaction(ctx context.Context, s *Server, cmd interface{}) (interface{}, error) {
 	c := cmd.(*types.SendRawTransactionCmd)
 	// Deserialize and send off to tx relay
 
@@ -4095,7 +4095,7 @@ func handleSendRawTransaction(_ context.Context, s *Server, cmd interface{}) (in
 
 	// Use 0 for the tag to represent local node.
 	tx := dcrutil.NewTx(msgtx)
-	acceptedTxs, err := s.cfg.SyncMgr.ProcessTransaction(tx, false,
+	acceptedTxs, err := s.cfg.SyncMgr.ProcessTransaction(ctx, tx, false,
 		allowHighFees, 0)
 	if err != nil {
 		// When the error is a rule error, it means the transaction was

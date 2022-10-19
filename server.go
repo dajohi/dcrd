@@ -2496,7 +2496,7 @@ func (s *server) proactivelyEvictSigCacheEntries(bestHeight int64) {
 // handleBlockchainNotification handles notifications from blockchain.  It does
 // things such as request orphan block parents and relay accepted blocks to
 // connected peers.
-func (s *server) handleBlockchainNotification(notification *blockchain.Notification) {
+func (s *server) handleBlockchainNotification(ctx context.Context, notification *blockchain.Notification) {
 	switch notification.Type {
 	// A block that intends to extend the main chain has passed all sanity and
 	// contextual checks and the chain is believed to be current.  Relay it to
@@ -2667,7 +2667,7 @@ func (s *server) handleBlockchainNotification(notification *blockchain.Notificat
 				txMemPool.MaybeAcceptDependents(tx, isTreasuryEnabled)
 				txMemPool.RemoveDoubleSpends(tx)
 				txMemPool.RemoveOrphan(tx)
-				acceptedTxs := txMemPool.ProcessOrphans(tx, ntfn.CheckTxFlags)
+				acceptedTxs := txMemPool.ProcessOrphans(ctx, tx, ntfn.CheckTxFlags)
 				s.AnnounceNewTransactions(acceptedTxs)
 
 				// Now that this block is in the blockchain, mark the
@@ -2710,7 +2710,7 @@ func (s *server) handleBlockchainNotification(notification *blockchain.Notificat
 		// transaction is still valid.
 		if !headerApprovesParent(&block.MsgBlock().Header) {
 			txns := parentBlock.Transactions()[1:]
-			txMemPool.MaybeAcceptTransactions(txns)
+			txMemPool.MaybeAcceptTransactions(ctx, txns)
 		}
 		if r := s.rpcServer; r != nil {
 			// Filter and update the rebroadcast inventory.
@@ -2782,7 +2782,7 @@ func (s *server) handleBlockchainNotification(notification *blockchain.Notificat
 				txMemPool.MaybeAcceptDependents(tx, isTreasuryEnabled)
 				txMemPool.RemoveDoubleSpends(tx)
 				txMemPool.RemoveOrphan(tx)
-				txMemPool.ProcessOrphans(tx, ntfn.CheckTxFlags)
+				txMemPool.ProcessOrphans(ctx, tx, ntfn.CheckTxFlags)
 			}
 		}
 
@@ -2808,16 +2808,16 @@ func (s *server) handleBlockchainNotification(notification *blockchain.Notificat
 		// block (probably the same one), which was disapproved, also spending
 		// those outputs, and, in that case, anything that happens to be in the
 		// pool which depends on the transaction is still valid.
-		handleDisconnectedBlockTxns := func(txns []*dcrutil.Tx) {
-			txMemPool.MaybeAcceptTransactions(txns)
+		handleDisconnectedBlockTxns := func(ctx context.Context, txns []*dcrutil.Tx) {
+			txMemPool.MaybeAcceptTransactions(ctx, txns)
 		}
-		handleDisconnectedBlockTxns(block.Transactions()[1:])
+		handleDisconnectedBlockTxns(ctx, block.Transactions()[1:])
 
 		if isTreasuryEnabled {
 			// Skip treasurybase
-			handleDisconnectedBlockTxns(block.STransactions()[1:])
+			handleDisconnectedBlockTxns(ctx, block.STransactions()[1:])
 		} else {
-			handleDisconnectedBlockTxns(block.STransactions())
+			handleDisconnectedBlockTxns(ctx, block.STransactions())
 		}
 
 		if s.bg != nil {
@@ -3616,11 +3616,11 @@ func newServer(ctx context.Context, listenAddrs []string, db database.DB,
 				return blockchain.NewUtxoViewpoint(utxoCache)
 			},
 			TipGeneration: s.chain.TipGeneration,
-			ValidateTransactionScripts: func(tx *dcrutil.Tx,
+			ValidateTransactionScripts: func(ctx context.Context, tx *dcrutil.Tx,
 				utxoView *blockchain.UtxoViewpoint, flags txscript.ScriptFlags,
 				isAutoRevocationsEnabled bool) error {
 
-				return blockchain.ValidateTransactionScripts(tx, utxoView, flags,
+				return blockchain.ValidateTransactionScripts(ctx, tx, utxoView, flags,
 					s.sigCache, isAutoRevocationsEnabled)
 			},
 		})

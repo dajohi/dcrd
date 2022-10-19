@@ -6,6 +6,7 @@ package blockchain
 
 import (
 	"bytes"
+	"context"
 	"encoding/binary"
 	"errors"
 	"fmt"
@@ -510,7 +511,8 @@ func TestTSpendVoteCount(t *testing.T) {
 	mul := params.TreasuryVoteIntervalMultiplier
 
 	// Create a test harness initialized with the genesis block as the tip.
-	g := newChaingenHarness(t, params)
+	ctx := context.Background()
+	g := newChaingenHarness(ctx, t, params)
 
 	// replaceTreasuryVersions is a munge function which modifies the
 	// provided block by replacing the block, stake, and vote versions with
@@ -526,8 +528,8 @@ func TestTSpendVoteCount(t *testing.T) {
 	// to reach one block prior to the treasury agenda becoming active.
 	// ---------------------------------------------------------------------
 
-	g.AdvanceToStakeValidationHeight()
-	g.AdvanceFromSVHToActiveAgendas(tVoteID)
+	g.AdvanceToStakeValidationHeight(ctx)
+	g.AdvanceFromSVHToActiveAgendas(ctx, tVoteID)
 
 	// Ensure treasury agenda is active.
 	tipHash := &g.chain.BestSnapshot().Hash
@@ -578,7 +580,7 @@ func TestTSpendVoteCount(t *testing.T) {
 			// Add TSpend
 			b.AddSTransaction(tspend)
 		})
-	g.RejectTipBlock(ErrNotTVI)
+	g.RejectTipBlock(ctx, ErrNotTVI)
 
 	// ---------------------------------------------------------------------
 	// Generate enough blocks to get to TVI.
@@ -599,7 +601,7 @@ func TestTSpendVoteCount(t *testing.T) {
 				[]stake.TreasuryVoteT{stake.TreasuryVoteYes},
 				voteCount, false))
 		g.SaveTipCoinbaseOutsWithTreasury()
-		g.AcceptTipBlock()
+		g.AcceptTipBlock(ctx)
 		outs = g.OldestCoinbaseOuts()
 	}
 
@@ -623,7 +625,7 @@ func TestTSpendVoteCount(t *testing.T) {
 			// Add TSpend
 			b.AddSTransaction(tspend)
 		})
-	g.RejectTipBlock(ErrNotEnoughTSpendVotes)
+	g.RejectTipBlock(ctx, ErrNotEnoughTSpendVotes)
 
 	// ---------------------------------------------------------------------
 	// Generate 1 TVI of No votes and add TSpend,
@@ -639,7 +641,7 @@ func TestTSpendVoteCount(t *testing.T) {
 				[]stake.TreasuryVoteT{stake.TreasuryVoteNo},
 				voteCount, false))
 		g.SaveTipCoinbaseOutsWithTreasury()
-		g.AcceptTipBlock()
+		g.AcceptTipBlock(ctx)
 		outs = g.OldestCoinbaseOuts()
 	}
 
@@ -655,7 +657,7 @@ func TestTSpendVoteCount(t *testing.T) {
 			// Add TSpend
 			b.AddSTransaction(tspend)
 		})
-	g.RejectTipBlock(ErrNotEnoughTSpendVotes)
+	g.RejectTipBlock(ctx, ErrNotEnoughTSpendVotes)
 
 	// ---------------------------------------------------------------------
 	// Generate two more TVI of no votes.
@@ -672,7 +674,7 @@ func TestTSpendVoteCount(t *testing.T) {
 				[]stake.TreasuryVoteT{stake.TreasuryVoteNo},
 				voteCount, false))
 		g.SaveTipCoinbaseOutsWithTreasury()
-		g.AcceptTipBlock()
+		g.AcceptTipBlock(ctx)
 		outs = g.OldestCoinbaseOuts()
 	}
 
@@ -689,7 +691,7 @@ func TestTSpendVoteCount(t *testing.T) {
 			// Add TSpend
 			b.AddSTransaction(tspend)
 		})
-	g.RejectTipBlock(ErrNotEnoughTSpendVotes)
+	g.RejectTipBlock(ctx, ErrNotEnoughTSpendVotes)
 
 	// Assert we have the correct number of votes and voting window.
 	tv, err := g.chain.tSpendCountVotes(g.chain.bestChain.Tip(),
@@ -729,7 +731,7 @@ func TestTSpendVoteCount(t *testing.T) {
 		g.NextBlock(name, nil, outs[1:], replaceTreasuryVersions,
 			replaceCoinbase)
 		g.SaveTipCoinbaseOutsWithTreasury()
-		g.AcceptTipBlock()
+		g.AcceptTipBlock(ctx)
 		outs = g.OldestCoinbaseOuts()
 	}
 
@@ -745,7 +747,7 @@ func TestTSpendVoteCount(t *testing.T) {
 			// Add TSpend
 			b.AddSTransaction(tspend)
 		})
-	g.RejectTipBlock(ErrExpiredTx)
+	g.RejectTipBlock(ctx, ErrExpiredTx)
 
 	// ---------------------------------------------------------------------
 	// Create TSpend in "mempool"
@@ -784,7 +786,7 @@ func TestTSpendVoteCount(t *testing.T) {
 				[]stake.TreasuryVoteT{stake.TreasuryVoteNo},
 				voteCount, false))
 		g.SaveTipCoinbaseOutsWithTreasury()
-		g.AcceptTipBlock()
+		g.AcceptTipBlock(ctx)
 		outs = g.OldestCoinbaseOuts()
 	}
 
@@ -802,7 +804,7 @@ func TestTSpendVoteCount(t *testing.T) {
 				[]stake.TreasuryVoteT{stake.TreasuryVoteYes},
 				totalVotes, false))
 		g.SaveTipCoinbaseOutsWithTreasury()
-		g.AcceptTipBlock()
+		g.AcceptTipBlock(ctx)
 		outs = g.OldestCoinbaseOuts()
 
 		if totalVotes > params.TicketsPerBlock {
@@ -824,7 +826,7 @@ func TestTSpendVoteCount(t *testing.T) {
 			// Add TSpend
 			b.AddSTransaction(tspend)
 		})
-	g.RejectTipBlock(ErrNotEnoughTSpendVotes)
+	g.RejectTipBlock(ctx, ErrNotEnoughTSpendVotes)
 
 	// Count votes.
 	tv, err = g.chain.tSpendCountVotes(g.chain.bestChain.Tip(),
@@ -848,7 +850,7 @@ func TestTSpendVoteCount(t *testing.T) {
 				[]stake.TreasuryVoteT{stake.TreasuryVoteYes},
 				totalVotes, false))
 		g.SaveTipCoinbaseOutsWithTreasury()
-		g.AcceptTipBlock()
+		g.AcceptTipBlock(ctx)
 		outs = g.OldestCoinbaseOuts()
 
 		if totalVotes > params.TicketsPerBlock {
@@ -880,7 +882,7 @@ func TestTSpendVoteCount(t *testing.T) {
 			// Add TSpend
 			b.AddSTransaction(tspend)
 		})
-	g.AcceptTipBlock()
+	g.AcceptTipBlock(ctx)
 }
 
 // getTreasuryState retrieves the treasury state for the provided hash.
@@ -925,7 +927,8 @@ func TestTSpendEmptyTreasury(t *testing.T) {
 	mul := params.TreasuryVoteIntervalMultiplier
 
 	// Create a test harness initialized with the genesis block as the tip.
-	g := newChaingenHarness(t, params)
+	ctx := context.Background()
+	g := newChaingenHarness(ctx, t, params)
 
 	// replaceTreasuryVersions is a munge function which modifies the
 	// provided block by replacing the block, stake, and vote versions with
@@ -941,8 +944,8 @@ func TestTSpendEmptyTreasury(t *testing.T) {
 	// to reach one block prior to the treasury agenda becoming active.
 	// ---------------------------------------------------------------------
 
-	g.AdvanceToStakeValidationHeight()
-	g.AdvanceFromSVHToActiveAgendas(tVoteID)
+	g.AdvanceToStakeValidationHeight(ctx)
+	g.AdvanceFromSVHToActiveAgendas(ctx, tVoteID)
 
 	// Ensure treasury agenda is active.
 	tipHash := &g.chain.BestSnapshot().Hash
@@ -989,7 +992,7 @@ func TestTSpendEmptyTreasury(t *testing.T) {
 		g.NextBlock(name, nil, outs[1:], replaceTreasuryVersions,
 			replaceCoinbase)
 		g.SaveTipCoinbaseOutsWithTreasury()
-		g.AcceptTipBlock()
+		g.AcceptTipBlock(ctx)
 		outs = g.OldestCoinbaseOuts()
 	}
 
@@ -1009,7 +1012,7 @@ func TestTSpendEmptyTreasury(t *testing.T) {
 				[]stake.TreasuryVoteT{stake.TreasuryVoteYes},
 				voteCount, false))
 		g.SaveTipCoinbaseOutsWithTreasury()
-		g.AcceptTipBlock()
+		g.AcceptTipBlock(ctx)
 		outs = g.OldestCoinbaseOuts()
 	}
 
@@ -1031,7 +1034,7 @@ func TestTSpendEmptyTreasury(t *testing.T) {
 			// Add TSpend
 			b.AddSTransaction(tspend)
 		})
-	g.RejectTipBlock(ErrInvalidExpenditure)
+	g.RejectTipBlock(ctx, ErrInvalidExpenditure)
 }
 
 // TestExpendituresReorg tests that the correct treasury balance is tracked
@@ -1065,7 +1068,8 @@ func TestExpendituresReorg(t *testing.T) {
 	mul := params.TreasuryVoteIntervalMultiplier
 
 	// Create a test harness initialized with the genesis block as the tip.
-	g := newChaingenHarness(t, params)
+	ctx := context.Background()
+	g := newChaingenHarness(ctx, t, params)
 
 	// Helper to check the treasury balance at tip.
 	assertTipTreasuryBalance := func(wantBalance int64) {
@@ -1094,8 +1098,8 @@ func TestExpendituresReorg(t *testing.T) {
 	// to reach one block prior to the treasury agenda becoming active.
 	// ---------------------------------------------------------------------
 
-	g.AdvanceToStakeValidationHeight()
-	g.AdvanceFromSVHToActiveAgendas(tVoteID)
+	g.AdvanceToStakeValidationHeight(ctx)
+	g.AdvanceFromSVHToActiveAgendas(ctx, tVoteID)
 
 	// Ensure treasury agenda is active.
 	tipHash := &g.chain.BestSnapshot().Hash
@@ -1128,7 +1132,7 @@ func TestExpendituresReorg(t *testing.T) {
 		g.NextBlock(name, nil, outs[1:], replaceTreasuryVersions,
 			replaceCoinbase)
 		g.SaveTipCoinbaseOutsWithTreasury()
-		g.AcceptTipBlock()
+		g.AcceptTipBlock(ctx)
 		outs = g.OldestCoinbaseOuts()
 		lastOuts := &oldOuts[len(oldOuts)-1]
 		*lastOuts = append(*lastOuts, outs[0])
@@ -1157,7 +1161,7 @@ func TestExpendituresReorg(t *testing.T) {
 		g.NextBlock(name, nil, outs[1:], replaceTreasuryVersions,
 			replaceCoinbase)
 		g.SaveTipCoinbaseOutsWithTreasury()
-		g.AcceptTipBlock()
+		g.AcceptTipBlock(ctx)
 		outs = g.OldestCoinbaseOuts()
 		tbaseBlocks++
 	}
@@ -1190,7 +1194,7 @@ func TestExpendituresReorg(t *testing.T) {
 				[]stake.TreasuryVoteT{stake.TreasuryVoteYes},
 				voteCount, false))
 		g.SaveTipCoinbaseOutsWithTreasury()
-		g.AcceptTipBlock()
+		g.AcceptTipBlock(ctx)
 		outs = g.OldestCoinbaseOuts()
 		tbaseBlocks++
 	}
@@ -1210,7 +1214,7 @@ func TestExpendituresReorg(t *testing.T) {
 			b.AddSTransaction(tspend)
 			b.AddSTransaction(tadd)
 		})
-	g.AcceptTipBlock()
+	g.AcceptTipBlock(ctx)
 
 	// Balance only reflects the tbase added so far. We add 1 to
 	// tbaseBlocks to account for the `btspend` block.
@@ -1237,9 +1241,9 @@ func TestExpendituresReorg(t *testing.T) {
 		switch i {
 		case 0:
 			// The first block creates a sidechain.
-			g.AcceptedToSideChainWithExpectedTip("btspend")
+			g.AcceptedToSideChainWithExpectedTip(ctx, "btspend")
 		default:
-			g.AcceptTipBlock()
+			g.AcceptTipBlock(ctx)
 		}
 		oldOuts = oldOuts[1:]
 		tbaseBlocks++
@@ -1270,9 +1274,9 @@ func TestExpendituresReorg(t *testing.T) {
 		switch {
 		case i < blocksToTreasuryChange-1:
 			// Only the last block changes tip.
-			g.AcceptedToSideChainWithExpectedTip(tip)
+			g.AcceptedToSideChainWithExpectedTip(ctx, tip)
 		default:
-			g.AcceptTipBlock()
+			g.AcceptTipBlock(ctx)
 		}
 		oldOuts = oldOuts[1:]
 	}
@@ -1317,7 +1321,8 @@ func TestSpendableTreasuryTxs(t *testing.T) {
 	mul := params.TreasuryVoteIntervalMultiplier
 
 	// Create a test harness initialized with the genesis block as the tip.
-	g := newChaingenHarness(t, params)
+	ctx := context.Background()
+	g := newChaingenHarness(ctx, t, params)
 
 	// replaceTreasuryVersions is a munge function which modifies the
 	// provided block by replacing the block, stake, and vote versions with
@@ -1333,8 +1338,8 @@ func TestSpendableTreasuryTxs(t *testing.T) {
 	// to reach one block prior to the treasury agenda becoming active.
 	// ---------------------------------------------------------------------
 
-	g.AdvanceToStakeValidationHeight()
-	g.AdvanceFromSVHToActiveAgendas(tVoteID)
+	g.AdvanceToStakeValidationHeight(ctx)
+	g.AdvanceFromSVHToActiveAgendas(ctx, tVoteID)
 
 	// Ensure treasury agenda is active.
 	tipHash := &g.chain.BestSnapshot().Hash
@@ -1367,7 +1372,7 @@ func TestSpendableTreasuryTxs(t *testing.T) {
 		g.NextBlock(name, nil, outs[1:], replaceTreasuryVersions,
 			replaceCoinbase)
 		g.SaveTipCoinbaseOutsWithTreasury()
-		g.AcceptTipBlock()
+		g.AcceptTipBlock(ctx)
 		outs = g.OldestCoinbaseOuts()
 	}
 
@@ -1449,7 +1454,7 @@ func TestSpendableTreasuryTxs(t *testing.T) {
 				[]stake.TreasuryVoteT{stake.TreasuryVoteYes},
 				voteCount, false))
 		g.SaveTipCoinbaseOutsWithTreasury()
-		g.AcceptTipBlock()
+		g.AcceptTipBlock(ctx)
 		outs = g.OldestCoinbaseOuts()
 	}
 
@@ -1469,7 +1474,7 @@ func TestSpendableTreasuryTxs(t *testing.T) {
 			b.AddSTransaction(tadd2)
 		})
 	g.SaveTipCoinbaseOutsWithTreasury()
-	g.AcceptTipBlock()
+	g.AcceptTipBlock(ctx)
 	outs = g.OldestCoinbaseOuts()
 
 	// Ensure the CFilter committed to the outputs of the TSpend and TAdds.
@@ -1573,7 +1578,7 @@ func TestSpendableTreasuryTxs(t *testing.T) {
 		g.NextBlock(name, nil, outs[1:], replaceTreasuryVersions,
 			replaceCoinbase)
 		g.SaveTipCoinbaseOutsWithTreasury()
-		g.AcceptTipBlock()
+		g.AcceptTipBlock(ctx)
 		outs = g.OldestCoinbaseOuts()
 	}
 
@@ -1589,7 +1594,7 @@ func TestSpendableTreasuryTxs(t *testing.T) {
 			b.AddTransaction(tx)
 		})
 	g.SaveTipCoinbaseOutsWithTreasury()
-	g.AcceptTipBlock()
+	g.AcceptTipBlock(ctx)
 }
 
 func TestTSpendDupVote(t *testing.T) {
@@ -1616,7 +1621,8 @@ func TestTSpendDupVote(t *testing.T) {
 	mul := params.TreasuryVoteIntervalMultiplier
 
 	// Create a test harness initialized with the genesis block as the tip.
-	g := newChaingenHarness(t, params)
+	ctx := context.Background()
+	g := newChaingenHarness(ctx, t, params)
 
 	// replaceTreasuryVersions is a munge function which modifies the
 	// provided block by replacing the block, stake, and vote versions with
@@ -1632,8 +1638,8 @@ func TestTSpendDupVote(t *testing.T) {
 	// to reach one block prior to the treasury agenda becoming active.
 	// ---------------------------------------------------------------------
 
-	g.AdvanceToStakeValidationHeight()
-	g.AdvanceFromSVHToActiveAgendas(tVoteID)
+	g.AdvanceToStakeValidationHeight(ctx)
+	g.AdvanceFromSVHToActiveAgendas(ctx, tVoteID)
 
 	// Ensure treasury agenda is active.
 	tipHash := &g.chain.BestSnapshot().Hash
@@ -1690,7 +1696,7 @@ func TestTSpendDupVote(t *testing.T) {
 		g.NextBlock(name, nil, outs[1:], replaceTreasuryVersions,
 			replaceCoinbase)
 		g.SaveTipCoinbaseOutsWithTreasury()
-		g.AcceptTipBlock()
+		g.AcceptTipBlock(ctx)
 		outs = g.OldestCoinbaseOuts()
 	}
 
@@ -1716,7 +1722,7 @@ func TestTSpendDupVote(t *testing.T) {
 				stake.TreasuryVoteYes,
 			},
 			voteCount, true))
-	g.RejectTipBlock(ErrBadTxInput)
+	g.RejectTipBlock(ctx, ErrBadTxInput)
 
 	// ---------------------------------------------------------------------
 	// Invalid treasury spend tx vote bits are illegal and therefore the tx
@@ -1737,7 +1743,7 @@ func TestTSpendDupVote(t *testing.T) {
 				0x04, // Invalid bits
 			},
 			voteCount, true))
-	g.RejectTipBlock(ErrBadTxInput)
+	g.RejectTipBlock(ctx, ErrBadTxInput)
 }
 
 func TestTSpendTooManyTSpend(t *testing.T) {
@@ -1764,7 +1770,8 @@ func TestTSpendTooManyTSpend(t *testing.T) {
 	mul := params.TreasuryVoteIntervalMultiplier
 
 	// Create a test harness initialized with the genesis block as the tip.
-	g := newChaingenHarness(t, params)
+	ctx := context.Background()
+	g := newChaingenHarness(ctx, t, params)
 
 	// replaceTreasuryVersions is a munge function which modifies the
 	// provided block by replacing the block, stake, and vote versions with
@@ -1780,8 +1787,8 @@ func TestTSpendTooManyTSpend(t *testing.T) {
 	// to reach one block prior to the treasury agenda becoming active.
 	// ---------------------------------------------------------------------
 
-	g.AdvanceToStakeValidationHeight()
-	g.AdvanceFromSVHToActiveAgendas(tVoteID)
+	g.AdvanceToStakeValidationHeight(ctx)
+	g.AdvanceFromSVHToActiveAgendas(ctx, tVoteID)
 
 	// Ensure treasury agenda is active.
 	tipHash := &g.chain.BestSnapshot().Hash
@@ -1837,7 +1844,7 @@ func TestTSpendTooManyTSpend(t *testing.T) {
 		g.NextBlock(name, nil, outs[1:], replaceTreasuryVersions,
 			replaceCoinbase)
 		g.SaveTipCoinbaseOutsWithTreasury()
-		g.AcceptTipBlock()
+		g.AcceptTipBlock(ctx)
 		outs = g.OldestCoinbaseOuts()
 	}
 
@@ -1852,7 +1859,7 @@ func TestTSpendTooManyTSpend(t *testing.T) {
 	g.NextBlock("bdv0", nil, outs[1:], replaceTreasuryVersions,
 		replaceCoinbase,
 		addTSpendVotes(t, tspendHashes, tspendVotes, voteCount, true))
-	g.RejectTipBlock(ErrBadTxInput)
+	g.RejectTipBlock(ctx, ErrBadTxInput)
 }
 
 func TestTSpendWindow(t *testing.T) {
@@ -1879,7 +1886,8 @@ func TestTSpendWindow(t *testing.T) {
 	mul := params.TreasuryVoteIntervalMultiplier
 
 	// Create a test harness initialized with the genesis block as the tip.
-	g := newChaingenHarness(t, params)
+	ctx := context.Background()
+	g := newChaingenHarness(ctx, t, params)
 
 	// replaceTreasuryVersions is a munge function which modifies the
 	// provided block by replacing the block, stake, and vote versions with
@@ -1895,8 +1903,8 @@ func TestTSpendWindow(t *testing.T) {
 	// to reach one block prior to the treasury agenda becoming active.
 	// ---------------------------------------------------------------------
 
-	g.AdvanceToStakeValidationHeight()
-	g.AdvanceFromSVHToActiveAgendas(tVoteID)
+	g.AdvanceToStakeValidationHeight(ctx)
+	g.AdvanceFromSVHToActiveAgendas(ctx, tVoteID)
 
 	// Ensure treasury agenda is active.
 	tipHash := &g.chain.BestSnapshot().Hash
@@ -1943,7 +1951,7 @@ func TestTSpendWindow(t *testing.T) {
 		g.NextBlock(name, nil, outs[1:], replaceTreasuryVersions,
 			replaceCoinbase)
 		g.SaveTipCoinbaseOutsWithTreasury()
-		g.AcceptTipBlock()
+		g.AcceptTipBlock(ctx)
 		outs = g.OldestCoinbaseOuts()
 	}
 
@@ -1963,7 +1971,7 @@ func TestTSpendWindow(t *testing.T) {
 				[]stake.TreasuryVoteT{stake.TreasuryVoteYes},
 				voteCount, false))
 		g.SaveTipCoinbaseOutsWithTreasury()
-		g.AcceptTipBlock()
+		g.AcceptTipBlock(ctx)
 		outs = g.OldestCoinbaseOuts()
 	}
 
@@ -1974,7 +1982,7 @@ func TestTSpendWindow(t *testing.T) {
 			// Add TSpend
 			b.AddSTransaction(tspend)
 		})
-	g.RejectTipBlock(ErrInvalidTSpendWindow)
+	g.RejectTipBlock(ctx, ErrInvalidTSpendWindow)
 }
 
 // TestTSpendSignature verifies that both PI keys work and in addition that an
@@ -2003,7 +2011,8 @@ func TestTSpendSignature(t *testing.T) {
 	mul := params.TreasuryVoteIntervalMultiplier
 
 	// Create a test harness initialized with the genesis block as the tip.
-	g := newChaingenHarness(t, params)
+	ctx := context.Background()
+	g := newChaingenHarness(ctx, t, params)
 
 	// replaceTreasuryVersions is a munge function which modifies the
 	// provided block by replacing the block, stake, and vote versions with
@@ -2019,8 +2028,8 @@ func TestTSpendSignature(t *testing.T) {
 	// to reach one block prior to the treasury agenda becoming active.
 	// ---------------------------------------------------------------------
 
-	g.AdvanceToStakeValidationHeight()
-	g.AdvanceFromSVHToActiveAgendas(tVoteID)
+	g.AdvanceToStakeValidationHeight(ctx)
+	g.AdvanceFromSVHToActiveAgendas(ctx, tVoteID)
 
 	// Ensure treasury agenda is active.
 	tipHash := &g.chain.BestSnapshot().Hash
@@ -2073,7 +2082,7 @@ func TestTSpendSignature(t *testing.T) {
 		g.NextBlock(name, nil, outs[1:], replaceTreasuryVersions,
 			replaceCoinbase)
 		g.SaveTipCoinbaseOutsWithTreasury()
-		g.AcceptTipBlock()
+		g.AcceptTipBlock(ctx)
 		outs = g.OldestCoinbaseOuts()
 	}
 
@@ -2099,7 +2108,7 @@ func TestTSpendSignature(t *testing.T) {
 				},
 				voteCount, false))
 		g.SaveTipCoinbaseOutsWithTreasury()
-		g.AcceptTipBlock()
+		g.AcceptTipBlock(ctx)
 		outs = g.OldestCoinbaseOuts()
 	}
 
@@ -2134,7 +2143,7 @@ func TestTSpendSignature(t *testing.T) {
 			b.AddSTransaction(tspend2)
 			b.AddSTransaction(tspend1)
 		})
-	g.RejectTipBlock(ErrDuplicateTx)
+	g.RejectTipBlock(ctx, ErrDuplicateTx)
 
 	// ---------------------------------------------------------------------
 	// Add tspend1 and tspend2
@@ -2152,7 +2161,7 @@ func TestTSpendSignature(t *testing.T) {
 			b.AddSTransaction(tspend2)
 		})
 	g.SaveTipCoinbaseOutsWithTreasury()
-	g.AcceptTipBlock()
+	g.AcceptTipBlock(ctx)
 	outs = g.OldestCoinbaseOuts()
 
 	// Assert treasury balance
@@ -2177,7 +2186,7 @@ func TestTSpendSignature(t *testing.T) {
 		g.NextBlock(name, nil, outs[1:], replaceTreasuryVersions,
 			replaceCoinbase)
 		g.SaveTipCoinbaseOutsWithTreasury()
-		g.AcceptTipBlock()
+		g.AcceptTipBlock(ctx)
 		outs = g.OldestCoinbaseOuts()
 	}
 
@@ -2222,7 +2231,8 @@ func TestTSpendSignatureInvalid(t *testing.T) {
 	mul := params.TreasuryVoteIntervalMultiplier
 
 	// Create a test harness initialized with the genesis block as the tip.
-	g := newChaingenHarness(t, params)
+	ctx := context.Background()
+	g := newChaingenHarness(ctx, t, params)
 
 	// replaceTreasuryVersions is a munge function which modifies the
 	// provided block by replacing the block, stake, and vote versions with
@@ -2238,8 +2248,8 @@ func TestTSpendSignatureInvalid(t *testing.T) {
 	// to reach one block prior to the treasury agenda becoming active.
 	// ---------------------------------------------------------------------
 
-	g.AdvanceToStakeValidationHeight()
-	g.AdvanceFromSVHToActiveAgendas(tVoteID)
+	g.AdvanceToStakeValidationHeight(ctx)
+	g.AdvanceFromSVHToActiveAgendas(ctx, tVoteID)
 
 	// Ensure treasury agenda is active.
 	tipHash := &g.chain.BestSnapshot().Hash
@@ -2287,7 +2297,7 @@ func TestTSpendSignatureInvalid(t *testing.T) {
 		g.NextBlock(name, nil, outs[1:], replaceTreasuryVersions,
 			replaceCoinbase)
 		g.SaveTipCoinbaseOutsWithTreasury()
-		g.AcceptTipBlock()
+		g.AcceptTipBlock(ctx)
 		outs = g.OldestCoinbaseOuts()
 	}
 
@@ -2311,7 +2321,7 @@ func TestTSpendSignatureInvalid(t *testing.T) {
 				},
 				voteCount, false))
 		g.SaveTipCoinbaseOutsWithTreasury()
-		g.AcceptTipBlock()
+		g.AcceptTipBlock(ctx)
 		outs = g.OldestCoinbaseOuts()
 	}
 
@@ -2343,7 +2353,7 @@ func TestTSpendSignatureInvalid(t *testing.T) {
 			// Add TSpend
 			b.AddSTransaction(tspend1)
 		})
-	g.RejectTipBlock(ErrUnknownPiKey)
+	g.RejectTipBlock(ctx, ErrUnknownPiKey)
 }
 
 func TestTSpendExists(t *testing.T) {
@@ -2371,7 +2381,8 @@ func TestTSpendExists(t *testing.T) {
 	mul := params.TreasuryVoteIntervalMultiplier
 
 	// Create a test harness initialized with the genesis block as the tip.
-	g := newChaingenHarness(t, params)
+	ctx := context.Background()
+	g := newChaingenHarness(ctx, t, params)
 
 	// replaceTreasuryVersions is a munge function which modifies the
 	// provided block by replacing the block, stake, and vote versions with
@@ -2387,8 +2398,8 @@ func TestTSpendExists(t *testing.T) {
 	// to reach one block prior to the treasury agenda becoming active.
 	// ---------------------------------------------------------------------
 
-	g.AdvanceToStakeValidationHeight()
-	g.AdvanceFromSVHToActiveAgendas(tVoteID)
+	g.AdvanceToStakeValidationHeight(ctx)
+	g.AdvanceFromSVHToActiveAgendas(ctx, tVoteID)
 
 	// Ensure treasury agenda is active.
 	tipHash := &g.chain.BestSnapshot().Hash
@@ -2437,7 +2448,7 @@ func TestTSpendExists(t *testing.T) {
 		g.NextBlock(name, &outs[0], outs[1:], replaceTreasuryVersions,
 			replaceCoinbase, splitSecondRegularTxOutputs)
 		g.SaveTipCoinbaseOutsWithTreasury()
-		g.AcceptTipBlock()
+		g.AcceptTipBlock(ctx)
 
 		souts := make([]chaingen.SpendableOut, 0, splitTxNumOutputs)
 		for j := 0; j < splitTxNumOutputs; j++ {
@@ -2477,7 +2488,7 @@ func TestTSpendExists(t *testing.T) {
 		g.NextBlock(name, nil, outs[1:], replaceTreasuryVersions,
 			replaceCoinbase)
 		g.SaveTipCoinbaseOutsWithTreasury()
-		g.AcceptTipBlock()
+		g.AcceptTipBlock(ctx)
 		outs = g.OldestCoinbaseOuts()
 	}
 
@@ -2496,7 +2507,7 @@ func TestTSpendExists(t *testing.T) {
 				[]stake.TreasuryVoteT{stake.TreasuryVoteYes},
 				voteCount, false))
 		g.SaveTipCoinbaseOutsWithTreasury()
-		g.AcceptTipBlock()
+		g.AcceptTipBlock(ctx)
 		outs = g.OldestCoinbaseOuts()
 	}
 
@@ -2523,7 +2534,7 @@ func TestTSpendExists(t *testing.T) {
 				replaceTreasuryVersions,
 				replaceCoinbase)
 		}
-		g.AcceptTipBlock()
+		g.AcceptTipBlock(ctx)
 	}
 	oldTip := g.TipName()
 
@@ -2534,7 +2545,7 @@ func TestTSpendExists(t *testing.T) {
 			// Add TSpend
 			b.AddSTransaction(tspend)
 		})
-	g.RejectTipBlock(ErrTSpendExists)
+	g.RejectTipBlock(ctx, ErrTSpendExists)
 
 	// ---------------------------------------------------------------------
 	// Generate a TVI and mine same TSpend, should not exist since it is a
@@ -2551,7 +2562,7 @@ func TestTSpendExists(t *testing.T) {
 		name := fmt.Sprintf("bep%v", i)
 		g.NextBlock(name, nil, txOuts[i][1:], replaceTreasuryVersions,
 			replaceCoinbase)
-		g.AcceptedToSideChainWithExpectedTip(oldTip)
+		g.AcceptedToSideChainWithExpectedTip(ctx, oldTip)
 		nextFork = i + 1
 	}
 
@@ -2562,7 +2573,7 @@ func TestTSpendExists(t *testing.T) {
 			// Add TSpend
 			b.AddSTransaction(tspend)
 		})
-	g.AcceptTipBlock()
+	g.AcceptTipBlock(ctx)
 
 	// ---------------------------------------------------------------------
 	// Generate a TVI and mine same TSpend, should not exist since it is a
@@ -2578,7 +2589,7 @@ func TestTSpendExists(t *testing.T) {
 	name := fmt.Sprintf("bep%v", nextFork)
 	g.NextBlock(name, nil, txOuts[nextFork+1][1:], replaceTreasuryVersions,
 		replaceCoinbase)
-	g.AcceptTipBlock()
+	g.AcceptTipBlock(ctx)
 	oldTip = g.TipName()
 	oldHeight := g.Tip().Header.Height
 
@@ -2589,7 +2600,7 @@ func TestTSpendExists(t *testing.T) {
 		name := fmt.Sprintf("bepp%v", i)
 		g.NextBlock(name, nil, txOuts[i][1:],
 			replaceTreasuryVersions, replaceCoinbase)
-		g.AcceptedToSideChainWithExpectedTip(oldTip)
+		g.AcceptedToSideChainWithExpectedTip(ctx, oldTip)
 		txIdx = i + 1
 	}
 
@@ -2600,7 +2611,7 @@ func TestTSpendExists(t *testing.T) {
 			// Add TSpend
 			b.AddSTransaction(tspend)
 		})
-	g.AcceptedToSideChainWithExpectedTip(oldTip)
+	g.AcceptedToSideChainWithExpectedTip(ctx, oldTip)
 	txIdx++
 
 	// Force reorg
@@ -2609,9 +2620,9 @@ func TestTSpendExists(t *testing.T) {
 		b := g.NextBlock(name, nil, txOuts[txIdx][1:],
 			replaceTreasuryVersions, replaceCoinbase)
 		if b.Header.Height <= oldHeight {
-			g.AcceptedToSideChainWithExpectedTip(oldTip)
+			g.AcceptedToSideChainWithExpectedTip(ctx, oldTip)
 		} else {
-			g.AcceptTipBlock()
+			g.AcceptTipBlock(ctx)
 		}
 		txIdx++
 	}
@@ -2637,7 +2648,8 @@ func TestTreasuryBalance(t *testing.T) {
 	removeDeploymentTimeConstraints(deployment)
 
 	// Create a test harness initialized with the genesis block as the tip.
-	g := newChaingenHarness(t, params)
+	ctx := context.Background()
+	g := newChaingenHarness(ctx, t, params)
 
 	// replaceTreasuryVersions is a munge function which modifies the
 	// provided block by replacing the block, stake, and vote versions with
@@ -2653,8 +2665,8 @@ func TestTreasuryBalance(t *testing.T) {
 	// to reach one block prior to the treasury agenda becoming active.
 	// ---------------------------------------------------------------------
 
-	g.AdvanceToStakeValidationHeight()
-	g.AdvanceFromSVHToActiveAgendas(tVoteID)
+	g.AdvanceToStakeValidationHeight(ctx)
+	g.AdvanceFromSVHToActiveAgendas(ctx, tVoteID)
 
 	// Ensure treasury agenda is active.
 	tipHash := &g.chain.BestSnapshot().Hash
@@ -2696,7 +2708,7 @@ func TestTreasuryBalance(t *testing.T) {
 				b.AddSTransaction(tx)
 			})
 		g.SaveTipCoinbaseOutsWithTreasury()
-		g.AcceptTipBlock()
+		g.AcceptTipBlock(ctx)
 	}
 	iterations := 1
 
@@ -2808,7 +2820,7 @@ func TestTreasuryBalance(t *testing.T) {
 				b.AddSTransaction(tx)
 			})
 		g.SaveTipCoinbaseOutsWithTreasury()
-		g.AcceptTipBlock()
+		g.AcceptTipBlock(ctx)
 	}
 	iterations++
 
@@ -2851,7 +2863,7 @@ func TestTreasuryBalance(t *testing.T) {
 				replaceCoinbase)
 		}
 		g.SaveTipCoinbaseOutsWithTreasury()
-		g.AcceptTipBlock()
+		g.AcceptTipBlock(ctx)
 	}
 	iterations += 2 // We generate 2*blockCount
 
@@ -2937,7 +2949,8 @@ func TestTAddCorners(t *testing.T) {
 	removeDeploymentTimeConstraints(deployment)
 
 	// Create a test harness initialized with the genesis block as the tip.
-	g := newChaingenHarness(t, params)
+	ctx := context.Background()
+	g := newChaingenHarness(ctx, t, params)
 
 	// replaceTreasuryVersions is a munge function which modifies the
 	// provided block by replacing the block, stake, and vote versions with the
@@ -2953,8 +2966,8 @@ func TestTAddCorners(t *testing.T) {
 	// to reach one block prior to the treasury agenda becoming active.
 	// ---------------------------------------------------------------------
 
-	g.AdvanceToStakeValidationHeight()
-	g.AdvanceFromSVHToActiveAgendas(tVoteID)
+	g.AdvanceToStakeValidationHeight(ctx)
+	g.AdvanceFromSVHToActiveAgendas(ctx, tVoteID)
 
 	// Ensure treasury agenda is active.
 	tipHash := &g.chain.BestSnapshot().Hash
@@ -3003,7 +3016,7 @@ func TestTAddCorners(t *testing.T) {
 		g.NextBlock(name, &outs[0], outs[1:], replaceTreasuryVersions,
 			replaceCoinbase, splitSecondRegularTxOutputs)
 		g.SaveTipCoinbaseOutsWithTreasury()
-		g.AcceptTipBlock()
+		g.AcceptTipBlock(ctx)
 
 		souts := make([]chaingen.SpendableOut, 0, splitTxNumOutputs)
 		for j := 0; j < splitTxNumOutputs; j++ {
@@ -3035,7 +3048,7 @@ func TestTAddCorners(t *testing.T) {
 		replaceCoinbase,
 		createTAdd(txOuts[0][0], 10, params),
 		mungeValueChange)
-	g.RejectTipBlock(ErrBadTxOutValue)
+	g.RejectTipBlock(ctx, ErrBadTxOutValue)
 
 	// ---------------------------------------------------------------------
 	// Create TAdd with negative in amount.
@@ -3059,7 +3072,7 @@ func TestTAddCorners(t *testing.T) {
 		replaceCoinbase,
 		createTAdd(txOuts[0][0], 10, params),
 		mungeValueIn)
-	g.RejectTipBlock(ErrFraudAmountIn)
+	g.RejectTipBlock(ctx, ErrFraudAmountIn)
 
 	// ---------------------------------------------------------------------
 	// Create TAdd with negative out amount.
@@ -3083,7 +3096,7 @@ func TestTAddCorners(t *testing.T) {
 		replaceCoinbase,
 		createTAdd(txOuts[0][0], 10, params),
 		mungeValueOut)
-	g.RejectTipBlock(ErrBadTxOutValue)
+	g.RejectTipBlock(ctx, ErrBadTxOutValue)
 
 	// ---------------------------------------------------------------------
 	// Create TAdd with 0 change.
@@ -3106,7 +3119,7 @@ func TestTAddCorners(t *testing.T) {
 		replaceCoinbase,
 		createTAdd(txOuts[0][0], 10, params),
 		mungeChangeValue)
-	g.RejectTipBlock(ErrInvalidTAddChange)
+	g.RejectTipBlock(ctx, ErrInvalidTAddChange)
 
 	_ = tvi
 	_ = mul
@@ -3132,7 +3145,8 @@ func TestTreasuryBaseCorners(t *testing.T) {
 	removeDeploymentTimeConstraints(deployment)
 
 	// Create a test harness initialized with the genesis block as the tip.
-	g := newChaingenHarness(t, params)
+	ctx := context.Background()
+	g := newChaingenHarness(ctx, t, params)
 
 	// replaceTreasuryVersions is a munge function which modifies the provided
 	// block by replacing the block, stake, and vote versions with the treasury
@@ -3209,8 +3223,8 @@ func TestTreasuryBaseCorners(t *testing.T) {
 	// to reach one block prior to the treasury agenda becoming active.
 	// ---------------------------------------------------------------------
 
-	g.AdvanceToStakeValidationHeight()
-	g.AdvanceFromSVHToActiveAgendas(tVoteID)
+	g.AdvanceToStakeValidationHeight(ctx)
+	g.AdvanceFromSVHToActiveAgendas(ctx, tVoteID)
 
 	// Ensure treasury agenda is active.
 	tipHash := &g.chain.BestSnapshot().Hash
@@ -3230,7 +3244,7 @@ func TestTreasuryBaseCorners(t *testing.T) {
 	startTip := g.TipName()
 	g.NextBlock("twotb0", nil, outs[1:], replaceTreasuryVersions,
 		replaceCoinbase, dupTreasurybase)
-	g.RejectTipBlock(ErrMultipleTreasurybases)
+	g.RejectTipBlock(ctx, ErrMultipleTreasurybases)
 
 	// ---------------------------------------------------------------------
 	// Flip STransactions 0 and 1.
@@ -3239,7 +3253,7 @@ func TestTreasuryBaseCorners(t *testing.T) {
 	g.SetTip(startTip)
 	g.NextBlock("notbon0", nil, outs[1:], replaceTreasuryVersions,
 		replaceCoinbase, flipTreasurybase)
-	g.RejectTipBlock(ErrFirstTxNotTreasurybase)
+	g.RejectTipBlock(ctx, ErrFirstTxNotTreasurybase)
 
 	// ---------------------------------------------------------------------
 	// No treasurybase.
@@ -3248,7 +3262,7 @@ func TestTreasuryBaseCorners(t *testing.T) {
 	g.SetTip(startTip)
 	g.NextBlock("notb0", nil, outs[1:], replaceTreasuryVersions,
 		replaceCoinbase, removeTreasurybase)
-	g.RejectTipBlock(ErrFirstTxNotTreasurybase)
+	g.RejectTipBlock(ctx, ErrFirstTxNotTreasurybase)
 
 	// ---------------------------------------------------------------------
 	// No treasurybase and no tickets.
@@ -3257,7 +3271,7 @@ func TestTreasuryBaseCorners(t *testing.T) {
 	g.SetTip(startTip)
 	g.NextBlock("nothing0", nil, outs[1:], replaceTreasuryVersions,
 		replaceCoinbase, removeStakeTxns)
-	g.RejectTipBlock(ErrFirstTxNotTreasurybase)
+	g.RejectTipBlock(ctx, ErrFirstTxNotTreasurybase)
 
 	// ---------------------------------------------------------------------
 	// Treasury base invalid height
@@ -3265,7 +3279,7 @@ func TestTreasuryBaseCorners(t *testing.T) {
 	g.SetTip(startTip)
 	g.NextBlock("height0", nil, outs[1:], replaceTreasuryVersions,
 		replaceCoinbase, changeHeightTreasurybase)
-	g.RejectTipBlock(ErrTreasurybaseHeight)
+	g.RejectTipBlock(ctx, ErrTreasurybaseHeight)
 
 	// ---------------------------------------------------------------------
 	// Treasury base invalid OP_RETURN script length.
@@ -3273,7 +3287,7 @@ func TestTreasuryBaseCorners(t *testing.T) {
 	g.SetTip(startTip)
 	g.NextBlock("length0", nil, outs[1:], replaceTreasuryVersions,
 		replaceCoinbase, corruptLengthTreasurybase)
-	g.RejectTipBlock(ErrFirstTxNotTreasurybase)
+	g.RejectTipBlock(ctx, ErrFirstTxNotTreasurybase)
 
 	// ---------------------------------------------------------------------
 	// Only treasury base.
@@ -3281,7 +3295,7 @@ func TestTreasuryBaseCorners(t *testing.T) {
 	g.SetTip(startTip)
 	g.NextBlock("novotes0", nil, outs[1:], replaceTreasuryVersions,
 		replaceCoinbase, removeAllButTreasurybase)
-	g.RejectTipBlock(ErrVotesMismatch)
+	g.RejectTipBlock(ctx, ErrVotesMismatch)
 
 	// ---------------------------------------------------------------------
 	// Treasury base invalid TxIn[0].Value
@@ -3289,7 +3303,7 @@ func TestTreasuryBaseCorners(t *testing.T) {
 	g.SetTip(startTip)
 	g.NextBlock("invalidin0", nil, outs[1:], replaceTreasuryVersions,
 		replaceCoinbase, corruptTreasurybaseValueIn)
-	g.RejectTipBlock(ErrBadTreasurybaseAmountIn)
+	g.RejectTipBlock(ctx, ErrBadTreasurybaseAmountIn)
 
 	// ---------------------------------------------------------------------
 	// Treasury base invalid TxOut[0].Value
@@ -3297,7 +3311,7 @@ func TestTreasuryBaseCorners(t *testing.T) {
 	g.SetTip(startTip)
 	g.NextBlock("invalidout0", nil, outs[1:], replaceTreasuryVersions,
 		replaceCoinbase, corruptTreasurybaseValueOut)
-	g.RejectTipBlock(ErrTreasurybaseOutValue)
+	g.RejectTipBlock(ctx, ErrTreasurybaseOutValue)
 
 	// Note we can't hit the following errors in consensus:
 	// * ErrFirstTxNotTreasurybase (missing OP_RETURN)
@@ -3332,7 +3346,8 @@ func TestTSpendCorners(t *testing.T) {
 	removeDeploymentTimeConstraints(deployment)
 
 	// Create a test harness initialized with the genesis block as the tip.
-	g := newChaingenHarness(t, params)
+	ctx := context.Background()
+	g := newChaingenHarness(ctx, t, params)
 
 	// replaceTreasuryVersions is a munge function which modifies the provided
 	// block by replacing the block, stake, and vote versions with the treasury
@@ -3348,8 +3363,8 @@ func TestTSpendCorners(t *testing.T) {
 	// to reach one block prior to the treasury agenda becoming active.
 	// ---------------------------------------------------------------------
 
-	g.AdvanceToStakeValidationHeight()
-	g.AdvanceFromSVHToActiveAgendas(tVoteID)
+	g.AdvanceToStakeValidationHeight(ctx)
+	g.AdvanceFromSVHToActiveAgendas(ctx, tVoteID)
 
 	// Ensure treasury agenda is active.
 	tipHash := &g.chain.BestSnapshot().Hash
@@ -3388,7 +3403,7 @@ func TestTSpendCorners(t *testing.T) {
 		g.NextBlock(name, nil, outs[1:], replaceTreasuryVersions,
 			replaceCoinbase)
 		g.SaveTipCoinbaseOutsWithTreasury()
-		g.AcceptTipBlock()
+		g.AcceptTipBlock(ctx)
 		outs = g.OldestCoinbaseOuts()
 	}
 
@@ -3406,7 +3421,7 @@ func TestTSpendCorners(t *testing.T) {
 				[]stake.TreasuryVoteT{stake.TreasuryVoteYes},
 				voteCount, false))
 		g.SaveTipCoinbaseOutsWithTreasury()
-		g.AcceptTipBlock()
+		g.AcceptTipBlock(ctx)
 		outs = g.OldestCoinbaseOuts()
 	}
 
@@ -3423,7 +3438,7 @@ func TestTSpendCorners(t *testing.T) {
 			// Add TSpend
 			b.AddSTransaction(tspend)
 		})
-	g.RejectTipBlock(ErrInvalidTSpendValueIn)
+	g.RejectTipBlock(ctx, ErrInvalidTSpendValueIn)
 }
 
 func TestTSpendFirstTVICorner(t *testing.T) {
@@ -3449,7 +3464,8 @@ func TestTSpendFirstTVICorner(t *testing.T) {
 	t.Logf("svh: %v tvi %v mul %v", svh, tvi, mul)
 
 	// Create a test harness initialized with the genesis block as the tip.
-	g := newChaingenHarness(t, params)
+	ctx := context.Background()
+	g := newChaingenHarness(ctx, t, params)
 
 	// With an SVH of 144 and a TVI of 11 and a MUL of 1 create a tspend
 	// that expires on block 156 (voting interval [143,154]). Start voting
@@ -3479,7 +3495,7 @@ func TestTSpendFirstTVICorner(t *testing.T) {
 	//   genesis -> bfb
 	g.CreateBlockOne("bfb", 0)
 	g.AssertTipHeight(1)
-	g.AcceptTipBlock()
+	g.AcceptTipBlock(ctx)
 
 	// Assert treasury agenda is indeed active.
 	tipHash := &g.chain.BestSnapshot().Hash
@@ -3507,7 +3523,7 @@ func TestTSpendFirstTVICorner(t *testing.T) {
 		blockName := fmt.Sprintf("bm%d", i)
 		g.NextBlock(blockName, nil, nil, replaceCoinbase)
 		g.SaveTipCoinbaseOutsWithTreasury()
-		g.AcceptTipBlock()
+		g.AcceptTipBlock(ctx)
 	}
 	g.AssertTipHeight(uint32(coinbaseMaturity) + 1)
 
@@ -3527,7 +3543,7 @@ func TestTSpendFirstTVICorner(t *testing.T) {
 		blockName := fmt.Sprintf("bse%d", i)
 		g.NextBlock(blockName, nil, ticketOuts, replaceCoinbase)
 		g.SaveTipCoinbaseOutsWithTreasury()
-		g.AcceptTipBlock()
+		g.AcceptTipBlock(ctx)
 	}
 	g.AssertTipHeight(uint32(stakeEnabledHeight))
 
@@ -3558,7 +3574,7 @@ func TestTSpendFirstTVICorner(t *testing.T) {
 		blockName := fmt.Sprintf("bsv%d", i)
 		g.NextBlock(blockName, nil, ticketOuts, replaceCoinbase)
 		g.SaveTipCoinbaseOutsWithTreasury()
-		g.AcceptTipBlock()
+		g.AcceptTipBlock(ctx)
 	}
 
 	g.AssertTipHeight(uint32(stakeValidationHeight - 1))
@@ -3577,7 +3593,7 @@ func TestTSpendFirstTVICorner(t *testing.T) {
 			// Add TSpend
 			b.AddSTransaction(tspend)
 		})
-	g.RejectTipBlock(ErrNotTVI)
+	g.RejectTipBlock(ctx, ErrNotTVI)
 
 	// ---------------------------------------------------------------------
 	// Start TSpend 'yes' voting here.
@@ -3616,7 +3632,7 @@ func TestTSpendFirstTVICorner(t *testing.T) {
 				[]stake.TreasuryVoteT{stake.TreasuryVoteYes},
 				voteCount, false))
 		g.SaveTipCoinbaseOutsWithTreasury()
-		g.AcceptTipBlock()
+		g.AcceptTipBlock(ctx)
 	}
 	g.AssertTipHeight(uint32(stakeValidationHeight + numVotingBlocks))
 
@@ -3633,7 +3649,7 @@ func TestTSpendFirstTVICorner(t *testing.T) {
 			// Add TSpend
 			b.AddSTransaction(tspend)
 		})
-	g.RejectTipBlock(ErrInvalidTVoteWindow)
+	g.RejectTipBlock(ctx, ErrInvalidTVoteWindow)
 }
 
 func TestTreasuryInRegularTree(t *testing.T) {
@@ -3656,7 +3672,8 @@ func TestTreasuryInRegularTree(t *testing.T) {
 	removeDeploymentTimeConstraints(deployment)
 
 	// Create a test harness initialized with the genesis block as the tip.
-	g := newChaingenHarness(t, params)
+	ctx := context.Background()
+	g := newChaingenHarness(ctx, t, params)
 
 	// replaceTreasuryVersions is a munge function which modifies the provided
 	// block by replacing the block, stake, and vote versions with the treasury
@@ -3690,8 +3707,8 @@ func TestTreasuryInRegularTree(t *testing.T) {
 	// to reach one block prior to the treasury agenda becoming active.
 	// ---------------------------------------------------------------------
 
-	g.AdvanceToStakeValidationHeight()
-	g.AdvanceFromSVHToActiveAgendas(tVoteID)
+	g.AdvanceToStakeValidationHeight(ctx)
+	g.AdvanceFromSVHToActiveAgendas(ctx, tVoteID)
 
 	// Ensure treasury agenda is active.
 	tipHash := &g.chain.BestSnapshot().Hash
@@ -3711,7 +3728,7 @@ func TestTreasuryInRegularTree(t *testing.T) {
 	startTip := g.TipName()
 	g.NextBlock("tb0", nil, outs[1:], replaceTreasuryVersions, replaceCoinbase,
 		addTreasuryBaseRegular)
-	g.RejectTipBlock(ErrMultipleCoinbases)
+	g.RejectTipBlock(ctx, ErrMultipleCoinbases)
 
 	// ---------------------------------------------------------------------
 	// Append tadd to transactions
@@ -3720,7 +3737,7 @@ func TestTreasuryInRegularTree(t *testing.T) {
 	g.SetTip(startTip)
 	g.NextBlock("tadd0", nil, outs[1:], replaceTreasuryVersions,
 		replaceCoinbase, createTAdd(outs[0], 15, params), moveTAddRegular)
-	g.RejectTipBlock(ErrStakeTxInRegularTree)
+	g.RejectTipBlock(ctx, ErrStakeTxInRegularTree)
 
 	// ---------------------------------------------------------------------
 	// Append TSpend to transactions.
@@ -3737,7 +3754,7 @@ func TestTreasuryInRegularTree(t *testing.T) {
 		replaceCoinbase, func(b *wire.MsgBlock) {
 			b.AddTransaction(tspend)
 		})
-	g.RejectTipBlock(ErrStakeTxInRegularTree)
+	g.RejectTipBlock(ctx, ErrStakeTxInRegularTree)
 }
 
 func TestTSpendVoteCountSynthetic(t *testing.T) {
@@ -4229,7 +4246,8 @@ func TestTSpendTooManyTAdds(t *testing.T) {
 	removeDeploymentTimeConstraints(deployment)
 
 	// Create a test harness initialized with the genesis block as the tip.
-	g := newChaingenHarness(t, params)
+	ctx := context.Background()
+	g := newChaingenHarness(ctx, t, params)
 
 	// replaceTreasuryVersions is a munge function which modifies the
 	// provided block by replacing the block, stake, and vote versions with
@@ -4255,8 +4273,8 @@ func TestTSpendTooManyTAdds(t *testing.T) {
 	// to reach one block prior to the treasury agenda becoming active.
 	// ---------------------------------------------------------------------
 
-	g.AdvanceToStakeValidationHeight()
-	g.AdvanceFromSVHToActiveAgendas(tVoteID)
+	g.AdvanceToStakeValidationHeight(ctx)
+	g.AdvanceFromSVHToActiveAgendas(ctx, tVoteID)
 
 	// Ensure treasury agenda is active.
 	tipHash := &g.chain.BestSnapshot().Hash
@@ -4289,7 +4307,7 @@ func TestTSpendTooManyTAdds(t *testing.T) {
 		g.NextBlock(name, nil, outs[1:], replaceTreasuryVersions,
 			replaceCoinbase)
 		g.SaveTipCoinbaseOutsWithTreasury()
-		g.AcceptTipBlock()
+		g.AcceptTipBlock(ctx)
 		outs = g.OldestCoinbaseOuts()
 		oldOuts = append(oldOuts, outs[0])
 	}
@@ -4313,7 +4331,7 @@ func TestTSpendTooManyTAdds(t *testing.T) {
 	g.NextBlock("btoomanytadds", nil, outs[1:], replaceTreasuryVersions,
 		replaceCoinbase, addTAdds(tadds))
 	g.SaveTipCoinbaseOutsWithTreasury()
-	g.RejectTipBlock(ErrTooManyTAdds)
+	g.RejectTipBlock(ctx, ErrTooManyTAdds)
 
 	// ---------------------------------------------------------------------
 	// Mine a block with the maximum number of tadds.
@@ -4325,5 +4343,5 @@ func TestTSpendTooManyTAdds(t *testing.T) {
 	g.NextBlock("bmaxtadds", nil, outs[1:], replaceTreasuryVersions,
 		replaceCoinbase, addTAdds(tadds[1:]))
 	g.SaveTipCoinbaseOutsWithTreasury()
-	g.AcceptTipBlock()
+	g.AcceptTipBlock(ctx)
 }

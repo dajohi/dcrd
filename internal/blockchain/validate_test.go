@@ -60,7 +60,8 @@ func TestBlockchainSpendJournal(t *testing.T) {
 	params.GenesisHash = params.GenesisBlock.BlockHash()
 
 	// Create a new database and chain instance to run tests against.
-	chain, err := chainSetup(t, params)
+	ctx := context.Background()
+	chain, err := chainSetup(ctx, t, params)
 	if err != nil {
 		t.Errorf("Failed to setup chain instance: %v", err)
 		return
@@ -96,7 +97,7 @@ func TestBlockchainSpendJournal(t *testing.T) {
 			t.Fatalf("NewBlockFromBytes error: %v", err.Error())
 		}
 
-		forkLen, err := chain.ProcessBlock(bl)
+		forkLen, err := chain.ProcessBlock(ctx, bl)
 		if err != nil {
 			t.Fatalf("ProcessBlock error at height %v: %v", i, err.Error())
 		}
@@ -361,7 +362,8 @@ func TestCheckConnectBlockTemplate(t *testing.T) {
 
 	// Create a test harness initialized with the genesis block as the tip.
 	params := chaincfg.RegNetParams()
-	g := newChaingenHarness(t, params)
+	ctx := context.Background()
+	g := newChaingenHarness(ctx, t, params)
 
 	// Define some additional convenience helper functions to process the
 	// current tip block associated with the generator.
@@ -378,7 +380,7 @@ func TestCheckConnectBlockTemplate(t *testing.T) {
 		t.Logf("Testing block template %s (hash %s, height %d)",
 			g.TipName(), block.Hash(), blockHeight)
 
-		err := g.chain.CheckConnectBlockTemplate(block)
+		err := g.chain.CheckConnectBlockTemplate(ctx, block)
 		if err != nil {
 			t.Fatalf("block template %q (hash %s, height %d) should "+
 				"have been accepted: %v", g.TipName(),
@@ -392,7 +394,7 @@ func TestCheckConnectBlockTemplate(t *testing.T) {
 		t.Logf("Testing block template %s (hash %s, height %d)",
 			g.TipName(), block.Hash(), blockHeight)
 
-		err := g.chain.CheckConnectBlockTemplate(block)
+		err := g.chain.CheckConnectBlockTemplate(ctx, block)
 		if err == nil {
 			t.Fatalf("block template %q (hash %s, height %d) should "+
 				"not have been accepted", g.TipName(), block.Hash(),
@@ -461,7 +463,7 @@ func TestCheckConnectBlockTemplate(t *testing.T) {
 	}
 	g.AssertTipHeight(1)
 	acceptedBlockTemplate()
-	g.RejectTipBlock(ErrHighHash)
+	g.RejectTipBlock(ctx, ErrHighHash)
 	g.ExpectTip("genesis")
 
 	// Produce a valid and solved initial block.
@@ -470,7 +472,7 @@ func TestCheckConnectBlockTemplate(t *testing.T) {
 	g.SetTip("genesis")
 	g.CreateBlockOne("bfb", 0)
 	g.AssertTipHeight(1)
-	g.AcceptTipBlock()
+	g.AcceptTipBlock(ctx)
 
 	// ---------------------------------------------------------------------
 	// Generate enough blocks to have mature coinbase outputs to work with.
@@ -487,7 +489,7 @@ func TestCheckConnectBlockTemplate(t *testing.T) {
 		g.NextBlock(blockName, nil, nil)
 		g.SaveTipCoinbaseOuts()
 		acceptedBlockTemplate()
-		g.AcceptTipBlock()
+		g.AcceptTipBlock(ctx)
 		tipName = blockName
 	}
 	g.AssertTipHeight(uint32(coinbaseMaturity) + 1)
@@ -536,7 +538,7 @@ func TestCheckConnectBlockTemplate(t *testing.T) {
 	g.NextBlock("bse0", nil, tempTicketOuts)
 	g.SaveTipCoinbaseOuts()
 	acceptedBlockTemplate()
-	g.AcceptTipBlock()
+	g.AcceptTipBlock(ctx)
 
 	var ticketsPurchased int
 	for i := int64(1); int64(g.Tip().Header.Height) < stakeEnabledHeight; i++ {
@@ -547,7 +549,7 @@ func TestCheckConnectBlockTemplate(t *testing.T) {
 		g.NextBlock(blockName, nil, ticketOuts)
 		g.SaveTipCoinbaseOuts()
 		acceptedBlockTemplate()
-		g.AcceptTipBlock()
+		g.AcceptTipBlock(ctx)
 	}
 	g.AssertTipHeight(uint32(stakeEnabledHeight))
 
@@ -582,7 +584,7 @@ func TestCheckConnectBlockTemplate(t *testing.T) {
 		g.NextBlock(blockName, nil, ticketOuts)
 		g.SaveTipCoinbaseOuts()
 		acceptedBlockTemplate()
-		g.AcceptTipBlock()
+		g.AcceptTipBlock(ctx)
 	}
 	g.AssertTipHeight(uint32(stakeValidationHeight))
 
@@ -603,7 +605,7 @@ func TestCheckConnectBlockTemplate(t *testing.T) {
 		g.NextBlock(blockName, nil, outs[1:])
 		g.SaveTipCoinbaseOuts()
 		acceptedBlockTemplate()
-		g.AcceptTipBlock()
+		g.AcceptTipBlock(ctx)
 	}
 	g.AssertTipHeight(uint32(stakeValidationHeight) + uint32(coinbaseMaturity))
 
@@ -628,13 +630,13 @@ func TestCheckConnectBlockTemplate(t *testing.T) {
 	//
 	//   ... -> b1(0) -> b2(1) -> b3(2)
 	g.NextBlock("b1", outs[0], ticketOuts[0])
-	g.AcceptTipBlock()
+	g.AcceptTipBlock(ctx)
 
 	g.NextBlock("b2", outs[1], ticketOuts[1])
-	g.AcceptTipBlock()
+	g.AcceptTipBlock(ctx)
 
 	g.NextBlock("b3", outs[2], ticketOuts[2])
-	g.AcceptTipBlock()
+	g.AcceptTipBlock(ctx)
 
 	// Create a block template that forks from b1.  It should not be allowed
 	// since it is not the current tip or its parent.
@@ -711,13 +713,13 @@ func TestCheckConnectBlockTemplate(t *testing.T) {
 	//               \-> b3a(2)
 	g.SetTip("b2")
 	g.NextBlock("b3a", outs[2], ticketOuts[2])
-	g.AcceptedToSideChainWithExpectedTip("b3")
+	g.AcceptedToSideChainWithExpectedTip(ctx, "b3")
 
 	// Force tip reorganization to b3a.
 	//
 	//   ... -> b2(1) -> b3a(2)
 	//               \-> b3(2)
-	g.ForceTipReorg("b3", "b3a")
+	g.ForceTipReorg(ctx, "b3", "b3a")
 	g.ExpectTip("b3a")
 
 	// Create a block template that forks from b2 (the tip's parent) and
@@ -996,7 +998,8 @@ func TestExplicitVerUpgradesSemantics(t *testing.T) {
 	coinbaseMaturity := params.CoinbaseMaturity
 
 	// Create a test harness initialized with the genesis block as the tip.
-	g := newChaingenHarness(t, params)
+	ctx := context.Background()
+	g := newChaingenHarness(ctx, t, params)
 
 	// The following funcs are convenience funcs for asserting the tests are
 	// actually testing what they intend to.
@@ -1056,7 +1059,7 @@ func TestExplicitVerUpgradesSemantics(t *testing.T) {
 	// validation height.
 	// -------------------------------------------------------------------------
 
-	g.AdvanceToHeight(stakeValidationHeight-1, ticketsPerBlock)
+	g.AdvanceToHeight(ctx, stakeValidationHeight-1, ticketsPerBlock)
 
 	// -------------------------------------------------------------------------
 	// Create block at stake validation height that has both a regular and stake
@@ -1102,7 +1105,7 @@ func TestExplicitVerUpgradesSemantics(t *testing.T) {
 		b.Transactions[3].TxOut[0].PkScript = []byte{txscript.OP_FALSE}
 	})
 	g.SaveTipCoinbaseOuts()
-	g.AcceptTipBlock()
+	g.AcceptTipBlock(ctx)
 	g.SnapshotCoinbaseOuts("postSVH")
 
 	// -------------------------------------------------------------------------
@@ -1121,7 +1124,7 @@ func TestExplicitVerUpgradesSemantics(t *testing.T) {
 	g.NextBlock("bbadvote", &outs[0], outs[1:], func(b *wire.MsgBlock) {
 		b.STransactions[4].TxOut[2].Version = 12345
 	})
-	g.RejectTipBlock(ErrBadTxInput)
+	g.RejectTipBlock(ctx, ErrBadTxInput)
 
 	// -------------------------------------------------------------------------
 	// Create enough blocks to allow the stake output created at stake
@@ -1135,7 +1138,7 @@ func TestExplicitVerUpgradesSemantics(t *testing.T) {
 		blockName := fmt.Sprintf("btmp%d", i)
 		g.NextBlock(blockName, &outs[0], outs[1:])
 		g.SaveTipCoinbaseOuts()
-		g.AcceptTipBlock()
+		g.AcceptTipBlock(ctx)
 		outs = g.OldestCoinbaseOuts()
 	}
 
@@ -1176,7 +1179,7 @@ func TestExplicitVerUpgradesSemantics(t *testing.T) {
 		b.AddTransaction(regSpendTx)
 
 	})
-	g.AcceptTipBlock()
+	g.AcceptTipBlock(ctx)
 
 	// -------------------------------------------------------------------------
 	// Set the harness tip back to stake validation height, invalidate the
@@ -1185,9 +1188,9 @@ func TestExplicitVerUpgradesSemantics(t *testing.T) {
 	// -------------------------------------------------------------------------
 
 	g.SetTip("bsvh")
-	g.InvalidateBlockAndExpectTip("btmp0", nil, "bsvh")
+	g.InvalidateBlockAndExpectTip(ctx, "btmp0", nil, "bsvh")
 	g.RestoreCoinbaseOutsSnapshot("postSVH")
-	g.AdvanceFromSVHToActiveAgendas(voteID)
+	g.AdvanceFromSVHToActiveAgendas(ctx, voteID)
 
 	// replaceVers is a munge function which modifies the provided block by
 	// replacing the block, stake, and vote versions with the explicit version
@@ -1220,7 +1223,7 @@ func TestExplicitVerUpgradesSemantics(t *testing.T) {
 	outs = g.OldestCoinbaseOuts()
 	g.NextBlock("bbase", &outs[0], outs[1:], replaceVers)
 	g.SaveTipCoinbaseOuts()
-	g.AcceptTipBlock()
+	g.AcceptTipBlock(ctx)
 
 	// -------------------------------------------------------------------------
 	// Create block that has a regular transaction with a version that is no
@@ -1237,7 +1240,7 @@ func TestExplicitVerUpgradesSemantics(t *testing.T) {
 	g.NextBlock("b0bad", &outs[0], outs[1:], replaceVers, func(b *wire.MsgBlock) {
 		b.Transactions[1].Version = ^uint16(0)
 	})
-	g.RejectTipBlock(ErrTxVersionTooHigh)
+	g.RejectTipBlock(ctx, ErrTxVersionTooHigh)
 
 	// -------------------------------------------------------------------------
 	// Create block that has a stake transaction with a version that is no
@@ -1254,7 +1257,7 @@ func TestExplicitVerUpgradesSemantics(t *testing.T) {
 	g.NextBlock("b0bad2", &outs[0], outs[1:], replaceVers, func(b *wire.MsgBlock) {
 		b.STransactions[3].Version = ^uint16(0)
 	})
-	g.RejectTipBlock(ErrTxVersionTooHigh)
+	g.RejectTipBlock(ctx, ErrTxVersionTooHigh)
 
 	// -------------------------------------------------------------------------
 	// Create block that has a regular transaction with an output that has a
@@ -1271,7 +1274,7 @@ func TestExplicitVerUpgradesSemantics(t *testing.T) {
 	g.NextBlock("b0bad3", &outs[0], outs[1:], replaceVers, func(b *wire.MsgBlock) {
 		b.Transactions[1].TxOut[0].Version = ^uint16(0)
 	})
-	g.RejectTipBlock(ErrScriptVersionTooHigh)
+	g.RejectTipBlock(ctx, ErrScriptVersionTooHigh)
 
 	// -------------------------------------------------------------------------
 	// Create block that spends both the regular and stake transactions created
@@ -1301,7 +1304,7 @@ func TestExplicitVerUpgradesSemantics(t *testing.T) {
 		b.AddTransaction(stakeSpendTx)
 	})
 	g.SaveTipCoinbaseOuts()
-	g.AcceptTipBlock()
+	g.AcceptTipBlock(ctx)
 
 	// -------------------------------------------------------------------------
 	// Create block that spends the regular transaction output created with a
@@ -1328,7 +1331,7 @@ func TestExplicitVerUpgradesSemantics(t *testing.T) {
 		b.AddTransaction(regSpendTx)
 	})
 	g.SaveTipCoinbaseOuts()
-	g.AcceptTipBlock()
+	g.AcceptTipBlock(ctx)
 }
 
 // TestCalcTicketReturnAmounts ensures that ticket return amounts are calculated
@@ -1764,7 +1767,8 @@ func TestAutoRevocations(t *testing.T) {
 	ruleChangeInterval := int64(params.RuleChangeActivationInterval)
 
 	// Create a test harness initialized with the genesis block as the tip.
-	g := newChaingenHarness(t, params)
+	ctx := context.Background()
+	g := newChaingenHarness(ctx, t, params)
 
 	// replaceAutoRevocationsVersions is a munge function which modifies the
 	// provided block by replacing the block, stake, vote, and revocation
@@ -1783,8 +1787,8 @@ func TestAutoRevocations(t *testing.T) {
 	// active.
 	// ---------------------------------------------------------------------
 
-	g.AdvanceToStakeValidationHeight()
-	g.AdvanceFromSVHToActiveAgendas(voteID)
+	g.AdvanceToStakeValidationHeight(ctx)
+	g.AdvanceFromSVHToActiveAgendas(ctx, voteID)
 	activeAgendaHeight := uint32(stakeValidationHeight + ruleChangeInterval*3 - 1)
 	g.AssertTipHeight(activeAgendaHeight)
 
@@ -1811,7 +1815,7 @@ func TestAutoRevocations(t *testing.T) {
 		blockName := fmt.Sprintf("bbm%d", i)
 		g.NextBlock(blockName, nil, outs[1:], replaceAutoRevocationsVersions)
 		g.SaveTipCoinbaseOuts()
-		g.AcceptTipBlock()
+		g.AcceptTipBlock(ctx)
 	}
 	g.AssertTipHeight(activeAgendaHeight + uint32(coinbaseMaturity))
 
@@ -1836,7 +1840,7 @@ func TestAutoRevocations(t *testing.T) {
 	g.NextBlock("b1", outs[0], ticketOuts[0], g.ReplaceWithNVotes(4),
 		replaceAutoRevocationsVersions)
 	g.AssertTipNumRevocations(0)
-	g.RejectTipBlock(ErrNoMissedTicketRevocation)
+	g.RejectTipBlock(ctx, ErrNoMissedTicketRevocation)
 
 	// Create a block that misses a vote and contains a version 1 revocation
 	// transaction.
@@ -1848,7 +1852,7 @@ func TestAutoRevocations(t *testing.T) {
 		g.CreateRevocationsForMissedTickets(), replaceAutoRevocationsVersions,
 		chaingen.ReplaceRevocationVersions(1))
 	g.AssertTipNumRevocations(1)
-	g.RejectTipBlock(ErrInvalidRevocationTxVersion)
+	g.RejectTipBlock(ctx, ErrInvalidRevocationTxVersion)
 
 	// Create a block that misses a vote and contains a revocation with a
 	// non-zero fee.
@@ -1876,7 +1880,7 @@ func TestAutoRevocations(t *testing.T) {
 	// the later error case of ErrBadPayeeValue since a revocation with a
 	// non-zero fee will not be identified as a revocation if the automatic
 	// ticket revocations agenda is active.
-	g.RejectTipBlock(ErrRegTxCreateStakeOut)
+	g.RejectTipBlock(ctx, ErrRegTxCreateStakeOut)
 
 	// Create a valid block that misses multiple votes and contains revocation
 	// transactions for those votes.
@@ -1886,7 +1890,7 @@ func TestAutoRevocations(t *testing.T) {
 	g.NextBlock("b4", outs[0], ticketOuts[0], g.ReplaceWithNVotes(3),
 		g.CreateRevocationsForMissedTickets(), replaceAutoRevocationsVersions)
 	g.AssertTipNumRevocations(2)
-	g.AcceptTipBlock()
+	g.AcceptTipBlock(ctx)
 
 	// Create a slice of the ticket hashes that revocations spent in the tip
 	// block that was just connected.
@@ -1917,7 +1921,7 @@ func TestAutoRevocations(t *testing.T) {
 	}
 
 	// Invalidate the previously connected block so that it is disconnected.
-	g.InvalidateBlockAndExpectTip("b4", nil, startTip)
+	g.InvalidateBlockAndExpectTip(ctx, "b4", nil, startTip)
 
 	// Validate that the revocations from the disconnected block are now back in
 	// the live ticket treap in the ticket database.
@@ -1957,7 +1961,8 @@ func TestModifiedSubsidySplitSemantics(t *testing.T) {
 	removeDeploymentTimeConstraints(deployment)
 
 	// Create a test harness initialized with the genesis block as the tip.
-	g := newChaingenHarness(t, params)
+	ctx := context.Background()
+	g := newChaingenHarness(ctx, t, params)
 
 	// replaceCoinbaseSubsidy is a munge function which modifies the provided
 	// block by replacing the coinbase subsidy with the proportion required for
@@ -2011,7 +2016,7 @@ func TestModifiedSubsidySplitSemantics(t *testing.T) {
 	// the agenda remains unaffected.
 	// -------------------------------------------------------------------------
 
-	g.AdvanceToStakeValidationHeight()
+	g.AdvanceToStakeValidationHeight(ctx)
 
 	// -------------------------------------------------------------------------
 	// Create a block that pays the modified work subsidy prior to activation
@@ -2026,7 +2031,7 @@ func TestModifiedSubsidySplitSemantics(t *testing.T) {
 	tipName := g.TipName()
 	outs := g.OldestCoinbaseOuts()
 	g.NextBlock("bsvhbad", &outs[0], outs[1:], replaceCoinbaseSubsidy)
-	g.RejectTipBlock(ErrBadCoinbaseAmountIn)
+	g.RejectTipBlock(ctx, ErrBadCoinbaseAmountIn)
 
 	// -------------------------------------------------------------------------
 	// Create a block that pays the modified vote subsidy prior to activation
@@ -2040,7 +2045,7 @@ func TestModifiedSubsidySplitSemantics(t *testing.T) {
 
 	g.SetTip(tipName)
 	g.NextBlock("bsvhbad2", &outs[0], outs[1:], replaceVoteSubsidies)
-	g.RejectTipBlock(ErrBadStakebaseAmountIn)
+	g.RejectTipBlock(ctx, ErrBadStakebaseAmountIn)
 
 	// -------------------------------------------------------------------------
 	// Generate and accept enough blocks with the appropriate vote bits set to
@@ -2049,7 +2054,7 @@ func TestModifiedSubsidySplitSemantics(t *testing.T) {
 	// -------------------------------------------------------------------------
 
 	g.SetTip(tipName)
-	g.AdvanceFromSVHToActiveAgendas(voteID)
+	g.AdvanceFromSVHToActiveAgendas(ctx, voteID)
 
 	// replaceVers is a munge function which modifies the provided block by
 	// replacing the block, stake, and vote versions with the modified subsidy
@@ -2073,7 +2078,7 @@ func TestModifiedSubsidySplitSemantics(t *testing.T) {
 	tipName = g.TipName()
 	outs = g.OldestCoinbaseOuts()
 	g.NextBlock("b1bad", &outs[0], outs[1:], replaceVers, replaceCoinbaseSubsidy)
-	g.RejectTipBlock(ErrBadStakebaseAmountIn)
+	g.RejectTipBlock(ctx, ErrBadStakebaseAmountIn)
 
 	// -------------------------------------------------------------------------
 	// Create a block that pays the original work subsidy that was in effect
@@ -2087,7 +2092,7 @@ func TestModifiedSubsidySplitSemantics(t *testing.T) {
 
 	g.SetTip(tipName)
 	g.NextBlock("b1bad2", &outs[0], outs[1:], replaceVers, replaceVoteSubsidies)
-	g.RejectTipBlock(ErrBadCoinbaseAmountIn)
+	g.RejectTipBlock(ctx, ErrBadCoinbaseAmountIn)
 
 	// -------------------------------------------------------------------------
 	// Create a block that pays the modified work and vote subsidies.
@@ -2101,5 +2106,5 @@ func TestModifiedSubsidySplitSemantics(t *testing.T) {
 	g.NextBlock("b1", &outs[0], outs[1:], replaceVers, replaceCoinbaseSubsidy,
 		replaceVoteSubsidies)
 	g.SaveTipCoinbaseOuts()
-	g.AcceptTipBlock()
+	g.AcceptTipBlock(ctx)
 }

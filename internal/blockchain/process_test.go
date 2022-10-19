@@ -5,6 +5,7 @@
 package blockchain
 
 import (
+	"context"
 	"fmt"
 	"sync"
 	"testing"
@@ -31,7 +32,8 @@ func TestProcessOrder(t *testing.T) {
 
 	// Create a test harness initialized with the genesis block as the tip.
 	params := chaincfg.RegNetParams()
-	g := newChaingenHarness(t, params)
+	ctx := context.Background()
+	g := newChaingenHarness(ctx, t, params)
 
 	// Shorter versions of useful params for convenience.
 	coinbaseMaturity := params.CoinbaseMaturity
@@ -41,7 +43,7 @@ func TestProcessOrder(t *testing.T) {
 	// Generate and accept enough blocks to reach stake validation height.
 	// ---------------------------------------------------------------------
 
-	g.AdvanceToStakeValidationHeight()
+	g.AdvanceToStakeValidationHeight(ctx)
 
 	// ---------------------------------------------------------------------
 	// Generate enough blocks to have a known distance to the first mature
@@ -56,7 +58,7 @@ func TestProcessOrder(t *testing.T) {
 		blockName := fmt.Sprintf("bbm%d", i)
 		g.NextBlock(blockName, nil, outs[1:])
 		g.SaveTipCoinbaseOuts()
-		g.AcceptTipBlock()
+		g.AcceptTipBlock(ctx)
 	}
 	g.AssertTipHeight(uint32(stakeValidationHeight) + uint32(coinbaseMaturity))
 
@@ -77,8 +79,8 @@ func TestProcessOrder(t *testing.T) {
 	//   ... -> b1(0)
 	//      \-> b1(0)
 	g.NextBlock("b1", outs[0], ticketOuts[0])
-	g.AcceptTipBlock()
-	g.RejectTipBlock(ErrDuplicateBlock)
+	g.AcceptTipBlock(ctx)
+	g.RejectTipBlock(ctx, ErrDuplicateBlock)
 
 	// ---------------------------------------------------------------------
 	// Orphan tests.
@@ -92,7 +94,7 @@ func TestProcessOrder(t *testing.T) {
 	g.NextBlock("borphan0", outs[1], ticketOuts[1], func(b *wire.MsgBlock) {
 		b.Header.PrevBlock = chainhash.Hash{}
 	})
-	g.RejectTipBlock(ErrMissingParent)
+	g.RejectTipBlock(ctx, ErrMissingParent)
 
 	// Create valid orphan block.
 	//
@@ -101,10 +103,10 @@ func TestProcessOrder(t *testing.T) {
 	g.SetTip("b1")
 	g.NextBlock("borphanbase", outs[1], ticketOuts[1])
 	g.NextBlock("borphan1", outs[2], ticketOuts[2])
-	g.RejectTipBlock(ErrMissingParent)
+	g.RejectTipBlock(ctx, ErrMissingParent)
 
 	// Ensure duplicate orphan blocks are rejected.
-	g.RejectTipBlock(ErrMissingParent)
+	g.RejectTipBlock(ctx, ErrMissingParent)
 
 	// ---------------------------------------------------------------------
 	// Out-of-order forked reorg to invalid block tests.
@@ -125,7 +127,7 @@ func TestProcessOrder(t *testing.T) {
 	//                  (bpw1 added last)
 	g.SetTip("b1")
 	g.NextBlock("b2", outs[1], ticketOuts[1])
-	g.AcceptTipBlock()
+	g.AcceptTipBlock(ctx)
 	g.ExpectTip("b2")
 
 	g.SetTip("b1")
@@ -136,9 +138,9 @@ func TestProcessOrder(t *testing.T) {
 		b.Transactions[0].TxOut[2].Value++
 	})
 	g.AcceptHeader("bpw1")
-	g.AcceptBlockData("bpw2")
-	g.AcceptBlockData("bpw3")
-	g.RejectBlock("bpw1", ErrBadCoinbaseValue)
+	g.AcceptBlockData(ctx, "bpw2")
+	g.AcceptBlockData(ctx, "bpw3")
+	g.RejectBlock(ctx, "bpw1", ErrBadCoinbaseValue)
 	g.ExpectTip("bpw2")
 
 	// Create a fork that ends with block that generates too much dev-org
@@ -155,9 +157,9 @@ func TestProcessOrder(t *testing.T) {
 		b.Transactions[0].TxOut[0].Value++
 	})
 	g.AcceptHeader("bdc1")
-	g.AcceptBlockData("bdc2")
-	g.AcceptBlockData("bdc3")
-	g.RejectBlock("bdc1", ErrNoTreasury)
+	g.AcceptBlockData(ctx, "bdc2")
+	g.AcceptBlockData(ctx, "bdc3")
+	g.RejectBlock(ctx, "bdc1", ErrNoTreasury)
 	g.ExpectTip("bdc2")
 }
 
@@ -208,7 +210,7 @@ func TestProcessOrder(t *testing.T) {
 //	        \-> b4h -> b5h@ -> b6h  -> b7h
 //	        \-> b4i -> b5i  -> b6i@ -> b7i  -> b8i
 //	        \-> b4j -> b5j  -> b6j  -> b7j@
-func genSharedProcessTestBlocks(t *testing.T) *chaingen.Generator {
+func genSharedProcessTestBlocks(ctx context.Context, t *testing.T) *chaingen.Generator {
 	processTestGeneratorLock.Lock()
 	defer processTestGeneratorLock.Unlock()
 
@@ -220,7 +222,7 @@ func genSharedProcessTestBlocks(t *testing.T) *chaingen.Generator {
 	// Create a new database and chain instance needed to create the generator
 	// populated with the desired blocks.
 	params := chaincfg.RegNetParams()
-	g := newChaingenHarness(t, params)
+	g := newChaingenHarness(ctx, t, params)
 
 	// Shorter versions of useful params for convenience.
 	coinbaseMaturity := params.CoinbaseMaturity
@@ -258,7 +260,7 @@ func genSharedProcessTestBlocks(t *testing.T) *chaingen.Generator {
 	// -------------------------------------------------------------------------
 
 	g.SetTip("genesis")
-	g.GenerateToStakeValidationHeight()
+	g.GenerateToStakeValidationHeight(ctx)
 
 	// -------------------------------------------------------------------------
 	// Generate enough blocks to have a known distance to the first mature
@@ -526,10 +528,11 @@ func TestProcessLogic(t *testing.T) {
 	// some branches are valid and others contain invalid headers and/or blocks
 	// with multiple valid descendants as well as further forks at various
 	// heights from those invalid branches.
-	sharedGen := genSharedProcessTestBlocks(t)
+	ctx := context.Background()
+	sharedGen := genSharedProcessTestBlocks(ctx, t)
 
 	// Create a new database and chain instance to run tests against.
-	g := newChaingenHarnessWithGen(t, sharedGen)
+	g := newChaingenHarnessWithGen(ctx, t, sharedGen)
 
 	// Shorter versions of useful params for convenience.
 	params := g.Params()
@@ -543,7 +546,7 @@ func TestProcessLogic(t *testing.T) {
 	// marked invalid due to the duplicate attempt.
 	// -------------------------------------------------------------------------
 
-	g.RejectBlock("genesis", ErrDuplicateBlock)
+	g.RejectBlock(ctx, "genesis", ErrDuplicateBlock)
 	g.AcceptHeader("genesis")
 	g.ExpectBestHeader("genesis")
 	g.ExpectBestInvalidHeader("")
@@ -571,7 +574,7 @@ func TestProcessLogic(t *testing.T) {
 	//
 	//   genesis
 	//          \-> bfbbad
-	g.RejectBlock("bfbbad", ErrBadCoinbaseValue)
+	g.RejectBlock(ctx, "bfbbad", ErrBadCoinbaseValue)
 	g.ExpectBestInvalidHeader("bfbbadchild")
 
 	// Ensure that the header for a known invalid block is rejected.
@@ -666,7 +669,7 @@ func TestProcessLogic(t *testing.T) {
 	// -------------------------------------------------------------------------
 
 	g.RejectHeader("b2", ErrMissingParent)
-	g.RejectBlock("b2", ErrMissingParent)
+	g.RejectBlock(ctx, "b2", ErrMissingParent)
 	g.ExpectBestInvalidHeader("bfbbadchild")
 
 	// -------------------------------------------------------------------------
@@ -743,26 +746,26 @@ func TestProcessLogic(t *testing.T) {
 	//   ... bsv0 -> ... -> bsv# -> bbm0 -> ... -> bbm#
 	// -------------------------------------------------------------------------
 
-	g.AcceptBlock("bfb")
-	g.RejectBlock("bfb", ErrDuplicateBlock)
+	g.AcceptBlock(ctx, "bfb")
+	g.RejectBlock(ctx, "bfb", ErrDuplicateBlock)
 	for i := uint16(0); i < coinbaseMaturity; i++ {
 		blockName := fmt.Sprintf("bm%d", i)
-		g.AcceptBlock(blockName)
+		g.AcceptBlock(ctx, blockName)
 	}
 	tipHeight = int64(coinbaseMaturity) + 1
 	for i := int64(0); tipHeight < stakeEnabledHeight; i++ {
 		blockName := fmt.Sprintf("bse%d", i)
-		g.AcceptBlock(blockName)
+		g.AcceptBlock(ctx, blockName)
 		tipHeight++
 	}
 	for i := int64(0); tipHeight < stakeValidationHeight; i++ {
 		blockName := fmt.Sprintf("bsv%d", i)
-		g.AcceptBlock(blockName)
+		g.AcceptBlock(ctx, blockName)
 		tipHeight++
 	}
 	for i := uint16(0); i < coinbaseMaturity; i++ {
 		blockName := fmt.Sprintf("bbm%d", i)
-		g.AcceptBlock(blockName)
+		g.AcceptBlock(ctx, blockName)
 	}
 
 	// -------------------------------------------------------------------------
@@ -784,15 +787,15 @@ func TestProcessLogic(t *testing.T) {
 	//              \-> b1bad
 	// -------------------------------------------------------------------------
 
-	g.RejectBlock("b1bad", ErrNotEnoughStake)
-	g.RejectBlock("b1bad", ErrNotEnoughStake)
+	g.RejectBlock(ctx, "b1bad", ErrNotEnoughStake)
+	g.RejectBlock(ctx, "b1bad", ErrNotEnoughStake)
 	g.ExpectBestInvalidHeader("bfbbadchild")
 
 	g.AcceptHeader("b1bad")
-	g.RejectBlock("b1bad", ErrNotEnoughStake)
+	g.RejectBlock(ctx, "b1bad", ErrNotEnoughStake)
 	g.ExpectBestInvalidHeader("b1bad")
 	g.RejectHeader("b1bad", ErrKnownInvalidBlock)
-	g.RejectBlock("b1bad", ErrKnownInvalidBlock)
+	g.RejectBlock(ctx, "b1bad", ErrKnownInvalidBlock)
 
 	// -------------------------------------------------------------------------
 	// Ensure that a block that has a positional failure is rejected as
@@ -805,8 +808,8 @@ func TestProcessLogic(t *testing.T) {
 	//              \-> b1bada
 	// -------------------------------------------------------------------------
 
-	g.RejectBlock("b1bada", ErrExpiredTx)
-	g.RejectBlock("b1bada", ErrKnownInvalidBlock)
+	g.RejectBlock(ctx, "b1bada", ErrExpiredTx)
+	g.RejectBlock(ctx, "b1bada", ErrKnownInvalidBlock)
 
 	// Since both b1bad and b1bada have the same work and the block data is
 	// rejected for both, whichever has the lowest hash (when treated as a
@@ -834,12 +837,12 @@ func TestProcessLogic(t *testing.T) {
 	//                        \-> b4b
 	// -------------------------------------------------------------------------
 
-	g.AcceptBlockData("b2")
-	g.AcceptBlockData("b4b")
-	g.AcceptBlockData("b3")
-	g.AcceptBlockData("b5")
-	g.AcceptBlockData("b4")
-	g.AcceptBlock("b1")
+	g.AcceptBlockData(ctx, "b2")
+	g.AcceptBlockData(ctx, "b4b")
+	g.AcceptBlockData(ctx, "b3")
+	g.AcceptBlockData(ctx, "b5")
+	g.AcceptBlockData(ctx, "b4")
+	g.AcceptBlock(ctx, "b1")
 	g.ExpectTip("b5")
 
 	// -------------------------------------------------------------------------
@@ -852,7 +855,7 @@ func TestProcessLogic(t *testing.T) {
 	//                               current tip                 best header
 	// -------------------------------------------------------------------------
 
-	g.RejectBlock("b1", ErrDuplicateBlock)
+	g.RejectBlock(ctx, "b1", ErrDuplicateBlock)
 	g.ExpectTip("b5")
 	g.ExpectBestHeader("b11")
 
@@ -878,7 +881,7 @@ func TestProcessLogic(t *testing.T) {
 
 	// Process the bad block and ensure its header is rejected after since it is
 	// then a known bad block.
-	g.RejectBlock("b5b", ErrTicketUnavailable)
+	g.RejectBlock(ctx, "b5b", ErrTicketUnavailable)
 	g.RejectHeader("b5b", ErrKnownInvalidBlock)
 
 	// Ensure that all of its descendant headers that were already known are
@@ -895,15 +898,15 @@ func TestProcessLogic(t *testing.T) {
 
 	// Ensure that all of its descendant blocks associated with the headers that
 	// were already known are rejected.
-	g.RejectBlock("b6b", ErrInvalidAncestorBlock)
-	g.RejectBlock("b7b", ErrInvalidAncestorBlock)
-	g.RejectBlock("b8b", ErrInvalidAncestorBlock)
-	g.RejectBlock("b8c", ErrInvalidAncestorBlock)
-	g.RejectBlock("b9c", ErrInvalidAncestorBlock)
-	g.RejectBlock("b7d", ErrInvalidAncestorBlock)
-	g.RejectBlock("b8d", ErrInvalidAncestorBlock)
-	g.RejectBlock("b9d", ErrInvalidAncestorBlock)
-	g.RejectBlock("b7e", ErrInvalidAncestorBlock)
+	g.RejectBlock(ctx, "b6b", ErrInvalidAncestorBlock)
+	g.RejectBlock(ctx, "b7b", ErrInvalidAncestorBlock)
+	g.RejectBlock(ctx, "b8b", ErrInvalidAncestorBlock)
+	g.RejectBlock(ctx, "b8c", ErrInvalidAncestorBlock)
+	g.RejectBlock(ctx, "b9c", ErrInvalidAncestorBlock)
+	g.RejectBlock(ctx, "b7d", ErrInvalidAncestorBlock)
+	g.RejectBlock(ctx, "b8d", ErrInvalidAncestorBlock)
+	g.RejectBlock(ctx, "b9d", ErrInvalidAncestorBlock)
+	g.RejectBlock(ctx, "b7e", ErrInvalidAncestorBlock)
 
 	// Ensure both the best known invalid and not known invalid headers are
 	// as expected.
@@ -917,7 +920,7 @@ func TestProcessLogic(t *testing.T) {
 	// Ensure that both a descendant header and block of the failed block that
 	// themselves were not already known are rejected.
 	g.RejectHeader("b8e", ErrInvalidAncestorBlock)
-	g.RejectBlock("b8e", ErrInvalidAncestorBlock)
+	g.RejectBlock(ctx, "b8e", ErrInvalidAncestorBlock)
 
 	// -------------------------------------------------------------------------
 	// Similar to above, but this time when the invalid block on a side chain
@@ -938,25 +941,25 @@ func TestProcessLogic(t *testing.T) {
 	// Accept the block data for b4g, b5g, and b7g but only the block header for
 	// b6g.  The data for block b7g should be accepted because b6g is not yet
 	// known to be invalid.  Notice that b8g is intentionally not processed yet.
-	g.AcceptBlockData("b4g")
-	g.AcceptBlockData("b5g")
+	g.AcceptBlockData(ctx, "b4g")
+	g.AcceptBlockData(ctx, "b5g")
 	g.AcceptHeader("b6g")
-	g.AcceptBlockData("b7g")
+	g.AcceptBlockData(ctx, "b7g")
 
 	// Process the bad block and ensure its header is rejected after since it is
 	// then a known bad block.
-	g.RejectBlock("b6g", ErrTicketUnavailable)
+	g.RejectBlock(ctx, "b6g", ErrTicketUnavailable)
 	g.RejectHeader("b6g", ErrKnownInvalidBlock)
 
 	// Ensure that all of its descendant headers and blocks that were already
 	// known are rejected.
-	g.RejectBlock("b6g", ErrDuplicateBlock)
-	g.RejectBlock("b7g", ErrDuplicateBlock)
+	g.RejectBlock(ctx, "b6g", ErrDuplicateBlock)
+	g.RejectBlock(ctx, "b7g", ErrDuplicateBlock)
 
 	// Ensure that both a descendant header and block of the failed block that
 	// themselves were not already known are rejected.
 	g.RejectHeader("b8g", ErrInvalidAncestorBlock)
-	g.RejectBlock("b8g", ErrInvalidAncestorBlock)
+	g.RejectBlock(ctx, "b8g", ErrInvalidAncestorBlock)
 
 	// Ensure both the best known invalid and not known invalid headers are
 	// unchanged.
@@ -982,21 +985,21 @@ func TestProcessLogic(t *testing.T) {
 	// Accept the block data for b4h and b6h, but only the block header for b5h.
 	// The data for block b6h should be accepted because b5h is not yet known to
 	// be invalid.
-	g.AcceptBlockData("b4h")
+	g.AcceptBlockData(ctx, "b4h")
 	g.AcceptHeader("b5h")
-	g.AcceptBlockData("b6h")
+	g.AcceptBlockData(ctx, "b6h")
 
 	// Process the bad block and ensure its header is rejected after since it is
 	// then a known bad block.
-	g.RejectBlock("b5h", ErrMissingTxOut)
+	g.RejectBlock(ctx, "b5h", ErrMissingTxOut)
 	g.RejectHeader("b5h", ErrKnownInvalidBlock)
 
 	// Ensure that all of its descendant headers and blocks that were already
 	// known are rejected.
 	g.RejectHeader("b6h", ErrInvalidAncestorBlock)
 	g.RejectHeader("b7h", ErrInvalidAncestorBlock)
-	g.RejectBlock("b6h", ErrDuplicateBlock)
-	g.RejectBlock("b7h", ErrInvalidAncestorBlock)
+	g.RejectBlock(ctx, "b6h", ErrDuplicateBlock)
+	g.RejectBlock(ctx, "b7h", ErrInvalidAncestorBlock)
 
 	// Ensure both the best known invalid and not known invalid headers are
 	// unchanged.
@@ -1023,27 +1026,27 @@ func TestProcessLogic(t *testing.T) {
 	// Accept the block data for b4i and b5i, but only the block header for b6i.
 	// The header for block b6i should be accepted since the block is not yet
 	// known to be invalid.
-	g.AcceptBlockData("b4i")
-	g.AcceptBlockData("b5i")
+	g.AcceptBlockData(ctx, "b4i")
+	g.AcceptBlockData(ctx, "b5i")
 	g.AcceptHeader("b6i")
 
 	// Process the bad block and ensure its header is rejected after since it is
 	// then a known bad block.  The chain should reorg back to b5 since it was
 	// seen first.
-	g.RejectBlock("b6i", ErrMissingTxOut)
+	g.RejectBlock(ctx, "b6i", ErrMissingTxOut)
 	g.RejectHeader("b6i", ErrKnownInvalidBlock)
 	g.ExpectTip("b5")
 
 	// Ensure that all of its descendant headers and blocks that were already
 	// known are rejected.
 	g.RejectHeader("b7i", ErrInvalidAncestorBlock)
-	g.RejectBlock("b7i", ErrInvalidAncestorBlock)
+	g.RejectBlock(ctx, "b7i", ErrInvalidAncestorBlock)
 
 	// Ensure that both a descendant header and block of the failed block that
 	// themselves were not already known are rejected.  Notice that the header
 	// for b7i was never accepted, so these should fail due to a missing parent.
 	g.RejectHeader("b8i", ErrMissingParent)
-	g.RejectBlock("b8i", ErrMissingParent)
+	g.RejectBlock(ctx, "b8i", ErrMissingParent)
 
 	// Ensure both the best known invalid and not known invalid headers are
 	// unchanged.
@@ -1073,17 +1076,17 @@ func TestProcessLogic(t *testing.T) {
 	// though it is invalid because it can't be checked yet since the data for
 	// b6j is not available.
 	g.ExpectTip("b5")
-	g.AcceptBlockData("b4j")
-	g.AcceptBlockData("b5j")
+	g.AcceptBlockData(ctx, "b4j")
+	g.AcceptBlockData(ctx, "b5j")
 	g.AcceptHeader("b6j")
-	g.AcceptBlockData("b7j")
+	g.AcceptBlockData(ctx, "b7j")
 
 	// Make the block data for b6j available in order to complete the link
 	// needed to trigger the reorg and check the blocks.  Since errors in reorgs
 	// are currently attributed to the block that caused them, the error in b7j
 	// should be attributed to b6j, but b6j should still end up as the tip since
 	// it is valid.
-	g.RejectBlock("b6j", ErrMissingTxOut)
+	g.RejectBlock(ctx, "b6j", ErrMissingTxOut)
 	g.ExpectTip("b6j")
 
 	// Ensure both the best known invalid and not known invalid headers are
@@ -1127,13 +1130,13 @@ func TestProcessLogic(t *testing.T) {
 	//                               ---                          ----
 	//                               ^^^                         new tip
 	//                             orig tip
-	g.AcceptBlockDataWithExpectedTip("b9f", "b6j")
-	g.AcceptBlockDataWithExpectedTip("b7f", "b6j")
-	g.AcceptBlockDataWithExpectedTip("b8f", "b6j")
-	g.AcceptBlockDataWithExpectedTip("b10f", "b6j")
-	g.AcceptBlockDataWithExpectedTip("b6f", "b6j")
-	g.AcceptBlockDataWithExpectedTip("b4f", "b6j")
-	g.AcceptBlockDataWithExpectedTip("b5f", "b10f")
+	g.AcceptBlockDataWithExpectedTip(ctx, "b9f", "b6j")
+	g.AcceptBlockDataWithExpectedTip(ctx, "b7f", "b6j")
+	g.AcceptBlockDataWithExpectedTip(ctx, "b8f", "b6j")
+	g.AcceptBlockDataWithExpectedTip(ctx, "b10f", "b6j")
+	g.AcceptBlockDataWithExpectedTip(ctx, "b6f", "b6j")
+	g.AcceptBlockDataWithExpectedTip(ctx, "b4f", "b6j")
+	g.AcceptBlockDataWithExpectedTip(ctx, "b5f", "b10f")
 
 	// Make the data for the initial branch available, again in an out of order
 	// fashion, but with an additional test condition built in such that all of
@@ -1149,11 +1152,11 @@ func TestProcessLogic(t *testing.T) {
 	//                                                            ^^^^
 	//                                                            ----
 	//                                                         current tip
-	g.AcceptBlockDataWithExpectedTip("b8", "b10f")
-	g.AcceptBlockDataWithExpectedTip("b10", "b10f")
-	g.AcceptBlockDataWithExpectedTip("b7", "b10f")
-	g.AcceptBlockDataWithExpectedTip("b9", "b10f")
-	g.AcceptBlockDataWithExpectedTip("b6", "b10f")
+	g.AcceptBlockDataWithExpectedTip(ctx, "b8", "b10f")
+	g.AcceptBlockDataWithExpectedTip(ctx, "b10", "b10f")
+	g.AcceptBlockDataWithExpectedTip(ctx, "b7", "b10f")
+	g.AcceptBlockDataWithExpectedTip(ctx, "b9", "b10f")
+	g.AcceptBlockDataWithExpectedTip(ctx, "b6", "b10f")
 	g.ExpectIsCurrent(false)
 
 	// Finally, accept the data for final block on the initial branch that
@@ -1166,7 +1169,7 @@ func TestProcessLogic(t *testing.T) {
 	//                                                            ^^^^
 	//                                                            ----
 	//                                                          orig tip
-	g.AcceptBlockDataWithExpectedTip("b11", "b11")
+	g.AcceptBlockDataWithExpectedTip(ctx, "b11", "b11")
 	g.ExpectIsCurrent(true)
 }
 
@@ -1180,10 +1183,11 @@ func TestInvalidateReconsider(t *testing.T) {
 	// some branches are valid and others contain invalid headers and/or blocks
 	// with multiple valid descendants as well as further forks at various
 	// heights from those invalid branches.
-	sharedGen := genSharedProcessTestBlocks(t)
+	ctx := context.Background()
+	sharedGen := genSharedProcessTestBlocks(ctx, t)
 
 	// Create a new database and chain instance to run tests against.
-	g := newChaingenHarnessWithGen(t, sharedGen)
+	g := newChaingenHarnessWithGen(ctx, t, sharedGen)
 
 	// Shorter versions of useful params for convenience.
 	params := g.Params()
@@ -1286,38 +1290,38 @@ func TestInvalidateReconsider(t *testing.T) {
 	//   ... -> bfb -> bm0 -> ... -> bm# -> bse0 -> ... -> bse# -> ...
 	//
 	//   ... bsv0 -> ... -> bsv# -> bbm0 -> ... -> bbm#
-	g.AcceptBlock("bfb")
+	g.AcceptBlock(ctx, "bfb")
 	for i := uint16(0); i < coinbaseMaturity; i++ {
 		blockName := fmt.Sprintf("bm%d", i)
-		g.AcceptBlock(blockName)
+		g.AcceptBlock(ctx, blockName)
 	}
 	tipHeight = int64(coinbaseMaturity) + 1
 	for i := int64(0); tipHeight < stakeEnabledHeight; i++ {
 		blockName := fmt.Sprintf("bse%d", i)
-		g.AcceptBlock(blockName)
+		g.AcceptBlock(ctx, blockName)
 		tipHeight++
 	}
 	for i := int64(0); tipHeight < stakeValidationHeight; i++ {
 		blockName := fmt.Sprintf("bsv%d", i)
-		g.AcceptBlock(blockName)
+		g.AcceptBlock(ctx, blockName)
 		tipHeight++
 	}
 	for i := uint16(0); i < coinbaseMaturity; i++ {
 		blockName := fmt.Sprintf("bbm%d", i)
-		g.AcceptBlock(blockName)
+		g.AcceptBlock(ctx, blockName)
 	}
 
 	// Accept the block data for several blocks in the main branch of the test
 	// data.
 	//
 	// ... -> b1 -> b2 -> b3 -> b4  -> b5  -> b6  -> b7
-	g.AcceptBlock("b1")
-	g.AcceptBlock("b2")
-	g.AcceptBlock("b3")
-	g.AcceptBlock("b4")
-	g.AcceptBlock("b5")
-	g.AcceptBlock("b6")
-	g.AcceptBlock("b7")
+	g.AcceptBlock(ctx, "b1")
+	g.AcceptBlock(ctx, "b2")
+	g.AcceptBlock(ctx, "b3")
+	g.AcceptBlock(ctx, "b4")
+	g.AcceptBlock(ctx, "b5")
+	g.AcceptBlock(ctx, "b6")
+	g.AcceptBlock(ctx, "b7")
 
 	// Accept the block data for several blocks in a branch of the test data
 	// that contains a bad block such that the invalid branch has more work.
@@ -1329,11 +1333,11 @@ func TestInvalidateReconsider(t *testing.T) {
 	//                      \-> b4b -> b5b -> b6b -> b7b -> b8b
 	//                                 ---
 	//                                 ^ (invalid block)
-	g.AcceptBlockData("b4b")
-	g.AcceptBlockData("b6b")
-	g.AcceptBlockData("b7b")
-	g.AcceptBlockData("b8b")
-	g.RejectBlock("b5b", ErrTicketUnavailable)
+	g.AcceptBlockData(ctx, "b4b")
+	g.AcceptBlockData(ctx, "b6b")
+	g.AcceptBlockData(ctx, "b7b")
+	g.AcceptBlockData(ctx, "b8b")
+	g.RejectBlock(ctx, "b5b", ErrTicketUnavailable)
 	g.ExpectTip("b7")
 	g.ExpectBestInvalidHeader("b9c")
 	g.ExpectIsCurrent(false)
@@ -1342,16 +1346,16 @@ func TestInvalidateReconsider(t *testing.T) {
 	// Invalidating and reconsidering an unknown block must error.
 	// -------------------------------------------------------------------------
 
-	g.InvalidateBlockAndExpectTip("b1bad", ErrUnknownBlock, "b7")
-	g.ReconsiderBlockAndExpectTip("b1bad", ErrUnknownBlock, "b7")
+	g.InvalidateBlockAndExpectTip(ctx, "b1bad", ErrUnknownBlock, "b7")
+	g.ReconsiderBlockAndExpectTip(ctx, "b1bad", ErrUnknownBlock, "b7")
 
 	// -------------------------------------------------------------------------
 	// The genesis block is not allowed to be invalidated, but it can be
 	// reconsidered.
 	// -------------------------------------------------------------------------
 
-	g.InvalidateBlockAndExpectTip("genesis", ErrInvalidateGenesisBlock, "b7")
-	g.ReconsiderBlockAndExpectTip("genesis", nil, "b7")
+	g.InvalidateBlockAndExpectTip(ctx, "genesis", ErrInvalidateGenesisBlock, "b7")
+	g.ReconsiderBlockAndExpectTip(ctx, "genesis", nil, "b7")
 	g.ExpectBestHeader("b11")
 	g.ExpectBestInvalidHeader("b9c")
 	g.ExpectIsCurrent(false)
@@ -1361,7 +1365,7 @@ func TestInvalidateReconsider(t *testing.T) {
 	// no effect.
 	// -------------------------------------------------------------------------
 
-	g.InvalidateBlockAndExpectTip("b5b", nil, "b7")
+	g.InvalidateBlockAndExpectTip(ctx, "b5b", nil, "b7")
 	g.ExpectBestHeader("b11")
 	g.ExpectBestInvalidHeader("b9c")
 	g.ExpectIsCurrent(false)
@@ -1394,7 +1398,7 @@ func TestInvalidateReconsider(t *testing.T) {
 	//                                 ^ (still invalid block)
 	// -------------------------------------------------------------------------
 
-	g.ReconsiderBlockAndExpectTip("b5b", ErrTicketUnavailable, "b7")
+	g.ReconsiderBlockAndExpectTip(ctx, "b5b", ErrTicketUnavailable, "b7")
 	g.ExpectBestHeader("b11")
 	g.ExpectBestInvalidHeader("b9c")
 	g.ExpectIsCurrent(false)
@@ -1428,7 +1432,7 @@ func TestInvalidateReconsider(t *testing.T) {
 	//                                 ^ (still invalid block)
 	// -------------------------------------------------------------------------
 
-	g.ReconsiderBlockAndExpectTip("b6b", ErrTicketUnavailable, "b7")
+	g.ReconsiderBlockAndExpectTip(ctx, "b6b", ErrTicketUnavailable, "b7")
 	g.ExpectBestHeader("b11")
 	g.ExpectBestInvalidHeader("b9c")
 	g.ExpectIsCurrent(false)
@@ -1469,12 +1473,12 @@ func TestInvalidateReconsider(t *testing.T) {
 	//      (no longer known to be invalid) ^          ^ (still marked invalid)
 	// -------------------------------------------------------------------------
 
-	g.InvalidateBlockAndExpectTip("b7b", nil, "b7")
+	g.InvalidateBlockAndExpectTip(ctx, "b7b", nil, "b7")
 	g.ExpectBestHeader("b11")
 	g.ExpectBestInvalidHeader("b9c")
 	g.ExpectIsCurrent(false)
 
-	g.ReconsiderBlockAndExpectTip("b6b", nil, "b7")
+	g.ReconsiderBlockAndExpectTip(ctx, "b6b", nil, "b7")
 	g.ExpectBestHeader("b11")
 	g.ExpectBestInvalidHeader("b9c")
 	g.ExpectIsCurrent(false)
@@ -1508,7 +1512,7 @@ func TestInvalidateReconsider(t *testing.T) {
 	//                                 ^ (invalid block)
 	// -------------------------------------------------------------------------
 
-	g.ReconsiderBlockAndExpectTip("b8b", ErrTicketUnavailable, "b7")
+	g.ReconsiderBlockAndExpectTip(ctx, "b8b", ErrTicketUnavailable, "b7")
 	g.ExpectBestHeader("b11")
 	g.ExpectBestInvalidHeader("b9c")
 	g.ExpectIsCurrent(false)
@@ -1557,12 +1561,12 @@ func TestInvalidateReconsider(t *testing.T) {
 
 	// Note that the genesis block is too far in the past to be considered
 	// current.
-	g.InvalidateBlockAndExpectTip("bfb", nil, "genesis")
+	g.InvalidateBlockAndExpectTip(ctx, "bfb", nil, "genesis")
 	g.ExpectBestHeader("genesis")
 	g.ExpectBestInvalidHeader("b11")
 	g.ExpectIsCurrent(false)
 
-	g.ReconsiderBlockAndExpectTip("bfb", nil, "b7")
+	g.ReconsiderBlockAndExpectTip(ctx, "bfb", nil, "b7")
 	g.ExpectBestHeader("b11")
 	g.ExpectBestInvalidHeader("b9c")
 	g.ExpectIsCurrent(false)
@@ -1599,20 +1603,20 @@ func TestInvalidateReconsider(t *testing.T) {
 
 	// The data for b6i should be accepted because the best chain tip has more
 	// work at this point and thus there is no attempt to connect it.
-	g.AcceptBlockData("b4i")
-	g.AcceptBlockData("b5i")
-	g.AcceptBlockData("b6i")
+	g.AcceptBlockData(ctx, "b4i")
+	g.AcceptBlockData(ctx, "b5i")
+	g.AcceptBlockData(ctx, "b6i")
 
 	// Invalidate the ancestor in the side chain first to ensure there is no
 	// reorg when the main chain is invalidated for the purposes of making it
 	// have less work when the side chain is reconsidered.
-	g.InvalidateBlockAndExpectTip("b5i", nil, "b7")
-	g.InvalidateBlockAndExpectTip("b5", nil, "b4")
+	g.InvalidateBlockAndExpectTip(ctx, "b5i", nil, "b7")
+	g.InvalidateBlockAndExpectTip(ctx, "b5", nil, "b4")
 	g.ExpectBestHeader("b10f")
 	g.ExpectBestInvalidHeader("b11")
 	g.ExpectIsCurrent(false)
 
-	g.ReconsiderBlockAndExpectTip("b6i", ErrMissingTxOut, "b5i")
+	g.ReconsiderBlockAndExpectTip(ctx, "b6i", ErrMissingTxOut, "b5i")
 	g.ExpectBestHeader("b10f")
 	g.ExpectBestInvalidHeader("b11")
 	g.ExpectIsCurrent(false)
@@ -1621,7 +1625,7 @@ func TestInvalidateReconsider(t *testing.T) {
 	// Undo the main chain invalidation for tests below.
 	// -------------------------------------------------------------------------
 
-	g.ReconsiderBlockAndExpectTip("b5", nil, "b7")
+	g.ReconsiderBlockAndExpectTip(ctx, "b5", nil, "b7")
 	g.ExpectBestHeader("b11")
 	g.ExpectBestInvalidHeader("b9c")
 	g.ExpectIsCurrent(false)
@@ -1673,14 +1677,14 @@ func TestInvalidateReconsider(t *testing.T) {
 	//           \-> b4i  -> b5i  -> b6i*
 	// -------------------------------------------------------------------------
 
-	g.AcceptBlock("b8")
-	g.AcceptBlock("b9")
-	g.InvalidateBlockAndExpectTip("b3", nil, "b2")
+	g.AcceptBlock(ctx, "b8")
+	g.AcceptBlock(ctx, "b9")
+	g.InvalidateBlockAndExpectTip(ctx, "b3", nil, "b2")
 	g.ExpectBestHeader("b2")
 	g.ExpectBestInvalidHeader("b11")
 	g.ExpectIsCurrent(true)
 
-	g.ReconsiderBlockAndExpectTip("b3", nil, "b9")
+	g.ReconsiderBlockAndExpectTip(ctx, "b3", nil, "b9")
 	g.ExpectBestHeader("b11")
 	g.ExpectBestInvalidHeader("b9c")
 	g.ExpectIsCurrent(false)
@@ -1710,20 +1714,20 @@ func TestInvalidateReconsider(t *testing.T) {
 
 	// Notice that the data for b4f, b6f and, b8f, and b10f are intentionally
 	// not made available yet.
-	g.AcceptBlockData("b5f")
-	g.AcceptBlockData("b7f")
-	g.AcceptBlockData("b9f")
-	g.InvalidateBlockAndExpectTip("b6f", nil, "b9")
-	g.ReconsiderBlockAndExpectTip("b7f", nil, "b9")
+	g.AcceptBlockData(ctx, "b5f")
+	g.AcceptBlockData(ctx, "b7f")
+	g.AcceptBlockData(ctx, "b9f")
+	g.InvalidateBlockAndExpectTip(ctx, "b6f", nil, "b9")
+	g.ReconsiderBlockAndExpectTip(ctx, "b7f", nil, "b9")
 	g.ExpectIsCurrent(false)
 
 	// Add the missing data to complete the side chain while only adding b4f
 	// last to ensure it triggers a reorg that consists of all of the blocks
 	// that were previously missing data, but should now be linked.
-	g.AcceptBlockData("b6f")
-	g.AcceptBlockData("b8f")
-	g.AcceptBlockData("b10f")
-	g.AcceptBlockData("b4f")
+	g.AcceptBlockData(ctx, "b6f")
+	g.AcceptBlockData(ctx, "b8f")
+	g.AcceptBlockData(ctx, "b10f")
+	g.AcceptBlockData(ctx, "b4f")
 	g.ExpectTip("b10f")
 	g.ExpectBestHeader("b11")
 	g.ExpectBestInvalidHeader("b9c")
@@ -1756,13 +1760,13 @@ func TestInvalidateReconsider(t *testing.T) {
 	//                                                       ^ (best chain tip)
 	// -------------------------------------------------------------------------
 
-	g.InvalidateBlockAndExpectTip("b4f", nil, "b9")
-	g.InvalidateBlockAndExpectTip("b9", nil, "b8")
+	g.InvalidateBlockAndExpectTip(ctx, "b4f", nil, "b9")
+	g.InvalidateBlockAndExpectTip(ctx, "b9", nil, "b8")
 	g.ExpectBestHeader("b8")
 	g.ExpectBestInvalidHeader("b11")
 	g.ExpectIsCurrent(true)
 
-	g.ReconsiderBlockAndExpectTip("b7f", nil, "b10f")
+	g.ReconsiderBlockAndExpectTip(ctx, "b7f", nil, "b10f")
 	g.ExpectBestHeader("b10f")
 	g.ExpectBestInvalidHeader("b11")
 	g.ExpectIsCurrent(true)
@@ -1781,12 +1785,12 @@ func TestInvalidateReconsider(t *testing.T) {
 	//              (invalidate, reconsider, best chain tip) ^
 	// -------------------------------------------------------------------------
 
-	g.InvalidateBlockAndExpectTip("b10f", nil, "b9f")
+	g.InvalidateBlockAndExpectTip(ctx, "b10f", nil, "b9f")
 	g.ExpectBestHeader("b9f")
 	g.ExpectBestInvalidHeader("b11")
 	g.ExpectIsCurrent(true)
 
-	g.ReconsiderBlockAndExpectTip("b10f", nil, "b10f")
+	g.ReconsiderBlockAndExpectTip(ctx, "b10f", nil, "b10f")
 	g.ExpectBestHeader("b10f")
 	g.ExpectBestInvalidHeader("b11")
 	g.ExpectIsCurrent(true)
@@ -1826,7 +1830,7 @@ func TestInvalidateReconsider(t *testing.T) {
 	//                                      (best chain tip) ^
 	// -------------------------------------------------------------------------
 
-	g.ReconsiderBlockAndExpectTip("b11", nil, "b10f")
+	g.ReconsiderBlockAndExpectTip(ctx, "b11", nil, "b10f")
 	g.ExpectBestHeader("b11")
 	g.ExpectBestInvalidHeader("b9c")
 	g.ExpectIsCurrent(false)
@@ -1838,8 +1842,8 @@ func TestInvalidateReconsider(t *testing.T) {
 	// ... -> b3 -> b4 -> b5 -> b6 -> b7 -> b8 -> b9 -> b10 -> b11
 	// -------------------------------------------------------------------------
 
-	g.AcceptBlockData("b10")
-	g.AcceptBlock("b11")
+	g.AcceptBlockData(ctx, "b10")
+	g.AcceptBlock(ctx, "b11")
 	g.ExpectBestHeader("b11")
 	g.ExpectIsCurrent(true)
 
@@ -1863,11 +1867,11 @@ func TestInvalidateReconsider(t *testing.T) {
 	//                                      (data seen first) ^
 	// -------------------------------------------------------------------------
 
-	g.InvalidateBlockAndExpectTip("b11", nil, "b10f")
+	g.InvalidateBlockAndExpectTip(ctx, "b11", nil, "b10f")
 	g.ExpectBestHeader("b10f")
 	g.ExpectIsCurrent(true)
 
-	g.ReconsiderBlockAndExpectTip("b11", nil, "b11")
+	g.ReconsiderBlockAndExpectTip(ctx, "b11", nil, "b11")
 	g.ExpectBestHeader("b11")
 	g.ExpectBestInvalidHeader("b9c")
 	g.ExpectIsCurrent(true)
@@ -1887,7 +1891,8 @@ func TestAssumeValid(t *testing.T) {
 	params.TargetTimePerBlock = time.Hour * 24
 
 	// Create a test harness initialized with the genesis block as the tip.
-	g := newChaingenHarness(t, params)
+	ctx := context.Background()
+	g := newChaingenHarness(ctx, t, params)
 
 	// Calculate the expected number of blocks in 2 weeks.
 	const timeInTwoWeeks = time.Hour * 24 * 14
@@ -1898,7 +1903,7 @@ func TestAssumeValid(t *testing.T) {
 	// Generate and accept enough blocks to reach stake validation height.
 	// ---------------------------------------------------------------------
 
-	g.AdvanceToStakeValidationHeight()
+	g.AdvanceToStakeValidationHeight(ctx)
 	g.AssertTipHeight(uint32(stakeValidationHeight))
 
 	// ---------------------------------------------------------------------
@@ -1913,7 +1918,7 @@ func TestAssumeValid(t *testing.T) {
 		blockName := fmt.Sprintf("bbav%d", i)
 		g.NextBlock(blockName, nil, outs[1:])
 		g.SaveTipCoinbaseOuts()
-		g.AcceptTipBlock()
+		g.AcceptTipBlock(ctx)
 	}
 	g.AssertTipHeight(uint32(expectedBlocksInTwoWeeks - 1))
 
@@ -1939,7 +1944,7 @@ func TestAssumeValid(t *testing.T) {
 	blockName := fmt.Sprintf("bbav%d", i)
 	g.NextBlock(blockName, nil, outs[1:])
 	g.SaveTipCoinbaseOuts()
-	g.AcceptTipBlock()
+	g.AcceptTipBlock(ctx)
 	i++
 	g.AssertTipHeight(uint32(expectedBlocksInTwoWeeks))
 
@@ -1969,13 +1974,13 @@ func TestAssumeValid(t *testing.T) {
 		blockName := fmt.Sprintf("bbav%d", i)
 		g.NextBlock(blockName, nil, outs[1:])
 		g.SaveTipCoinbaseOuts()
-		g.AcceptTipBlock()
+		g.AcceptTipBlock(ctx)
 		tipName := g.TipName()
 
 		g.SetTip(bestSideBlockName)
 		bestSideBlockName = fmt.Sprintf("bbava%d", i)
 		g.NextBlock(bestSideBlockName, nil, outs[1:])
-		g.AcceptedToSideChainWithExpectedTip(tipName)
+		g.AcceptedToSideChainWithExpectedTip(ctx, tipName)
 		g.SetTip(tipName)
 	}
 	g.AssertTipHeight(2*uint32(expectedBlocksInTwoWeeks) + 2)

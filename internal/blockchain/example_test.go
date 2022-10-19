@@ -66,7 +66,8 @@ func ExampleBlockChain_ProcessBlock() {
 	// ordinarily keep a reference to the median time source and add time
 	// values obtained from other peers on the network so the local time is
 	// adjusted to be in agreement with other peers.
-	chain, err := blockchain.New(context.Background(),
+	ctx := context.Background()
+	chain, err := blockchain.New(ctx,
 		&blockchain.Config{
 			DB:          db,
 			ChainParams: mainNetParams,
@@ -87,7 +88,7 @@ func ExampleBlockChain_ProcessBlock() {
 	// Process a block.  For this example, intentionally cause an error by
 	// trying to process the genesis block which already exists.
 	genesisBlock := dcrutil.NewBlock(mainNetParams.GenesisBlock)
-	forkLen, err := chain.ProcessBlock(genesisBlock)
+	forkLen, err := chain.ProcessBlock(ctx, genesisBlock)
 	if err != nil {
 		fmt.Printf("Failed to create chain instance: %v\n", err)
 		return

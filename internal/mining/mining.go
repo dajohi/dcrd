@@ -7,6 +7,7 @@ package mining
 
 import (
 	"container/heap"
+	"context"
 	"encoding/binary"
 	"fmt"
 	"math"
@@ -86,7 +87,7 @@ type Config struct {
 	// connecting the passed block to either the tip of the main chain or its
 	// parent does not violate any consensus rules, aside from the proof of work
 	// requirement.
-	CheckConnectBlockTemplate func(block *dcrutil.Block) error
+	CheckConnectBlockTemplate func(ctx context.Context, block *dcrutil.Block) error
 
 	// CheckTicketExhaustion defines the function to use to ensure that extending
 	// the block associated with the provided hash with a block that contains the
@@ -146,7 +147,7 @@ type Config struct {
 	// ForceHeadReorganization defines the function to use to force a
 	// reorganization of the block chain to the block hash requested, so long as
 	// it matches up with the current organization of the best chain.
-	ForceHeadReorganization func(formerBest chainhash.Hash, newBest chainhash.Hash) error
+	ForceHeadReorganization func(ctx context.Context, formerBest, newBest chainhash.Hash) error
 
 	// HeaderByHash returns the block header identified by the given hash or an
 	// error if it doesn't exist.  Note that this will return headers from both
@@ -192,7 +193,7 @@ type Config struct {
 
 	// ValidateTransactionScripts defines the function to use to validate the
 	// scripts for the passed transaction.
-	ValidateTransactionScripts func(tx *dcrutil.Tx,
+	ValidateTransactionScripts func(ctx context.Context, tx *dcrutil.Tx,
 		utxoView *blockchain.UtxoViewpoint, flags txscript.ScriptFlags,
 		isAutoRevocationsEnabled bool) error
 }
@@ -802,7 +803,7 @@ func (g *BlkTmplGenerator) maybeInsertStakeTx(stx *dcrutil.Tx, treeValid bool, i
 // work off of is present, it will return a copy of that template to pass to the
 // miner.
 // Safe for concurrent access.
-func (g *BlkTmplGenerator) handleTooFewVoters(nextHeight int64,
+func (g *BlkTmplGenerator) handleTooFewVoters(ctx context.Context, nextHeight int64,
 	miningAddress stdaddr.Address, isTreasuryEnabled,
 	isSubsidyEnabled bool) (*BlockTemplate, error) {
 
@@ -931,7 +932,7 @@ func (g *BlkTmplGenerator) handleTooFewVoters(nextHeight int64,
 
 		// Make sure the block validates.
 		btBlock := dcrutil.NewBlockDeepCopyCoinbase(&block)
-		err = g.cfg.CheckConnectBlockTemplate(btBlock)
+		err = g.cfg.CheckConnectBlockTemplate(ctx, btBlock)
 		if err != nil {
 			str := fmt.Sprintf("failed to check template: %v while "+
 				"constructing a new parent", err.Error())
@@ -1161,7 +1162,7 @@ func calcFeePerKb(txDesc *TxDesc, ancestorStats *TxAncestorStats) float64 {
 //
 // This function returns nil when there are not enough voters on any of the
 // current top blocks to create a new block template.
-func (g *BlkTmplGenerator) NewBlockTemplate(payToAddress stdaddr.Address) (*BlockTemplate, error) {
+func (g *BlkTmplGenerator) NewBlockTemplate(ctx context.Context, payToAddress stdaddr.Address) (*BlockTemplate, error) {
 	// All transaction scripts are verified using the more strict standard
 	// flags.
 	scriptFlags, err := g.cfg.Policy.StandardVerifyFlags()
@@ -1235,7 +1236,7 @@ func (g *BlkTmplGenerator) NewBlockTemplate(payToAddress stdaddr.Address) (*Bloc
 		if len(eligibleParents) == 0 {
 			log.Debugf("Too few voters found on any HEAD block, " +
 				"recycling a parent block to mine on")
-			return g.handleTooFewVoters(nextBlockHeight, payToAddress,
+			return g.handleTooFewVoters(ctx, nextBlockHeight, payToAddress,
 				isTreasuryEnabled, isSubsidyEnabled)
 		}
 
@@ -1250,7 +1251,7 @@ func (g *BlkTmplGenerator) NewBlockTemplate(payToAddress stdaddr.Address) (*Bloc
 				break
 			}
 
-			err := g.cfg.ForceHeadReorganization(prevHash, *newHead)
+			err := g.cfg.ForceHeadReorganization(ctx, prevHash, *newHead)
 			if err != nil {
 				log.Debugf("failed to reorganize to new parent: %v", err)
 				continue
@@ -1741,7 +1742,7 @@ nextPriorityQueueItem:
 				miningView.reject(bundledTx.Tx.Hash())
 				continue nextPriorityQueueItem
 			}
-			err = g.cfg.ValidateTransactionScripts(bundledTx.Tx, blockUtxos,
+			err = g.cfg.ValidateTransactionScripts(ctx, bundledTx.Tx, blockUtxos,
 				scriptFlags, isAutoRevocationsEnabled)
 			if err != nil {
 				log.Tracef("Skipping tx %s due to error in "+
@@ -2154,7 +2155,7 @@ nextPriorityQueueItem:
 		voters < minimumVotesRequired {
 		log.Warnf("incongruent number of voters in mempool " +
 			"vs mempool.voters; not enough voters found")
-		return g.handleTooFewVoters(nextBlockHeight, payToAddress,
+		return g.handleTooFewVoters(ctx, nextBlockHeight, payToAddress,
 			isTreasuryEnabled, isSubsidyEnabled)
 	}
 
@@ -2314,7 +2315,7 @@ nextPriorityQueueItem:
 	// consensus rules to ensure it properly connects to the current best
 	// chain with no issues.
 	block := dcrutil.NewBlockDeepCopyCoinbase(&msgBlock)
-	err = g.cfg.CheckConnectBlockTemplate(block)
+	err = g.cfg.CheckConnectBlockTemplate(ctx, block)
 	if err != nil {
 		str := fmt.Sprintf("failed to do final check for check connect "+
 			"block when making new block template: %v", err)

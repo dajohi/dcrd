@@ -6,6 +6,7 @@
 package blockchain
 
 import (
+	"context"
 	"errors"
 	"fmt"
 
@@ -363,7 +364,7 @@ func (b *BlockChain) maybeAcceptBlockData(node *blockNode, block *dcrutil.Block,
 // are needed to pass along to checkBlockContext.
 //
 // This function MUST be called with the chain lock held (for writes).
-func (b *BlockChain) maybeAcceptBlocks(curTip *blockNode, nodes []*blockNode, flags BehaviorFlags) ([]*blockNode, error) {
+func (b *BlockChain) maybeAcceptBlocks(ctx context.Context, curTip *blockNode, nodes []*blockNode, flags BehaviorFlags) ([]*blockNode, error) {
 	isCurrent := b.isCurrent(curTip)
 	for i, n := range nodes {
 		var err error
@@ -411,7 +412,7 @@ func (b *BlockChain) maybeAcceptBlocks(curTip *blockNode, nodes []*blockNode, fl
 		// notification.  This is intentional and must not be changed without
 		// understanding why!
 		if n.parent == curTip && isCurrent {
-			b.sendNotification(NTNewTipBlockChecked, linkedBlock)
+			b.sendNotification(ctx, NTNewTipBlockChecked, linkedBlock)
 		}
 	}
 
@@ -452,7 +453,7 @@ func (b *BlockChain) maybeAcceptBlocks(curTip *blockNode, nodes []*blockNode, fl
 // reorganize, the fork length will be 0.
 //
 // This function is safe for concurrent access.
-func (b *BlockChain) ProcessBlock(block *dcrutil.Block) (int64, error) {
+func (b *BlockChain) ProcessBlock(ctx context.Context, block *dcrutil.Block) (int64, error) {
 	// Since the chain lock is periodically released to send notifications,
 	// protect the overall processing of blocks with a separate mutex.
 	b.processLock.Lock()
@@ -560,7 +561,7 @@ func (b *BlockChain) ProcessBlock(block *dcrutil.Block) (int64, error) {
 	var finalErr error
 	currentTip := b.bestChain.Tip()
 	b.addRecentBlock(block)
-	acceptedNodes, err := b.maybeAcceptBlocks(currentTip, linkedNodes, flags)
+	acceptedNodes, err := b.maybeAcceptBlocks(ctx, currentTip, linkedNodes, flags)
 	if err != nil {
 		finalErr = err
 
@@ -603,7 +604,7 @@ func (b *BlockChain) ProcessBlock(block *dcrutil.Block) (int64, error) {
 	// Note that any errors that take place in the reorg will be attributed to
 	// the block being processed.  The calling code currently depends on this
 	// behavior, so care must be taken if this behavior is changed.
-	reorgErr := b.reorganizeChain(target)
+	reorgErr := b.reorganizeChain(ctx, target)
 	switch {
 	// The final error is just the reorg error in the case there was no error
 	// carried forward from above.
@@ -647,7 +648,7 @@ func (b *BlockChain) ProcessBlock(block *dcrutil.Block) (int64, error) {
 		if fork := b.bestChain.FindFork(n); fork != nil {
 			forkLen = n.height - fork.height
 		}
-		b.sendNotification(NTBlockAccepted, &BlockAcceptedNtfnsData{
+		b.sendNotification(ctx, NTBlockAccepted, &BlockAcceptedNtfnsData{
 			BestHeight: newTip.height,
 			ForkLen:    forkLen,
 			Block:      block,
@@ -669,7 +670,7 @@ func (b *BlockChain) ProcessBlock(block *dcrutil.Block) (int64, error) {
 // invalid ancestor.  It then reorganizes the chain as necessary so the branch
 // with the most cumulative proof of work that is still valid becomes the main
 // chain.
-func (b *BlockChain) InvalidateBlock(hash *chainhash.Hash) error {
+func (b *BlockChain) InvalidateBlock(ctx context.Context, hash *chainhash.Hash) error {
 	b.processLock.Lock()
 	defer b.processLock.Unlock()
 
@@ -713,7 +714,7 @@ func (b *BlockChain) InvalidateBlock(hash *chainhash.Hash) error {
 	// having failed validation along with all of its descendants as having an
 	// invalid ancestor.
 	b.chainLock.Lock()
-	if err := b.reorganizeChain(node.parent); err != nil {
+	if err := b.reorganizeChain(ctx, node.parent); err != nil {
 		b.flushBlockIndexWarnOnly()
 		b.chainLock.Unlock()
 		return err
@@ -763,7 +764,7 @@ func (b *BlockChain) InvalidateBlock(hash *chainhash.Hash) error {
 	// passed block is on a side chain.
 	b.chainLock.Lock()
 	targetTip := b.index.FindBestChainCandidate()
-	err := b.reorganizeChain(targetTip)
+	err := b.reorganizeChain(ctx, targetTip)
 	b.flushBlockIndexWarnOnly()
 	b.chainLock.Unlock()
 	return err
@@ -788,7 +789,7 @@ func blockNodeInSlice(node *blockNode, slice []*blockNode) bool {
 // then potentially reorganizes the chain as necessary so the block with the
 // most cumulative proof of work that is valid becomes the tip of the main
 // chain.
-func (b *BlockChain) ReconsiderBlock(hash *chainhash.Hash) error {
+func (b *BlockChain) ReconsiderBlock(ctx context.Context, hash *chainhash.Hash) error {
 	b.processLock.Lock()
 	defer b.processLock.Unlock()
 
@@ -912,7 +913,7 @@ func (b *BlockChain) ReconsiderBlock(hash *chainhash.Hash) error {
 	b.chainLock.Lock()
 	b.isCurrentLatch = false
 	targetTip := b.index.FindBestChainCandidate()
-	err := b.reorganizeChain(targetTip)
+	err := b.reorganizeChain(ctx, targetTip)
 	b.flushBlockIndexWarnOnly()
 	b.chainLock.Unlock()
 

@@ -673,7 +673,7 @@ func (m *SyncManager) handleDonePeerMsg(p *peerpkg.Peer) {
 }
 
 // handleTxMsg handles transaction messages from all peers.
-func (m *SyncManager) handleTxMsg(tmsg *txMsg) {
+func (m *SyncManager) handleTxMsg(ctx context.Context, tmsg *txMsg) {
 	peer := lookupPeer(tmsg.peer, m.peers)
 	if peer == nil {
 		return
@@ -700,7 +700,7 @@ func (m *SyncManager) handleTxMsg(tmsg *txMsg) {
 	// Process the transaction to include validation, insertion in the
 	// memory pool, orphan handling, etc.
 	allowOrphans := m.cfg.MaxOrphanTxs > 0
-	acceptedTxs, err := m.cfg.TxMemPool.ProcessTransaction(tmsg.tx,
+	acceptedTxs, err := m.cfg.TxMemPool.ProcessTransaction(ctx, tmsg.tx,
 		allowOrphans, true, mempool.Tag(peer.ID()))
 
 	// Remove transaction from request maps. Either the mempool/chain
@@ -757,9 +757,9 @@ func (m *SyncManager) maybeUpdateIsCurrent() {
 // the best chain or is now the tip of the best chain due to causing a
 // reorganize, the fork length will be 0.  Orphans are rejected and can be
 // detected by checking if the error is blockchain.ErrMissingParent.
-func (m *SyncManager) processBlock(block *dcrutil.Block) (int64, error) {
+func (m *SyncManager) processBlock(ctx context.Context, block *dcrutil.Block) (int64, error) {
 	// Process the block to include validation, best chain selection, etc.
-	forkLen, err := m.cfg.Chain.ProcessBlock(block)
+	forkLen, err := m.cfg.Chain.ProcessBlock(ctx, block)
 	if err != nil {
 		return 0, err
 	}
@@ -784,7 +784,7 @@ func (m *SyncManager) processBlock(block *dcrutil.Block) (int64, error) {
 }
 
 // handleBlockMsg handles block messages from all peers.
-func (m *SyncManager) handleBlockMsg(bmsg *blockMsg) {
+func (m *SyncManager) handleBlockMsg(ctx context.Context, bmsg *blockMsg) {
 	peer := lookupPeer(bmsg.peer, m.peers)
 	if peer == nil {
 		return
@@ -809,7 +809,7 @@ func (m *SyncManager) handleBlockMsg(bmsg *blockMsg) {
 	// Also, remove the block from the request maps once it has been processed.
 	// This ensures chain is aware of the block before it is removed from the
 	// maps in order to help prevent duplicate requests.
-	forkLen, err := m.processBlock(bmsg.block)
+	forkLen, err := m.processBlock(ctx, bmsg.block)
 	delete(peer.requestedBlocks, *blockHash)
 	delete(m.requestedBlocks, *blockHash)
 	if err != nil {
@@ -1396,14 +1396,14 @@ out:
 				m.handleNewPeerMsg(ctx, msg.peer)
 
 			case *txMsg:
-				m.handleTxMsg(msg)
+				m.handleTxMsg(ctx, msg)
 				select {
 				case msg.reply <- struct{}{}:
 				case <-ctx.Done():
 				}
 
 			case *blockMsg:
-				m.handleBlockMsg(msg)
+				m.handleBlockMsg(ctx, msg)
 				select {
 				case msg.reply <- struct{}{}:
 				case <-ctx.Done():
@@ -1436,7 +1436,7 @@ out:
 				}
 
 			case processBlockMsg:
-				forkLen, err := m.processBlock(msg.block)
+				forkLen, err := m.processBlock(ctx, msg.block)
 				if err != nil {
 					msg.reply <- processBlockResponse{
 						forkLen: forkLen,

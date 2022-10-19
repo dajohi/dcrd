@@ -158,8 +158,8 @@ type SyncManager interface {
 
 	// ProcessTransaction relays the provided transaction validation and
 	// insertion into the memory pool.
-	ProcessTransaction(tx *dcrutil.Tx, allowOrphans bool, allowHighFees bool,
-		tag mempool.Tag) ([]*dcrutil.Tx, error)
+	ProcessTransaction(ctx context.Context, tx *dcrutil.Tx, allowOrphans bool,
+		allowHighFees bool, tag mempool.Tag) ([]*dcrutil.Tx, error)
 
 	// RecentlyConfirmedTxn returns with high degree of confidence whether a
 	// transaction has been recently confirmed in a block.
@@ -404,7 +404,7 @@ type Chain interface {
 	// a known invalid ancestor.  It then reorganizes the chain as necessary so
 	// the branch with the most cumulative proof of work that is still valid
 	// becomes the main chain.
-	InvalidateBlock(*chainhash.Hash) error
+	InvalidateBlock(context.Context, *chainhash.Hash) error
 
 	// ReconsiderBlock removes the known invalid status of the provided block
 	// and all of its ancestors along with the known invalid ancestor status
@@ -414,7 +414,7 @@ type Chain interface {
 	// rules.  It then potentially reorganizes the chain as necessary so the
 	// block with the most cumulative proof of work that is valid becomes the
 	// tip of the main chain.
-	ReconsiderBlock(*chainhash.Hash) error
+	ReconsiderBlock(context.Context, *chainhash.Hash) error
 }
 
 // Clock represents a clock for use with the RPC server. The purpose of this

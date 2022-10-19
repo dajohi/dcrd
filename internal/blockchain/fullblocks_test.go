@@ -7,6 +7,7 @@ package blockchain
 
 import (
 	"bytes"
+	"context"
 	"errors"
 	"testing"
 
@@ -169,7 +170,8 @@ func TestFullBlocks(t *testing.T) {
 	}
 
 	// Create a new database and chain instance to run tests against.
-	chain, err := chainSetup(t, chaincfg.RegNetParams())
+	ctx := context.Background()
+	chain, err := chainSetup(ctx, t, chaincfg.RegNetParams())
 	if err != nil {
 		t.Fatalf("Failed to setup chain instance: %v", err)
 	}
@@ -184,7 +186,7 @@ func TestFullBlocks(t *testing.T) {
 			item.Name, block.Hash(), blockHeight)
 
 		var isOrphan bool
-		forkLen, err := chain.ProcessBlock(block)
+		forkLen, err := chain.ProcessBlock(ctx, block)
 		if errors.Is(err, ErrMissingParent) {
 			isOrphan = true
 			err = nil
@@ -221,7 +223,7 @@ func TestFullBlocks(t *testing.T) {
 		t.Logf("Testing block %s (hash %s, height %d)",
 			item.Name, block.Hash(), blockHeight)
 
-		_, err := chain.ProcessBlock(block)
+		_, err := chain.ProcessBlock(ctx, block)
 		if err == nil {
 			t.Fatalf("block %q (hash %s, height %d) should not "+
 				"have been accepted", item.Name, block.Hash(),
@@ -275,7 +277,7 @@ func TestFullBlocks(t *testing.T) {
 		t.Logf("Testing block %s (hash %s, height %d)",
 			item.Name, block.Hash(), blockHeight)
 
-		_, err := chain.ProcessBlock(block)
+		_, err := chain.ProcessBlock(ctx, block)
 		if err != nil {
 			// Ensure the error is of the expected type.  Note that orphans are
 			// rejected with ErrMissingParent, so this check covers both

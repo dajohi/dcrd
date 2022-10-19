@@ -102,7 +102,7 @@ func (bi *blockImporter) readBlock() ([]byte, error) {
 // block through the chain rules to ensure it follows all rules and matches
 // up to the known checkpoint.  Returns whether the block was imported along
 // with any potential errors.
-func (bi *blockImporter) processBlock(serializedBlock []byte) (bool, error) {
+func (bi *blockImporter) processBlock(ctx context.Context, serializedBlock []byte) (bool, error) {
 	// Deserialize the block which includes checks for malformed blocks.
 	block, err := dcrutil.NewBlockFromBytes(serializedBlock)
 	if err != nil {
@@ -131,7 +131,7 @@ func (bi *blockImporter) processBlock(serializedBlock []byte) (bool, error) {
 
 	// Ensure the blocks follows all of the chain rules and match up to the
 	// known checkpoints.
-	forkLen, err := bi.chain.ProcessBlock(block)
+	forkLen, err := bi.chain.ProcessBlock(ctx, block)
 	if err != nil {
 		if errors.Is(err, blockchain.ErrMissingParent) {
 			return false, fmt.Errorf("import file contains an orphan block: %v",
@@ -232,7 +232,7 @@ out:
 
 			bi.blocksProcessed++
 			bi.lastHeight++
-			imported, err := bi.processBlock(serializedBlock)
+			imported, err := bi.processBlock(ctx, serializedBlock)
 			if err != nil {
 				bi.errChan <- err
 				break out

@@ -5,6 +5,7 @@
 package blockchain
 
 import (
+	"context"
 	"testing"
 
 	"github.com/decred/dcrd/blockchain/v5/chaingen"
@@ -26,7 +27,8 @@ func TestFetchUtxoView(t *testing.T) {
 
 	// Create a test harness initialized with the genesis block as the tip.
 	params := chaincfg.RegNetParams()
-	g := newChaingenHarness(t, params)
+	ctx := context.Background()
+	g := newChaingenHarness(ctx, t, params)
 
 	// ---------------------------------------------------------------------
 	// Create some convenience functions to improve test readability.
@@ -68,7 +70,7 @@ func TestFetchUtxoView(t *testing.T) {
 	// Generate and accept enough blocks to reach stake validation height.
 	// ---------------------------------------------------------------------
 
-	g.AdvanceToStakeValidationHeight()
+	g.AdvanceToStakeValidationHeight(ctx)
 
 	// ---------------------------------------------------------------------
 	// Create block that has a transaction available in its regular tx tree
@@ -79,7 +81,7 @@ func TestFetchUtxoView(t *testing.T) {
 
 	outs := g.OldestCoinbaseOuts()
 	b0 := g.NextBlock("b0", &outs[0], outs[1:])
-	g.AcceptTipBlock()
+	g.AcceptTipBlock(ctx)
 
 	// Create a transaction that spends from an output in the regular tx tree of
 	// the tip block.
@@ -120,7 +122,7 @@ func TestFetchUtxoView(t *testing.T) {
 		g.ReplaceVoteBits(voteBitNo)(b)
 	})
 	g.AssertTipDisapprovesPrevious()
-	g.AcceptTipBlock()
+	g.AcceptTipBlock(ctx)
 
 	// Ensure that fetching a view for a transaction that is in the regular tx
 	// tree of a disapproved block prior to the tip block when the tip block
@@ -176,8 +178,8 @@ func TestFetchUtxoView(t *testing.T) {
 		b.Transactions[1] = b0Tx1.MsgTx()
 	})
 	g.AssertTipDisapprovesPrevious()
-	g.AcceptedToSideChainWithExpectedTip("b1")
-	g.ForceTipReorg("b1", "b1a")
+	g.AcceptedToSideChainWithExpectedTip(ctx, "b1")
+	g.ForceTipReorg(ctx, "b1", "b1a")
 
 	// Ensure that fetching a view for a transaction that is in the regular tx
 	// tree of a disapproved block prior to the tip block and is also included

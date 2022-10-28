@@ -29,6 +29,9 @@ type NetAddress struct {
 
 	// Services represents the service flags supported by this network address.
 	Services wire.ServiceFlag
+
+	// Type represents the type of network that the network address belongs to.
+	Type NetAddressType
 }
 
 // IsRoutable returns a boolean indicating whether the network address is
@@ -43,7 +46,8 @@ func (netAddr *NetAddress) IsRoutable() bool {
 // port.
 func (netAddr *NetAddress) ipString() string {
 	netIP := netAddr.IP
-	if isOnionCatTor(netIP) {
+	switch netAddr.Type {
+	case TORv2Address:
 		// We know now that na.IP is long enough.
 		base32 := base32.StdEncoding.EncodeToString(netIP[6:])
 		return strings.ToLower(base32) + ".onion"
@@ -94,12 +98,17 @@ func (a *AddrManager) newAddressFromString(addr string) (*NetAddress, error) {
 	return a.HostToNetAddress(host, uint16(port), wire.SFNodeNetwork)
 }
 
-// NewNetAddressIPPort creates a new address manager network address given an ip,
-// port, and the supported service flags for the address.
+// NewNetAddressIPPort creates a new address manager network address given an
+// ip, port, and the supported service flags for the address.  The provided ip
+// MUST be an IPv4, IPv6, or TORv2 address since this method does not perform
+// error checking on the derived network address type.
 func NewNetAddressIPPort(ip net.IP, port uint16, services wire.ServiceFlag) *NetAddress {
+	netAddressType, _ := deriveNetAddressType(ip)
 	timestamp := time.Unix(time.Now().Unix(), 0)
+	canonicalizedIP := canonicalizeIP(netAddressType, ip)
 	return &NetAddress{
-		IP:        ip,
+		Type:      netAddressType,
+		IP:        canonicalizedIP,
 		Port:      port,
 		Services:  services,
 		Timestamp: timestamp,

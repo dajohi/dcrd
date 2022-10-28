@@ -1129,12 +1129,12 @@ func getReachabilityFrom(localAddr, remoteAddr *NetAddress) NetAddressReach {
 		return Unreachable
 	}
 
-	if isOnionCatTor(remoteAddr.IP) {
-		if isOnionCatTor(localAddr.IP) {
+	if remoteAddr.Type == TORv2Address {
+		if localAddr.Type == TORv2Address {
 			return Private
 		}
 
-		if localAddr.IsRoutable() && isIPv4(localAddr.IP) {
+		if localAddr.IsRoutable() && localAddr.Type == IPv4Address {
 			return Ipv4
 		}
 
@@ -1150,15 +1150,15 @@ func getReachabilityFrom(localAddr, remoteAddr *NetAddress) NetAddressReach {
 			return Teredo
 		}
 
-		if isIPv4(localAddr.IP) {
+		if localAddr.Type == IPv4Address {
 			return Ipv4
 		}
 
 		return Ipv6Weak
 	}
 
-	if isIPv4(remoteAddr.IP) {
-		if localAddr.IsRoutable() && isIPv4(localAddr.IP) {
+	if remoteAddr.Type == IPv4Address {
+		if localAddr.IsRoutable() && localAddr.Type == IPv4Address {
 			return Ipv4
 		}
 		return Unreachable
@@ -1179,7 +1179,7 @@ func getReachabilityFrom(localAddr, remoteAddr *NetAddress) NetAddressReach {
 		return Teredo
 	}
 
-	if isIPv4(localAddr.IP) {
+	if localAddr.Type == IPv4Address {
 		return Ipv4
 	}
 
@@ -1236,8 +1236,11 @@ func (a *AddrManager) GetBestLocalAddress(remoteAddr *NetAddress) *NetAddress {
 //
 // This function is safe for concurrent access.
 func (a *AddrManager) ValidatePeerNa(localAddr, remoteAddr *NetAddress) (bool, NetAddressReach) {
-	net := addressType(localAddr.IP)
+	net := localAddr.Type
 	reach := getReachabilityFrom(localAddr, remoteAddr)
+	if isLocal(localAddr.IP) {
+		return false, reach
+	}
 	valid := (net == IPv4Address && reach == Ipv4) || (net == IPv6Address &&
 		(reach == Ipv6Weak || reach == Ipv6Strong || reach == Teredo))
 	return valid, reach

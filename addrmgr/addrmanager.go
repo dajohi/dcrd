@@ -1134,7 +1134,7 @@ func getReachabilityFrom(localAddr, remoteAddr *NetAddress) NetAddressReach {
 			return Private
 		}
 
-		if localAddr.IsRoutable() && isIPv4(localAddr.IP) {
+		if localAddr.IsRoutable() && localAddr.IP.Is4() {
 			return Ipv4
 		}
 
@@ -1150,15 +1150,15 @@ func getReachabilityFrom(localAddr, remoteAddr *NetAddress) NetAddressReach {
 			return Teredo
 		}
 
-		if isIPv4(localAddr.IP) {
+		if localAddr.IP.Is4() {
 			return Ipv4
 		}
 
 		return Ipv6Weak
 	}
 
-	if isIPv4(remoteAddr.IP) {
-		if localAddr.IsRoutable() && isIPv4(localAddr.IP) {
+	if remoteAddr.IP.Is4() {
+		if localAddr.IsRoutable() && localAddr.IP.Is4() {
 			return Ipv4
 		}
 		return Unreachable
@@ -1179,7 +1179,7 @@ func getReachabilityFrom(localAddr, remoteAddr *NetAddress) NetAddressReach {
 		return Teredo
 	}
 
-	if isIPv4(localAddr.IP) {
+	if localAddr.IP.Is4() {
 		return Ipv4
 	}
 
@@ -1219,7 +1219,7 @@ func (a *AddrManager) GetBestLocalAddress(remoteAddr *NetAddress) *NetAddress {
 
 		// Send something unroutable if nothing suitable.
 		var ip net.IP
-		if !isIPv4(remoteAddr.IP) && !isOnionCatTor(remoteAddr.IP) {
+		if !remoteAddr.IP.Is4() && !isOnionCatTor(remoteAddr.IP) {
 			ip = net.IPv6zero
 		} else {
 			ip = net.IPv4zero

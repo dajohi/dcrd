@@ -610,11 +610,11 @@ func TestValidatePeerNa(t *testing.T) {
 	const unroutableIpv6Address = "::1"
 	const routableIpv4Address = "12.1.2.3"
 	const routableIpv6Address = "2003::"
-	onionCatTorV2Address := onionCatNet.IP.String()
-	rfc4380IPAddress := rfc4380Net.IP.String()
-	rfc3964IPAddress := rfc3964Net.IP.String()
-	rfc6052IPAddress := rfc6052Net.IP.String()
-	rfc6145IPAddress := rfc6145Net.IP.String()
+	onionCatTorV2Address := onionCatNet.Addr().String()
+	rfc4380IPAddress := rfc4380Net.Addr().String()
+	rfc3964IPAddress := rfc3964Net.Addr().String()
+	rfc6052IPAddress := rfc6052Net.Addr().String()
+	rfc6145IPAddress := rfc6145Net.Addr().String()
 
 	tests := []struct {
 		name          string
@@ -759,7 +759,7 @@ func TestValidatePeerNa(t *testing.T) {
 		}
 		if reach != test.reach {
 			t.Errorf("%q: unexpected return value for reach - want '%v', "+
-				"got '%v'", test.name, test.reach, reach)
+				"got '%v' %v %v", test.name, test.reach, reach, test.localAddress, test.remoteAddress)
 		}
 	}
 }

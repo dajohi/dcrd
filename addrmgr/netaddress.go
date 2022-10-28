@@ -7,6 +7,7 @@ package addrmgr
 import (
 	"encoding/base32"
 	"net"
+	"net/netip"
 	"strconv"
 	"strings"
 	"time"
@@ -16,10 +17,8 @@ import (
 
 // NetAddress defines information about a peer on the network.
 type NetAddress struct {
-	// IP address of the peer. It is defined as a byte array to support various
-	// address types that are not standard to the net module and therefore not
-	// entirely appropriate to store as a net.IP.
-	IP []byte
+	// IP address of the peer.
+	IP netip.Addr
 
 	// Port is the port of the remote peer.
 	Port uint16
@@ -45,10 +44,11 @@ func (netAddr *NetAddress) ipString() string {
 	netIP := netAddr.IP
 	if isOnionCatTor(netIP) {
 		// We know now that na.IP is long enough.
-		base32 := base32.StdEncoding.EncodeToString(netIP[6:])
+		b := netIP.As16()
+		base32 := base32.StdEncoding.EncodeToString(b[6:])
 		return strings.ToLower(base32) + ".onion"
 	}
-	return net.IP(netIP).String()
+	return netIP.String()
 }
 
 // Key returns a string that can be used to uniquely represent the network
@@ -98,8 +98,10 @@ func (a *AddrManager) newAddressFromString(addr string) (*NetAddress, error) {
 // port, and the supported service flags for the address.
 func NewNetAddressIPPort(ip net.IP, port uint16, services wire.ServiceFlag) *NetAddress {
 	timestamp := time.Unix(time.Now().Unix(), 0)
+	addr, _ := netip.AddrFromSlice(ip)
+
 	return &NetAddress{
-		IP:        ip,
+		IP:        addr.Unmap(),
 		Port:      port,
 		Services:  services,
 		Timestamp: timestamp,

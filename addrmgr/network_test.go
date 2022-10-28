@@ -7,6 +7,7 @@ package addrmgr
 
 import (
 	"net"
+	"net/netip"
 	"testing"
 
 	"github.com/decred/dcrd/wire"
@@ -16,7 +17,7 @@ import (
 // address based on RFCs work as intended.
 func TestIPTypes(t *testing.T) {
 	type ipTest struct {
-		ip       net.IP
+		ip       netip.Addr
 		rfc1918  bool
 		rfc2544  bool
 		rfc3849  bool
@@ -38,7 +39,7 @@ func TestIPTypes(t *testing.T) {
 	newIPTest := func(ip string, rfc1918, rfc2544, rfc3849, rfc3927, rfc3964,
 		rfc4193, rfc4380, rfc4843, rfc4862, rfc5737, rfc6052, rfc6145, rfc6598,
 		local, valid, routable bool) ipTest {
-		nip := net.ParseIP(ip)
+		nip := netip.MustParseAddr(ip)
 		test := ipTest{nip, rfc1918, rfc2544, rfc3849, rfc3927, rfc3964, rfc4193, rfc4380,
 			rfc4843, rfc4862, rfc5737, rfc6052, rfc6145, rfc6598, local, valid, routable}
 		return test

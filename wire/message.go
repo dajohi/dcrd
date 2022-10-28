@@ -1,5 +1,5 @@
 // Copyright (c) 2013-2016 The btcsuite developers
-// Copyright (c) 2015-2020 The Decred developers
+// Copyright (c) 2015-2022 The Decred developers
 // Use of this source code is governed by an ISC
 // license that can be found in the LICENSE file.
 
@@ -58,6 +58,8 @@ const (
 	CmdCFilterV2      = "cfilterv2"
 	CmdGetInitState   = "getinitstate"
 	CmdInitState      = "initstate"
+	CmdGetAddrV2      = "getaddrv2"
+	CmdAddrV2         = "addrv2"
 )
 
 // Message is an interface that describes a Decred message.  A type that
@@ -167,6 +169,12 @@ func makeEmptyMessage(command string) (Message, error) {
 
 	case CmdInitState:
 		msg = &MsgInitState{}
+
+	case CmdGetAddrV2:
+		msg = &MsgGetAddrV2{}
+
+	case CmdAddrV2:
+		msg = &MsgAddrV2{}
 
 	default:
 		str := fmt.Sprintf("unhandled command [%s]", command)

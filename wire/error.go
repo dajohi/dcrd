@@ -1,5 +1,5 @@
 // Copyright (c) 2013-2015 The btcsuite developers
-// Copyright (c) 2015-2020 The Decred developers
+// Copyright (c) 2015-2023 The Decred developers
 // Use of this source code is governed by an ISC
 // license that can be found in the LICENSE file.
 
@@ -133,6 +133,9 @@ const (
 	// ErrTooManyTSpends is returned when the number of tspend hashes
 	// exceeds the maximum allowed.
 	ErrTooManyTSpends
+
+	// ErrTooFewAddrs is returned when an address list has zero addresses.
+	ErrTooFewAddrs
 )
 
 // Map of ErrorCode values back to their constant names for pretty printing.

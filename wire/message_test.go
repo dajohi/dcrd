@@ -1,5 +1,5 @@
 // Copyright (c) 2013-2016 The btcsuite developers
-// Copyright (c) 2015-2021 The Decred developers
+// Copyright (c) 2015-2023 The Decred developers
 // Use of this source code is governed by an ISC
 // license that can be found in the LICENSE file.
 
@@ -80,6 +80,14 @@ func TestMessage(t *testing.T) {
 	msgReject := NewMsgReject("block", RejectDuplicate, "duplicate block")
 	msgGetInitState := NewMsgGetInitState()
 	msgInitState := NewMsgInitState()
+	msgGetAddrV2 := NewMsgGetAddrV2()
+	msgAddrV2 := NewMsgAddrV2()
+
+	// msgaddrv2 requires at least 1 address
+	timestamp := time.Unix(time.Now().Unix(), 0)
+	ipv4Addr := NewNetAddressV2(IPv4Address, net.ParseIP("127.0.0.1").To4(), 8333,
+		timestamp, SFNodeNetwork)
+	msgAddrV2.AddAddress(*ipv4Addr)
 
 	tests := []struct {
 		in     Message     // Value to encode
@@ -90,8 +98,8 @@ func TestMessage(t *testing.T) {
 	}{
 		{msgVersion, msgVersion, pver, MainNet, 125},
 		{msgVerack, msgVerack, pver, MainNet, 24},
-		{msgGetAddr, msgGetAddr, pver, MainNet, 24},
-		{msgAddr, msgAddr, pver, MainNet, 25},
+		{msgGetAddr, msgGetAddr, AddrV2Version - 1, MainNet, 24},
+		{msgAddr, msgAddr, AddrV2Version - 1, MainNet, 25},
 		{msgGetBlocks, msgGetBlocks, pver, MainNet, 61},
 		{msgBlock, msgBlock, pver, MainNet, 522},
 		{msgInv, msgInv, pver, MainNet, 25},
@@ -112,6 +120,8 @@ func TestMessage(t *testing.T) {
 		{msgCFTypes, msgCFTypes, pver, MainNet, 26},
 		{msgGetInitState, msgGetInitState, pver, MainNet, 25},
 		{msgInitState, msgInitState, pver, MainNet, 27},
+		{msgGetAddrV2, msgGetAddrV2, pver, MainNet, 24},
+		{msgAddrV2, msgAddrV2, pver, MainNet, 48},
 	}
 
 	t.Logf("Running %d tests", len(tests))
@@ -287,7 +297,7 @@ func TestReadMessageWireErrors(t *testing.T) {
 		// Exceed max allowed payload for a message of a specific type.  [5]
 		{
 			exceedTypePayloadBytes,
-			pver,
+			AddrV2Version - 1,
 			dcrnet,
 			len(exceedTypePayloadBytes),
 			&MessageError{},
@@ -317,7 +327,7 @@ func TestReadMessageWireErrors(t *testing.T) {
 		// Message with a valid header, but wrong format. [8]
 		{
 			badMessageBytes,
-			pver,
+			AddrV2Version - 1,
 			dcrnet,
 			len(badMessageBytes),
 			&MessageError{},

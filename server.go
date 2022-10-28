@@ -723,10 +723,6 @@ func (sp *serverPeer) OnVersion(_ *peer.Peer, msg *wire.MsgVersion) {
 	remoteAddr := wireToAddrmgrNetAddress(sp.NA())
 	addrManager := sp.server.addrManager
 	if !cfg.SimNet && !cfg.RegNet && !isInbound {
-		// Be sure the address exists in the address manager.
-		addrManager.AddAddresses([]*addrmgr.NetAddress{remoteAddr},
-			remoteAddr)
-
 		err := addrManager.SetServices(remoteAddr, msg.Services)
 		if err != nil {
 			srvrLog.Errorf("Setting services for address failed: %v", err)
@@ -1837,7 +1833,7 @@ func (s *server) handleDonePeerMsg(state *peerState, sp *serverPeer) {
 		remoteAddr := wireToAddrmgrNetAddress(sp.NA())
 		err := s.addrManager.Connected(remoteAddr)
 		if err != nil {
-			srvrLog.Debugf("Marking address as connected failed: %v", err)
+			srvrLog.Errorf("Marking address as connected failed: %v", err)
 		}
 	}
 
@@ -2232,12 +2228,6 @@ func (s *server) outboundPeerConnected(c *connmgr.ConnReq, conn net.Conn) {
 	sp.isWhitelisted = isWhitelisted(conn.RemoteAddr())
 	sp.AssociateConnection(conn)
 	go s.peerDoneHandler(sp)
-
-	remoteAddr := wireToAddrmgrNetAddress(sp.NA())
-	err = s.addrManager.Attempt(remoteAddr)
-	if err != nil {
-		srvrLog.Debugf("Marking address as attempted failed: %v", err)
-	}
 }
 
 // peerDoneHandler handles peer disconnects by notifying the server that it's
@@ -2983,7 +2973,7 @@ func (s *server) querySeeders(ctx context.Context) {
 			ctx, cancel := context.WithTimeout(ctx, time.Minute)
 			defer cancel()
 
-			addrs, err := connmgr.SeedAddrs(ctx, seeder, dcrdDial,
+			addrs, err := connmgr.SeedAddrs(ctx, seeder, s.dcrdDial,
 				connmgr.SeedFilterServices(defaultRequiredServices))
 			if err != nil {
 				srvrLog.Infof("seeder '%s' error: %v", seeder, err)
@@ -3138,6 +3128,39 @@ func parseListeners(addrs []string) ([]net.Addr, error) {
 		}
 	}
 	return netAddrs, nil
+}
+
+// dcrdDial connects to the address on the named network using the appropriate
+// dial function depending on the address and configuration options.  For
+// example, .onion addresses will be dialed using the onion specific proxy if
+// one was specified, but will otherwise use the normal dial function (which
+// could itself use a proxy or not).
+func (s *server) dcrdDial(ctx context.Context, network, addr string) (net.Conn, error) {
+	host, portStr, err := net.SplitHostPort(addr)
+	if err != nil {
+		return nil, err
+	}
+	port, err := strconv.ParseUint(portStr, 10, 16)
+	if err != nil {
+		return nil, err
+	}
+	remoteAddr, err := s.addrManager.HostToNetAddress(host, uint16(port), 0)
+	if err != nil {
+		return nil, err
+	}
+	// Be sure the address exists in the address manager.
+	s.addrManager.AddAddresses([]*addrmgr.NetAddress{remoteAddr},
+		remoteAddr)
+
+	err = s.addrManager.Attempt(remoteAddr)
+	if err != nil {
+		srvrLog.Errorf("Marking address as attempted failed: %v", err)
+	}
+
+	if strings.Contains(addr, ".onion:") {
+		return cfg.oniondial(ctx, network, addr)
+	}
+	return cfg.dial(ctx, network, addr)
 }
 
 func (s *server) upnpUpdateThread(ctx context.Context) {
@@ -3702,7 +3725,7 @@ func newServer(ctx context.Context, listenAddrs []string, db database.DB,
 		OnAccept:       s.inboundPeerConnected,
 		RetryDuration:  connectionRetryInterval,
 		TargetOutbound: uint32(targetOutbound),
-		Dial:           dcrdDial,
+		Dial:           s.dcrdDial,
 		Timeout:        cfg.DialTimeout,
 		OnConnection:   s.outboundPeerConnected,
 		GetNewAddress:  newAddressFunc,

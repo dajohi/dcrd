@@ -1375,18 +1375,6 @@ func loadConfig(appName string) (*config, []string, error) {
 	return &cfg, remainingArgs, nil
 }
 
-// dcrdDial connects to the address on the named network using the appropriate
-// dial function depending on the address and configuration options.  For
-// example, .onion addresses will be dialed using the onion specific proxy if
-// one was specified, but will otherwise use the normal dial function (which
-// could itself use a proxy or not).
-func dcrdDial(ctx context.Context, network, addr string) (net.Conn, error) {
-	if strings.Contains(addr, ".onion:") {
-		return cfg.oniondial(ctx, network, addr)
-	}
-	return cfg.dial(ctx, network, addr)
-}
-
 // dcrdLookup returns the correct DNS lookup function to use depending on the
 // passed host and configuration options.  For example, .onion addresses will be
 // resolved using the onion specific proxy if one was specified, but will

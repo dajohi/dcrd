@@ -1443,6 +1443,56 @@ func (sp *serverPeer) OnAddr(_ *peer.Peer, msg *wire.MsgAddr) {
 	sp.server.addrManager.AddAddresses(addrList, remoteAddr)
 }
 
+// OnMixPR
+func (sp *serverPeer) OnMixPR(_ *peer.Peer, msg *wire.MsgMixPR) {
+	// Ignore addresses when running on the simulation and regression test
+	// networks.  This helps prevent the networks from becoming another public
+	// test network since they will not be able to learn about other peers that
+	// have not specifically been provided.
+	if cfg.SimNet || cfg.RegNet {
+		return
+	}
+
+	commitment, err := msg.Data()
+	if err != nil {
+		peerLog.Errorf("mixpr: failed to generate commitment: %v", err)
+		return
+	}
+
+	// TODO - add ban score increases
+
+	if !VerifySignature(msg.Signature, msg.Identity, commitment) {
+		err := fmt.Errorf("mixpr: invalid identity")
+		peerLog.Error(err)
+		return
+	}
+}
+
+// OnMixKE
+func (sp *serverPeer) OnMixKE(_ *peer.Peer, msg *wire.MsgMixKE) {
+	// Ignore addresses when running on the simulation and regression test
+	// networks.  This helps prevent the networks from becoming another public
+	// test network since they will not be able to learn about other peers that
+	// have not specifically been provided.
+	if cfg.SimNet || cfg.RegNet {
+		return
+	}
+
+	commitment, err := msg.Data()
+	if err != nil {
+		peerLog.Errorf("mixke: failed to generate commitment: %v", err)
+		return
+	}
+
+	// TODO - add ban score increases
+
+	if !VerifySignature(msg.Signature, msg.Identity, commitment) {
+		err := fmt.Errorf("mixke: invalid identity")
+		peerLog.Error(err)
+		return
+	}
+}
+
 // OnRead is invoked when a peer receives a message and it is used to update
 // the bytes received by the server.
 func (sp *serverPeer) OnRead(_ *peer.Peer, bytesRead int, msg wire.Message, err error) {

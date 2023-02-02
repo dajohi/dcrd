@@ -58,6 +58,12 @@ const (
 	CmdCFilterV2      = "cfilterv2"
 	CmdGetInitState   = "getinitstate"
 	CmdInitState      = "initstate"
+	CmdMixPR          = "mixpr"
+	CmdMixKE          = "mixke"
+	CmdMixCT          = "mixct"
+	CmdMixSR          = "mixsr"
+	CmdMixDC          = "mixdc"
+	CmdMixCM          = "mixcm"
 )
 
 // Message is an interface that describes a Decred message.  A type that
@@ -167,6 +173,24 @@ func makeEmptyMessage(command string) (Message, error) {
 
 	case CmdInitState:
 		msg = &MsgInitState{}
+
+	case CmdMixPR:
+		msg = &MsgMixPR{}
+
+	case CmdMixKE:
+		msg = &MsgMixKE{}
+
+	case CmdMixCT:
+		msg = &MsgMixCT{}
+
+	case CmdMixSR:
+		msg = &MsgMixSR{}
+
+	case CmdMixDC:
+		msg = &MsgMixDC{}
+
+	case CmdMixCM:
+		msg = &MsgMixCM{}
 
 	default:
 		str := fmt.Sprintf("unhandled command [%s]", command)

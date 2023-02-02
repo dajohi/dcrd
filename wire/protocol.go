@@ -51,6 +51,9 @@ const (
 	// RemoveRejectVersion is the protocol version which removes support for the
 	// reject message.
 	RemoveRejectVersion uint32 = 9
+
+	// MixVersion is the protocol version which adds peer-to-peer mixing.
+	MixVersion uint32 = 10
 )
 
 // ServiceFlag identifies services supported by a Decred peer.

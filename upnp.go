@@ -312,7 +312,6 @@ func soapRequest(url, function, message string) (replyXML []byte, err error) {
 	if r.StatusCode >= 400 {
 		// log.Stderr(function, r.StatusCode)
 		err = errors.New("error " + strconv.Itoa(r.StatusCode) + " for " + function)
-		r = nil
 		return
 	}
 	var reply soapEnvelope

@@ -28,3 +28,4 @@ linters:
     - unconvert
     - unused
     - vetshadow
+    - wastedassign

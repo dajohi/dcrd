@@ -1,400 +1,158 @@
 package main
 
-// Upnp code taken from Taipei Torrent license is below:
-// Copyright (c) 2010 Jack Palevich. All rights reserved.
-//
-// Redistribution and use in source and binary forms, with or without
-// modification, are permitted provided that the following conditions are
-// met:
-//
-//    * Redistributions of source code must retain the above copyright
-// notice, this list of conditions and the following disclaimer.
-//    * Redistributions in binary form must reproduce the above
-// copyright notice, this list of conditions and the following disclaimer
-// in the documentation and/or other materials provided with the
-// distribution.
-//    * Neither the name of Google Inc. nor the names of its
-// contributors may be used to endorse or promote products derived from
-// this software without specific prior written permission.
-//
-// THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
-// "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
-// LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
-// A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
-// OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
-// SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
-// LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
-// DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
-// THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
-// (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
-// OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-
-// Just enough UPnP to be able to forward ports
-//
-
 import (
-	"bytes"
 	"context"
-	"encoding/xml"
 	"errors"
-	"fmt"
 	"net"
-	"net/http"
 	"net/url"
-	"strconv"
 	"strings"
 	"time"
+
+	"gitlab.com/NebulousLabs/fastrand"
+	"gitlab.com/NebulousLabs/go-upnp/goupnp"
+	"gitlab.com/NebulousLabs/go-upnp/goupnp/dcps/internetgateway1"
 )
 
-type upnpNAT struct {
-	serviceURL string
-	ourIP      string
+// An IGD provides an interface to the most commonly used functions of an
+// Internet Gateway Device: discovering the external IP, and forwarding ports.
+type IGD struct {
+	// This interface is satisfied by the internetgateway1.WANIPConnection1
+	// and internetgateway1.WANPPPConnection1 types.
+	client interface {
+		GetExternalIPAddress() (string, error)
+		AddPortMapping(string, uint16, string, uint16, string, bool, string, uint32) error
+		GetSpecificPortMappingEntry(string, uint16, string) (uint16, string, bool, string, uint32, error)
+		DeletePortMapping(string, uint16, string) error
+		GetServiceClient() *goupnp.ServiceClient
+	}
 }
 
-// discover searches the local network for a UPnP router returning a NAT
-// for the network if so, nil if not.
-func discover(ctx context.Context) (*upnpNAT, error) {
-	ssdp, err := net.ResolveUDPAddr("udp4", "239.255.255.250:1900")
+// ExternalIP returns the router's external IP.
+func (d *IGD) ExternalIP() (net.IP, error) {
+	ip, err := d.client.GetExternalIPAddress()
 	if err != nil {
 		return nil, err
 	}
-	var l net.ListenConfig
-	conn, err := l.ListenPacket(ctx, "udp4", ":0")
-	if err != nil {
-		return nil, err
-	}
-	socket := conn.(*net.UDPConn)
-	defer socket.Close()
+	return net.ParseIP(ip), nil
+}
 
-	err = socket.SetDeadline(time.Now().Add(3 * time.Second))
+// IsForwardedTCP checks whether a specific TCP port is forwarded to this host
+func (d *IGD) IsForwardedTCP(port uint16) (bool, error) {
+	return d.checkForward(port, "TCP")
+}
+
+// checkForward checks whether a specific TCP or UDP port is forwarded to this host
+func (d *IGD) checkForward(port uint16, proto string) (bool, error) {
+	time.Sleep(time.Millisecond)
+	_, _, enabled, _, _, err := d.client.GetSpecificPortMappingEntry("", port, proto)
+
 	if err != nil {
-		return nil, err
+		// 714 "NoSuchEntryInArray" means that there is no such forwarding
+		if strings.Contains(err.Error(), "<errorCode>714</errorCode>") {
+			return false, nil
+		}
+		return false, err
 	}
 
-	st := "ST: urn:schemas-upnp-org:device:InternetGatewayDevice:1\r\n"
-	buf := bytes.NewBufferString(
-		"M-SEARCH * HTTP/1.1\r\n" +
-			"HOST: 239.255.255.250:1900\r\n" +
-			st +
-			"MAN: \"ssdp:discover\"\r\n" +
-			"MX: 2\r\n\r\n")
-	message := buf.Bytes()
-	answerBytes := make([]byte, 1024)
-	for i := 0; i < 3; i++ {
-		_, err = socket.WriteToUDP(message, ssdp)
+	return enabled, nil
+}
+
+// Forward forwards the specified port, and adds its description to the
+// router's port mapping table.
+func (d *IGD) Forward(port uint16, desc string) error {
+	ip, err := d.getInternalIP()
+	if err != nil {
+		return err
+	}
+
+	time.Sleep(time.Millisecond)
+	return d.client.AddPortMapping("", port, "TCP", port, ip, true, desc, 0)
+}
+
+// Clear un-forwards a port, removing it from the router's port mapping table.
+func (d *IGD) Clear(port uint16) error {
+	time.Sleep(time.Millisecond)
+	return d.client.DeletePortMapping("", port, "TCP")
+}
+
+// Location returns the URL of the router, for future lookups (see Load).
+func (d *IGD) Location() string {
+	return d.client.GetServiceClient().Location.String()
+}
+
+// getInternalIP returns the user's local IP.
+func (d *IGD) getInternalIP() (string, error) {
+	host, _, _ := net.SplitHostPort(d.client.GetServiceClient().RootDevice.URLBase.Host)
+	devIP := net.ParseIP(host)
+	if devIP == nil {
+		return "", errors.New("could not determine router's internal IP")
+	}
+
+	ifaces, err := net.Interfaces()
+	if err != nil {
+		return "", err
+	}
+
+	for _, iface := range ifaces {
+		addrs, err := iface.Addrs()
 		if err != nil {
-			return nil, err
+			return "", err
 		}
-		var n int
-		n, _, err = socket.ReadFromUDP(answerBytes)
-		if err != nil {
-			continue
-			// socket.Close()
-			// return
-		}
-		answer := string(answerBytes[0:n])
-		if !strings.Contains(answer, "\r\n"+st) {
-			continue
-		}
-		// HTTP header field names are case-insensitive.
-		// https://www.w3.org/Protocols/rfc2616/rfc2616-sec4.html#sec4.2
-		locString := "\r\nlocation: "
-		locIndex := strings.Index(strings.ToLower(answer), locString)
-		if locIndex < 0 {
-			continue
-		}
-		loc := answer[locIndex+len(locString):]
-		endIndex := strings.Index(loc, "\r\n")
-		if endIndex < 0 {
-			continue
-		}
-		locURL := loc[0:endIndex]
-		var serviceURL string
-		serviceURL, err = getServiceURL(locURL)
-		if err != nil {
-			return nil, err
-		}
-		serviceIP := getServiceIP(serviceURL)
-		var ourIP string
-		ourIP, err = getOurIP(serviceIP)
-		if err != nil {
-			return nil, err
-		}
-		return &upnpNAT{serviceURL: serviceURL, ourIP: ourIP}, nil
-	}
-	return nil, errors.New("UPnP port discovery failed")
-}
 
-// service represents the Service type in an UPnP xml description.
-// Only the parts we care about are present and thus the xml may have more
-// fields than present in the structure.
-type service struct {
-	ServiceType string `xml:"serviceType"`
-	ControlURL  string `xml:"controlURL"`
-}
-
-// deviceList represents the deviceList type in an UPnP xml description.
-// Only the parts we care about are present and thus the xml may have more
-// fields than present in the structure.
-type deviceList struct {
-	XMLName xml.Name `xml:"deviceList"`
-	Device  []device `xml:"device"`
-}
-
-// serviceList represents the serviceList type in an UPnP xml description.
-// Only the parts we care about are present and thus the xml may have more
-// fields than present in the structure.
-type serviceList struct {
-	XMLName xml.Name  `xml:"serviceList"`
-	Service []service `xml:"service"`
-}
-
-// device represents the device type in an UPnP xml description.
-// Only the parts we care about are present and thus the xml may have more
-// fields than present in the structure.
-type device struct {
-	XMLName     xml.Name    `xml:"device"`
-	DeviceType  string      `xml:"deviceType"`
-	DeviceList  deviceList  `xml:"deviceList"`
-	ServiceList serviceList `xml:"serviceList"`
-}
-
-// specVersion represents the specVersion in a UPnP xml description.
-// Only the parts we care about are present and thus the xml may have more
-// fields than present in the structure.
-type specVersion struct {
-	XMLName xml.Name `xml:"specVersion"`
-	Major   int      `xml:"major"`
-	Minor   int      `xml:"minor"`
-}
-
-// root represents the Root document for a UPnP xml description.
-// Only the parts we care about are present and thus the xml may have more
-// fields than present in the structure.
-type root struct {
-	XMLName     xml.Name `xml:"root"`
-	SpecVersion specVersion
-	Device      device
-}
-
-// getChildDevice searches the children of device for a device with the given
-// type.
-func getChildDevice(d *device, deviceType string) *device {
-	for i := range d.DeviceList.Device {
-		if d.DeviceList.Device[i].DeviceType == deviceType {
-			return &d.DeviceList.Device[i]
+		for _, addr := range addrs {
+			if x, ok := addr.(*net.IPNet); ok && x.Contains(devIP) {
+				return x.IP.String(), nil
+			}
 		}
 	}
-	return nil
+
+	return "", errors.New("could not determine internal IP")
 }
 
-// getChildDevice searches the service list of device for a service with the
-// given type.
-func getChildService(d *device, serviceType string) *service {
-	for i := range d.ServiceList.Service {
-		if d.ServiceList.Service[i].ServiceType == serviceType {
-			return &d.ServiceList.Service[i]
+// discover scans the local network for routers and returns the first
+// UPnP-enabled router it encounters.  It will try up to 3 times to find a
+// router, sleeping a random duration between each attempt.  This is to
+// mitigate a race condition with many callers attempting to discover
+// simultaneously.
+func discover(ctx context.Context) (*IGD, error) {
+	// TODO: if more than one client is found, only return those on the same
+	// subnet as the user?
+	maxTries := 3
+	sleepTime := time.Millisecond * time.Duration(fastrand.Intn(5000))
+	for try := 0; try < maxTries; try++ {
+		pppclients, _, _ := internetgateway1.NewWANPPPConnection1Clients(ctx)
+		if len(pppclients) > 0 {
+			return &IGD{pppclients[0]}, nil
 		}
-	}
-	return nil
-}
-
-func getServiceIP(serviceURL string) (routerIP string) {
-	url, _ := url.Parse(serviceURL)
-	return url.Hostname()
-}
-
-// getOurIP returns the local IP that is on the same subnet as the serviceIP.
-func getOurIP(serviceIP string) (ip string, err error) {
-	_, serviceNet, _ := net.ParseCIDR(serviceIP + "/24")
-	addrs, err := net.InterfaceAddrs()
-	for _, addr := range addrs {
-		ip, _, _ := net.ParseCIDR(addr.String())
-		if serviceNet.Contains(ip) {
-			return ip.String(), nil
+		ipclients, _, _ := internetgateway1.NewWANIPConnection1Clients(ctx)
+		if len(ipclients) > 0 {
+			return &IGD{ipclients[0]}, nil
 		}
+		select {
+		case <-ctx.Done():
+			return nil, context.Canceled
+		case <-time.After(sleepTime):
+		}
+		sleepTime *= 2
 	}
-	return
+	return nil, errors.New("no UPnP-enabled gateway found")
 }
 
-// getServiceURL parses the xml description at the given root url to find the
-// url for the WANIPConnection service to be used for port forwarding.
-func getServiceURL(rootURL string) (url string, err error) {
-	r, err := http.Get(rootURL)
-	if err != nil {
-		return
-	}
-	defer r.Body.Close()
-	if r.StatusCode >= 400 {
-		err = fmt.Errorf("%d", r.StatusCode)
-		return
-	}
-	var root root
-	err = xml.NewDecoder(r.Body).Decode(&root)
-	if err != nil {
-		return
-	}
-	a := &root.Device
-	if a.DeviceType != "urn:schemas-upnp-org:device:InternetGatewayDevice:1" {
-		err = errors.New("no internet gateway device")
-		return
-	}
-	b := getChildDevice(a, "urn:schemas-upnp-org:device:WANDevice:1")
-	if b == nil {
-		err = errors.New("no WAN device")
-		return
-	}
-	c := getChildDevice(b, "urn:schemas-upnp-org:device:WANConnectionDevice:1")
-	if c == nil {
-		err = errors.New("no WAN connection device")
-		return
-	}
-	d := getChildService(c, "urn:schemas-upnp-org:service:WANIPConnection:1")
-	if d == nil {
-		err = errors.New("no WAN IP connection")
-		return
-	}
-	url = combineURL(rootURL, d.ControlURL)
-	return
-}
-
-// combineURL appends subURL onto rootURL.
-func combineURL(rootURL, subURL string) string {
-	protocolEnd := "://"
-	protoEndIndex := strings.Index(rootURL, protocolEnd)
-	a := rootURL[protoEndIndex+len(protocolEnd):]
-	rootIndex := strings.Index(a, "/")
-	return rootURL[0:protoEndIndex+len(protocolEnd)+rootIndex] + subURL
-}
-
-// soapBody represents the <s:Body> element in a SOAP reply.
-// fields we don't care about are elided.
-type soapBody struct {
-	XMLName xml.Name `xml:"Body"`
-	Data    []byte   `xml:",innerxml"`
-}
-
-// soapEnvelope represents the <s:Envelope> element in a SOAP reply.
-// fields we don't care about are elided.
-type soapEnvelope struct {
-	XMLName xml.Name `xml:"Envelope"`
-	Body    soapBody `xml:"Body"`
-}
-
-// soapRequests performs a soap request with the given parameters and returns
-// the xml replied stripped of the soap headers. in the case that the request is
-// unsuccessful the an error is returned.
-func soapRequest(url, function, message string) (replyXML []byte, err error) {
-	fullMessage := "<?xml version=\"1.0\" ?>" +
-		"<s:Envelope xmlns:s=\"http://schemas.xmlsoap.org/soap/envelope/\" s:encodingStyle=\"http://schemas.xmlsoap.org/soap/encoding/\">\r\n" +
-		"<s:Body>" + message + "</s:Body></s:Envelope>"
-
-	req, err := http.NewRequest(http.MethodPost, url, strings.NewReader(fullMessage))
+// Load connects to the router service specified by rawurl. This is much
+// faster than Discover. Generally, Load should only be called with values
+// returned by the IGD's Location method.
+func Load(rawurl string) (*IGD, error) {
+	loc, err := url.Parse(rawurl)
 	if err != nil {
 		return nil, err
 	}
-	req.Header.Set("Content-Type", "text/xml ; charset=\"utf-8\"")
-	req.Header.Set("User-Agent", "Darwin/10.0.0, UPnP/1.0, MiniUPnPc/1.3")
-	//req.Header.Set("Transfer-Encoding", "chunked")
-	req.Header.Set("SOAPAction", "\"urn:schemas-upnp-org:service:WANIPConnection:1#"+function+"\"")
-	req.Header.Set("Connection", "Close")
-	req.Header.Set("Cache-Control", "no-cache")
-	req.Header.Set("Pragma", "no-cache")
-
-	r, err := http.DefaultClient.Do(req)
-	if err != nil {
-		return nil, err
+	pppclients, _ := internetgateway1.NewWANPPPConnection1ClientsByURL(loc)
+	if len(pppclients) > 0 {
+		return &IGD{pppclients[0]}, nil
 	}
-	if r.Body != nil {
-		defer r.Body.Close()
+	ipclients, _ := internetgateway1.NewWANIPConnection1ClientsByURL(loc)
+	if len(ipclients) > 0 {
+		return &IGD{ipclients[0]}, nil
 	}
-
-	if r.StatusCode >= 400 {
-		// log.Stderr(function, r.StatusCode)
-		err = errors.New("error " + strconv.Itoa(r.StatusCode) + " for " + function)
-		return
-	}
-	var reply soapEnvelope
-	err = xml.NewDecoder(r.Body).Decode(&reply)
-	if err != nil {
-		return nil, err
-	}
-	return reply.Body.Data, nil
-}
-
-// getExternalIPAddressResponse represents the XML response to a
-// GetExternalIPAddress SOAP request.
-type getExternalIPAddressResponse struct {
-	XMLName           xml.Name `xml:"GetExternalIPAddressResponse"`
-	ExternalIPAddress string   `xml:"NewExternalIPAddress"`
-}
-
-// GetExternalAddress implements the NAT interface by fetching the external IP
-// from the UPnP router.
-func (n *upnpNAT) GetExternalAddress() (addr net.IP, err error) {
-	message := "<u:GetExternalIPAddress xmlns:u=\"urn:schemas-upnp-org:service:WANIPConnection:1\"/>\r\n"
-	response, err := soapRequest(n.serviceURL, "GetExternalIPAddress", message)
-	if err != nil {
-		return nil, err
-	}
-
-	var reply getExternalIPAddressResponse
-	err = xml.Unmarshal(response, &reply)
-	if err != nil {
-		return nil, err
-	}
-
-	addr = net.ParseIP(reply.ExternalIPAddress)
-	if addr == nil {
-		return nil, errors.New("unable to parse ip address")
-	}
-	return addr, nil
-}
-
-// AddPortMapping implements the NAT interface by setting up a port forwarding
-// from the UPnP router to the local machine with the given ports and protocol.
-func (n *upnpNAT) AddPortMapping(protocol string, externalPort, internalPort int, description string, timeout int) (mappedExternalPort int, err error) {
-	// A single concatenation would break ARM compilation.
-	message := "<u:AddPortMapping xmlns:u=\"urn:schemas-upnp-org:service:WANIPConnection:1\">\r\n" +
-		"<NewRemoteHost></NewRemoteHost><NewExternalPort>" + strconv.Itoa(externalPort)
-	message += "</NewExternalPort><NewProtocol>" + strings.ToUpper(protocol) + "</NewProtocol>"
-	message += "<NewInternalPort>" + strconv.Itoa(internalPort) + "</NewInternalPort>" +
-		"<NewInternalClient>" + n.ourIP + "</NewInternalClient>" +
-		"<NewEnabled>1</NewEnabled><NewPortMappingDescription>"
-	message += description +
-		"</NewPortMappingDescription><NewLeaseDuration>" + strconv.Itoa(timeout) +
-		"</NewLeaseDuration></u:AddPortMapping>"
-
-	response, err := soapRequest(n.serviceURL, "AddPortMapping", message)
-	if err != nil {
-		return
-	}
-
-	// TODO: check response to see if the port was forwarded
-	// If the port was not wildcard we don't get a reply with the port in
-	// it. Not sure about wildcard yet. miniupnpc just checks for error
-	// codes here.
-	mappedExternalPort = externalPort
-	_ = response
-	return
-}
-
-// DeletePortMapping implements the NAT interface by removing up a port forwarding
-// from the UPnP router to the local machine with the given ports and.
-func (n *upnpNAT) DeletePortMapping(protocol string, externalPort, internalPort int) (err error) {
-
-	message := "<u:DeletePortMapping xmlns:u=\"urn:schemas-upnp-org:service:WANIPConnection:1\">\r\n" +
-		"<NewRemoteHost></NewRemoteHost><NewExternalPort>" + strconv.Itoa(externalPort) +
-		"</NewExternalPort><NewProtocol>" + strings.ToUpper(protocol) + "</NewProtocol>" +
-		"</u:DeletePortMapping>"
-
-	response, err := soapRequest(n.serviceURL, "DeletePortMapping", message)
-	if err != nil {
-		return
-	}
-
-	// TODO: check response to see if the port was deleted
-	// log.Println(message, response)
-	_ = response
-	return
+	return nil, errors.New("no UPnP-enabled gateway found at URL " + rawurl)
 }

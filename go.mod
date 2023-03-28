@@ -38,6 +38,8 @@ require (
 	github.com/jrick/bitset v1.0.0
 	github.com/jrick/logrotate v1.0.0
 	github.com/syndtr/goleveldb v1.0.1-0.20210819022825-2ae1ddf74ef7
+	gitlab.com/NebulousLabs/fastrand v0.0.0-20181126182046-603482d69e40
+	gitlab.com/NebulousLabs/go-upnp v0.0.0-20211002182029-11da932010b6
 	golang.org/x/sys v0.5.0
 	golang.org/x/term v0.5.0
 )
@@ -48,6 +50,9 @@ require (
 	github.com/decred/dcrd/dcrec/edwards/v2 v2.0.2 // indirect
 	github.com/decred/dcrd/hdkeychain/v3 v3.1.0 // indirect
 	github.com/golang/snappy v0.0.4 // indirect
+	golang.org/x/crypto v0.0.0-20210322153248-0c34fe9e7dc2 // indirect
+	golang.org/x/net v0.0.0-20210410081132-afb366fc7cd1 // indirect
+	golang.org/x/text v0.3.6 // indirect
 )
 
 replace (

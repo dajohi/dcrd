@@ -209,6 +209,7 @@ func TestTreasury(t *testing.T) {
 	// latest simnet.
 	return
 
+	// nolint:govet
 	var handlers *rpcclient.NotificationHandlers
 	net := chaincfg.SimNetParams()
 

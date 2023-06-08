@@ -6,7 +6,6 @@
 package addrmgr
 
 import (
-	"errors"
 	"fmt"
 	"net"
 	"os"
@@ -21,8 +20,10 @@ import (
 // Put some IP in here for convenience. Points to google.
 var someIP = "173.194.115.66"
 
-func lookupFunc(host string) ([]net.IP, error) {
-	return nil, errors.New("not implemented")
+// genericFilter defines a filter that instructs address manager
+// operations that accept it to return network addresses of any type.
+func genericFilter(netAddressType NetAddressType) bool {
+	return true
 }
 
 // addAddressByIP is a convenience function that adds an address to the
@@ -45,7 +46,7 @@ func TestStartStop(t *testing.T) {
 		t.Fatalf("peers file exists though it should not: %s", peersFile)
 	}
 
-	amgr := New(dir, nil)
+	amgr := New(dir)
 	amgr.Start()
 
 	// Add single network address to the address manager.
@@ -63,7 +64,7 @@ func TestStartStop(t *testing.T) {
 	}
 
 	// Start a new address manager, which initializes it from the peers file.
-	amgr = New(dir, nil)
+	amgr = New(dir)
 	amgr.Start()
 
 	knownAddress := amgr.GetAddress()
@@ -86,7 +87,7 @@ func TestStartStop(t *testing.T) {
 }
 
 func TestAddOrUpdateAddress(t *testing.T) {
-	amgr := New("testaddaddressupdate", nil)
+	amgr := New("testaddaddressupdate")
 	amgr.Start()
 	if ka := amgr.GetAddress(); ka != nil {
 		t.Fatal("address manager should contain no addresses")
@@ -185,7 +186,7 @@ func TestAddLocalAddress(t *testing.T) {
 	const testPort = 8333
 	const testServices = wire.SFNodeNetwork
 
-	amgr := New("testaddlocaladdress", nil)
+	amgr := New("testaddlocaladdress")
 	validLocalAddresses := make(map[string]struct{})
 	for _, test := range tests {
 		netAddr := NewNetAddressIPPort(test.ip, testPort, testServices)
@@ -226,7 +227,7 @@ func TestAddLocalAddress(t *testing.T) {
 }
 
 func TestAttempt(t *testing.T) {
-	n := New("testattempt", lookupFunc)
+	n := New("testattempt")
 
 	// Add a new address and get it.
 	n.addAddressByIP(someIP, 8333)
@@ -256,7 +257,7 @@ func TestAttempt(t *testing.T) {
 }
 
 func TestConnected(t *testing.T) {
-	n := New("testconnected", lookupFunc)
+	n := New("testconnected")
 
 	// Add a new address and get it
 	n.addAddressByIP(someIP, 8333)
@@ -286,7 +287,7 @@ func TestConnected(t *testing.T) {
 }
 
 func TestNeedMoreAddresses(t *testing.T) {
-	n := New("testneedmoreaddresses", lookupFunc)
+	n := New("testneedmoreaddresses")
 	addrsToAdd := needAddressThreshold
 	b := n.NeedMoreAddresses()
 	if !b {
@@ -315,7 +316,7 @@ func TestNeedMoreAddresses(t *testing.T) {
 }
 
 func TestGood(t *testing.T) {
-	n := New("testgood", lookupFunc)
+	n := New("testgood")
 	addrsToAdd := 64 * 64
 	addrs := make([]*NetAddress, addrsToAdd)
 
@@ -337,7 +338,7 @@ func TestGood(t *testing.T) {
 			addrsToAdd)
 	}
 
-	numCache := len(n.AddressCache())
+	numCache := len(n.AddressCache(genericFilter))
 	if numCache >= numAddrs/4 {
 		t.Fatalf("Number of addresses in cache: got %d, want %d", numCache,
 			numAddrs/4)
@@ -348,7 +349,7 @@ func TestGood(t *testing.T) {
 	// the new bucket, and when marked good it should move to the tried bucket.
 	// If the tried bucket is full then it should make room for the newly tried
 	// address by moving the old one back to the new bucket.
-	n = New("testgood_tried_overflow", lookupFunc)
+	n = New("testgood_tried_overflow")
 	n.triedBucketSize = 1
 	n.getNewBucket = func(netAddr, srcAddr *NetAddress) int {
 		return 0
@@ -433,7 +434,7 @@ func TestGood(t *testing.T) {
 }
 
 func TestGetAddress(t *testing.T) {
-	n := New("testgetaddress", lookupFunc)
+	n := New("testgetaddress")
 
 	// Get an address from an empty set (should error)
 	if rv := n.GetAddress(); rv != nil {
@@ -528,11 +529,11 @@ func TestGetBestLocalAddress(t *testing.T) {
 		newAddressFromIP(net.ParseIP("2001:470::1")),
 	}}
 
-	amgr := New("testgetbestlocaladdress", nil)
+	amgr := New("testgetbestlocaladdress")
 
 	// Test against default when there's no address
 	for x, test := range tests {
-		got := amgr.GetBestLocalAddress(test.remoteAddr)
+		got := amgr.GetBestLocalAddress(test.remoteAddr, genericFilter)
 		if !reflect.DeepEqual(test.want0.IP, got.IP) {
 			t.Errorf("TestGetBestLocalAddress test1 #%d failed for remote address %s: want %s got %s",
 				x, test.remoteAddr.IP, test.want1.IP, got.IP)
@@ -546,7 +547,7 @@ func TestGetBestLocalAddress(t *testing.T) {
 
 	// Test against want1
 	for x, test := range tests {
-		got := amgr.GetBestLocalAddress(test.remoteAddr)
+		got := amgr.GetBestLocalAddress(test.remoteAddr, genericFilter)
 		if !reflect.DeepEqual(test.want1.IP, got.IP) {
 			t.Errorf("TestGetBestLocalAddress test1 #%d failed for remote address %s: want %s got %s",
 				x, test.remoteAddr.IP, test.want1.IP, got.IP)
@@ -560,7 +561,7 @@ func TestGetBestLocalAddress(t *testing.T) {
 
 	// Test against want2
 	for x, test := range tests {
-		got := amgr.GetBestLocalAddress(test.remoteAddr)
+		got := amgr.GetBestLocalAddress(test.remoteAddr, genericFilter)
 		if !reflect.DeepEqual(test.want2.IP, got.IP) {
 			t.Errorf("TestGetBestLocalAddress test2 #%d failed for remote address %s: want %s got %s",
 				x, test.remoteAddr.IP, test.want2.IP, got.IP)
@@ -574,7 +575,7 @@ func TestGetBestLocalAddress(t *testing.T) {
 
 		// Test against want3
 		for x, test := range tests {
-			got := amgr.GetBestLocalAddress(&test.remoteAddr)
+			got := amgr.GetBestLocalAddress(&test.remoteAddr, genericFilter)
 			if !test.want3.IP.Equal(got.IP) {
 				t.Errorf("TestGetBestLocalAddress test3 #%d failed for remote address %s: want %s got %s",
 					x, test.remoteAddr.IP, test.want3.IP, got.IP)
@@ -595,7 +596,7 @@ func TestCorruptPeersFile(t *testing.T) {
 	if err := fp.Close(); err != nil {
 		t.Fatalf("Could not write empty peers file: %s", peersFile)
 	}
-	amgr := New(dir, nil)
+	amgr := New(dir)
 	amgr.Start()
 	amgr.Stop()
 	if _, err := os.Stat(peersFile); err != nil {
@@ -610,7 +611,7 @@ func TestValidatePeerNa(t *testing.T) {
 	const unroutableIpv6Address = "::1"
 	const routableIpv4Address = "12.1.2.3"
 	const routableIpv6Address = "2003::"
-	onionCatTorV2Address := onionCatNet.IP.String()
+	const onionCatTorV3Address = "xa4r2iadxm55fbnqgwwi5mymqdcofiu3w6rpbtqn7b2dyn7mgwj64jyd.onion"
 	rfc4380IPAddress := rfc4380Net.IP.String()
 	rfc3964IPAddress := rfc3964Net.IP.String()
 	rfc6052IPAddress := rfc6052Net.IP.String()
@@ -623,33 +624,33 @@ func TestValidatePeerNa(t *testing.T) {
 		valid         bool
 		reach         NetAddressReach
 	}{{
-		name:          "torv2 to torv2",
-		localAddress:  onionCatTorV2Address,
-		remoteAddress: onionCatTorV2Address,
+		name:          "torv3 to torv2",
+		localAddress:  onionCatTorV3Address,
+		remoteAddress: onionCatTorV3Address,
 		valid:         false,
 		reach:         Private,
 	}, {
-		name:          "routable ipv4 to torv2",
+		name:          "routable ipv4 to torv3",
 		localAddress:  routableIpv4Address,
-		remoteAddress: onionCatTorV2Address,
+		remoteAddress: onionCatTorV3Address,
 		valid:         true,
 		reach:         Ipv4,
 	}, {
-		name:          "unroutable ipv4 to torv2",
+		name:          "unroutable ipv4 to torv3",
 		localAddress:  unroutableIpv4Address,
-		remoteAddress: onionCatTorV2Address,
+		remoteAddress: onionCatTorV3Address,
 		valid:         false,
 		reach:         Default,
 	}, {
-		name:          "routable ipv6 to torv2",
+		name:          "routable ipv6 to torv3",
 		localAddress:  routableIpv6Address,
-		remoteAddress: onionCatTorV2Address,
+		remoteAddress: onionCatTorV3Address,
 		valid:         false,
 		reach:         Default,
 	}, {
-		name:          "unroutable ipv6 to torv2",
+		name:          "unroutable ipv6 to torv3",
 		localAddress:  unroutableIpv6Address,
-		remoteAddress: onionCatTorV2Address,
+		remoteAddress: onionCatTorV3Address,
 		valid:         false,
 		reach:         Default,
 	}, {
@@ -744,12 +745,36 @@ func TestValidatePeerNa(t *testing.T) {
 		reach:         Ipv6Weak,
 	}}
 
-	addressManager := New("testValidatePeerNa", nil)
+	zeroTime := time.Time{}
+	addressManager := New("testValidatePeerNa")
 	for _, test := range tests {
-		localIP := net.ParseIP(test.localAddress)
-		remoteIP := net.ParseIP(test.remoteAddress)
-		localNa := NewNetAddressIPPort(localIP, 8333, wire.SFNodeNetwork)
-		remoteNa := NewNetAddressIPPort(remoteIP, 8333, wire.SFNodeNetwork)
+		localAddrType, localAddrBytes, err := ParseHost(test.localAddress)
+		if err != nil {
+			t.Errorf("%q: failed to parse local address '%v': %v", test.name,
+				test.localAddress, err)
+			return
+		}
+		remoteAddrType, remoteAddrBytes, err := ParseHost(test.remoteAddress)
+		if err != nil {
+			t.Errorf("%q: failed to parse remote address '%v': %v", test.name,
+				test.remoteAddress, err)
+			return
+		}
+
+		localNa, err := NewNetAddressByType(localAddrType, localAddrBytes,
+			8333, zeroTime, wire.SFNodeNetwork)
+		if err != nil {
+			t.Errorf("%q: failed to create local network address '%v': %v",
+				test.name, test.localAddress, err)
+			return
+		}
+		remoteNa, err := NewNetAddressByType(remoteAddrType, remoteAddrBytes,
+			8333, zeroTime, wire.SFNodeNetwork)
+		if err != nil {
+			t.Errorf("%q: failed to create remote network address '%v': %v",
+				test.name, test.remoteAddress, err)
+			return
+		}
 
 		valid, reach := addressManager.ValidatePeerNa(localNa, remoteNa)
 		if valid != test.valid {
@@ -764,94 +789,11 @@ func TestValidatePeerNa(t *testing.T) {
 	}
 }
 
-// TestHostToNetAddress ensures that HostToNetAddress behaves as expected
-// given valid and invalid host name arguments.
-func TestHostToNetAddress(t *testing.T) {
-	// Define a hostname that will cause a lookup to be performed using the
-	// lookupFunc provided to the address manager instance for each test.
-	const hostnameForLookup = "hostname.test"
-	const services = wire.SFNodeNetwork
-
-	tests := []struct {
-		name       string
-		host       string
-		port       uint16
-		lookupFunc func(host string) ([]net.IP, error)
-		wantErr    bool
-		want       *NetAddress
-	}{{
-		name:       "valid onion address",
-		host:       "a5ccbdkubbr2jlcp.onion",
-		port:       8333,
-		lookupFunc: nil,
-		wantErr:    false,
-		want: NewNetAddressIPPort(
-			net.ParseIP("fd87:d87e:eb43:744:208d:5408:63a4:ac4f"), 8333,
-			services),
-	}, {
-		name:       "invalid onion address",
-		host:       "0000000000000000.onion",
-		port:       8333,
-		lookupFunc: nil,
-		wantErr:    true,
-		want:       nil,
-	}, {
-		name: "unresolvable host name",
-		host: hostnameForLookup,
-		port: 8333,
-		lookupFunc: func(host string) ([]net.IP, error) {
-			return nil, fmt.Errorf("unresolvable host %v", host)
-		},
-		wantErr: true,
-		want:    nil,
-	}, {
-		name: "not resolved host name",
-		host: hostnameForLookup,
-		port: 8333,
-		lookupFunc: func(host string) ([]net.IP, error) {
-			return nil, nil
-		},
-		wantErr: true,
-		want:    nil,
-	}, {
-		name: "resolved host name",
-		host: hostnameForLookup,
-		port: 8333,
-		lookupFunc: func(host string) ([]net.IP, error) {
-			return []net.IP{net.ParseIP("127.0.0.1")}, nil
-		},
-		wantErr: false,
-		want: NewNetAddressIPPort(net.ParseIP("127.0.0.1"), 8333,
-			services),
-	}, {
-		name:       "valid ip address",
-		host:       "12.1.2.3",
-		port:       8333,
-		lookupFunc: nil,
-		wantErr:    false,
-		want: NewNetAddressIPPort(net.ParseIP("12.1.2.3"), 8333,
-			services),
-	}}
-
-	for _, test := range tests {
-		addrManager := New("testHostToNetAddress", test.lookupFunc)
-		result, err := addrManager.HostToNetAddress(test.host, test.port,
-			services)
-		if test.wantErr == true && err == nil {
-			t.Errorf("%q: expected error but one was not returned", test.name)
-		}
-		if !reflect.DeepEqual(result, test.want) {
-			t.Errorf("%q: unexpected result - got %v, want %v", test.name,
-				result, test.want)
-		}
-	}
-}
-
 // TestSetServices ensures that a known address' services are updated as
 // expected and that the services field is not mutated when new services are
 // added.
 func TestSetServices(t *testing.T) {
-	addressManager := New("testSetServices", nil)
+	addressManager := New("testSetServices")
 	const services = wire.SFNodeNetwork
 
 	// Attempt to set services for an address not known to the address manager.

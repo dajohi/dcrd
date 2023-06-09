@@ -50,11 +50,10 @@ require (
 	github.com/decred/dcrd/hdkeychain/v3 v3.1.0 // indirect
 	github.com/golang/snappy v0.0.4 // indirect
 	github.com/klauspost/cpuid/v2 v2.0.9 // indirect
-	golang.org/x/crypto v0.9.0 // indirect
+	golang.org/x/net v0.10.0 // indirect
 )
 
 replace (
-	github.com/decred/dcrd/addrmgr/v2 => ./addrmgr
 	github.com/decred/dcrd/bech32 => ./bech32
 	github.com/decred/dcrd/blockchain/stake/v5 => ./blockchain/stake
 	github.com/decred/dcrd/blockchain/standalone/v2 => ./blockchain/standalone
@@ -62,7 +61,6 @@ replace (
 	github.com/decred/dcrd/certgen => ./certgen
 	github.com/decred/dcrd/chaincfg/chainhash => ./chaincfg/chainhash
 	github.com/decred/dcrd/chaincfg/v3 => ./chaincfg
-	github.com/decred/dcrd/connmgr/v3 => ./connmgr
 	github.com/decred/dcrd/container/apbf => ./container/apbf
 	github.com/decred/dcrd/crypto/blake256 => ./crypto/blake256
 	github.com/decred/dcrd/crypto/ripemd160 => ./crypto/ripemd160

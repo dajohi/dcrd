@@ -1176,11 +1176,9 @@ func loadConfig(appName string) (*config, []string, error) {
 		return nil, nil, err
 	}
 
-	// Don't allow unsynchronized mining on mainnet.
+	// Warn if unsynchronized mining is enabled on mainnet.
 	if cfg.AllowUnsyncedMining && cfg.params == &mainNetParams {
-		str := "%s: allowunsyncedmining cannot be activated on mainnet"
-		err := fmt.Errorf(str, funcName)
-		return nil, nil, err
+		dcrdLog.Warnf("unsynchronized mining enabled on mainnet")
 	}
 
 	// Always allow unsynchronized mining on simnet and regnet.

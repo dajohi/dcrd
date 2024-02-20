@@ -48,6 +48,7 @@ import (
 	"github.com/decred/dcrd/peer/v3"
 	"github.com/decred/dcrd/txscript/v4"
 	"github.com/decred/dcrd/wire"
+	"github.com/huin/goupnp/dcps/internetgateway1"
 	"github.com/syndtr/goleveldb/leveldb"
 )
 
@@ -519,7 +520,7 @@ type server struct {
 	query                chan interface{}
 	relayInv             chan relayMsg
 	broadcast            chan broadcastMsg
-	nat                  *upnpNAT
+	nat                  *internetgateway1.WANPPPConnection1
 	db                   database.DB
 	timeSource           blockchain.MedianTimeSource
 	services             wire.ServiceFlag
@@ -3268,7 +3269,8 @@ func (s *server) upnpUpdateThread(ctx context.Context) {
 	// Go off immediately to prevent code duplication, thereafter we renew
 	// lease every 15 minutes.
 	timer := time.NewTimer(0 * time.Second)
-	lport, _ := strconv.ParseInt(s.chainParams.DefaultPort, 10, 16)
+	lport64, _ := strconv.ParseUint(s.chainParams.DefaultPort, 10, 16)
+	lport := uint16(lport64)
 
 	first := true
 out:
@@ -3279,22 +3281,21 @@ out:
 			// TODO: know which ports we are listening to on an external net.
 			// TODO: if specific listen port doesn't work then ask for wildcard
 			// listen port?
-			// XXX this assumes timeout is in seconds.
-			listenPort, err := s.nat.AddPortMapping("tcp", int(lport), int(lport),
-				"dcrd listen port", 20*60)
+			err := s.nat.AddPortMappingCtx(ctx, "", lport, "TCP", lport, "", true,
+				"dcrd listen port", 0)
 			if err != nil {
 				srvrLog.Warnf("can't add UPnP port mapping: %v", err)
 			}
 			if first && err == nil {
 				// TODO: look this up periodically to see if upnp domain changed
 				// and so did ip.
-				externalip, err := s.nat.GetExternalAddress()
+				externalip, err := s.nat.GetExternalIPAddressCtx(ctx)
 				if err != nil {
 					srvrLog.Warnf("UPnP can't get external address: %v", err)
 					continue out
 				}
-				localAddr := addrmgr.NewNetAddressIPPort(externalip,
-					uint16(listenPort), s.services)
+				localAddr := addrmgr.NewNetAddressIPPort(net.ParseIP(externalip),
+					lport, s.services)
 				err = s.addrManager.AddLocalAddress(localAddr, addrmgr.UpnpPrio)
 				if err != nil {
 					srvrLog.Warnf("Failed to add UPnP local address %s: %v",
@@ -3314,7 +3315,7 @@ out:
 
 	timer.Stop()
 
-	err := s.nat.DeletePortMapping("tcp", int(lport), int(lport))
+	err := s.nat.DeletePortMapping("", lport, "TCP")
 	if err != nil {
 		srvrLog.Warnf("unable to remove UPnP port mapping: %v", err)
 	} else {
@@ -3644,7 +3645,7 @@ func newServer(ctx context.Context, listenAddrs []string, db database.DB,
 	services := defaultServices
 
 	var listeners []net.Listener
-	var nat *upnpNAT
+	var nat *internetgateway1.WANPPPConnection1
 	if !cfg.DisableListen {
 		var err error
 		listeners, nat, err = initListeners(ctx, chainParams, amgr, listenAddrs,
@@ -4128,7 +4129,7 @@ func newServer(ctx context.Context, listenAddrs []string, db database.DB,
 // initListeners initializes the configured net listeners and adds any bound
 // addresses to the address manager. Returns the listeners and a NAT interface,
 // which is non-nil if UPnP is in use.
-func initListeners(ctx context.Context, params *chaincfg.Params, amgr *addrmgr.AddrManager, listenAddrs []string, services wire.ServiceFlag) ([]net.Listener, *upnpNAT, error) {
+func initListeners(ctx context.Context, params *chaincfg.Params, amgr *addrmgr.AddrManager, listenAddrs []string, services wire.ServiceFlag) ([]net.Listener, *internetgateway1.WANPPPConnection1, error) {
 	// Listen for TCP connections at the configured addresses
 	netAddrs, err := parseListeners(listenAddrs)
 	if err != nil {
@@ -4152,7 +4153,7 @@ func initListeners(ctx context.Context, params *chaincfg.Params, amgr *addrmgr.A
 		notifyAddrServer.notifyP2PAddress(listener.Addr().String())
 	}
 
-	var nat *upnpNAT
+	var nat *internetgateway1.WANPPPConnection1
 	if len(cfg.ExternalIPs) != 0 {
 		defaultPort, err := strconv.ParseUint(params.DefaultPort, 10, 16)
 		if err != nil {
@@ -4191,7 +4192,7 @@ func initListeners(ctx context.Context, params *chaincfg.Params, amgr *addrmgr.A
 	} else {
 		if cfg.Upnp {
 			var err error
-			nat, err = discover(ctx)
+			nat, err = discover()
 			if err != nil {
 				srvrLog.Warnf("Can't discover upnp: %v", err)
 			}

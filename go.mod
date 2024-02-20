@@ -34,6 +34,7 @@ require (
 	github.com/decred/go-socks v1.1.0
 	github.com/decred/slog v1.2.0
 	github.com/gorilla/websocket v1.5.0
+	github.com/huin/goupnp v1.3.0
 	github.com/jessevdk/go-flags v1.5.0
 	github.com/jrick/bitset v1.0.0
 	github.com/jrick/logrotate v1.0.0
@@ -50,6 +51,7 @@ require (
 	github.com/decred/dcrd/hdkeychain/v3 v3.1.1 // indirect
 	github.com/golang/snappy v0.0.4 // indirect
 	github.com/klauspost/cpuid/v2 v2.0.9 // indirect
+	golang.org/x/sync v0.0.0-20210220032951-036812b2e83c // indirect
 )
 
 replace (

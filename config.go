@@ -13,6 +13,7 @@ import (
 	"errors"
 	"fmt"
 	"net"
+	"net/netip"
 	"os"
 	"os/user"
 	"path/filepath"
@@ -225,7 +226,7 @@ type config struct {
 	dial          func(context.Context, string, string) (net.Conn, error)
 	miningAddrs   []stdaddr.Address
 	minRelayTxFee dcrutil.Amount
-	whitelists    []*net.IPNet
+	whitelists    []netip.Prefix
 	ipv4NetInfo   types.NetworksResult
 	ipv6NetInfo   types.NetworksResult
 	onionNetInfo  types.NetworksResult
@@ -979,31 +980,27 @@ func loadConfig(appName string) (*config, []string, error) {
 
 	// Validate any given whitelisted IP addresses and networks.
 	if len(cfg.Whitelists) > 0 {
-		var ip net.IP
-		cfg.whitelists = make([]*net.IPNet, 0, len(cfg.Whitelists))
+		cfg.whitelists = make([]netip.Prefix, 0, len(cfg.Whitelists))
 
-		for _, addr := range cfg.Whitelists {
-			_, ipnet, err := net.ParseCIDR(addr)
+		for _, ipnet := range cfg.Whitelists {
+			prefix, err := netip.ParsePrefix(ipnet)
 			if err != nil {
-				ip = net.ParseIP(addr)
-				if ip == nil {
-					str := "%s: the whitelist value of '%s' is invalid"
-					err = fmt.Errorf(str, funcName, addr)
+				addr, err := netip.ParseAddr(ipnet)
+				if err != nil {
+					str := "%s: the whitelist value of '%s' is invalid: %w"
+					err = fmt.Errorf(str, funcName, ipnet, err)
 					return nil, nil, err
 				}
 				var bits int
-				if ip.To4() == nil {
+				if !addr.Is4() {
 					// IPv6
 					bits = 128
 				} else {
 					bits = 32
 				}
-				ipnet = &net.IPNet{
-					IP:   ip,
-					Mask: net.CIDRMask(bits, bits),
-				}
+				prefix = netip.PrefixFrom(addr, bits)
 			}
-			cfg.whitelists = append(cfg.whitelists, ipnet)
+			cfg.whitelists = append(cfg.whitelists, prefix)
 		}
 	}
 

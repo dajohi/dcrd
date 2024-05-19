@@ -17,6 +17,7 @@ import (
 	"hash"
 	"math"
 	"net"
+	"net/netip"
 	"os"
 	"path"
 	"runtime"
@@ -2158,8 +2159,13 @@ func newPeerConfig(sp *serverPeer) *peer.Config {
 // instance, associates it with the connection, and starts all additional server
 // peer processing goroutines.
 func (s *server) inboundPeerConnected(conn net.Conn) {
+	addrPort, err := netip.ParseAddrPort(conn.RemoteAddr().String())
+	if err != nil {
+		conn.Close()
+		return
+	}
 	sp := newServerPeer(s, false)
-	sp.isWhitelisted = isWhitelisted(conn.RemoteAddr())
+	sp.isWhitelisted = isWhitelisted(addrPort.Addr())
 	sp.Peer = peer.NewInboundPeer(newPeerConfig(sp))
 	sp.syncMgrPeer = netsync.NewPeer(sp.Peer)
 	sp.AssociateConnection(conn)
@@ -2172,6 +2178,11 @@ func (s *server) inboundPeerConnected(conn net.Conn) {
 // request instance and the connection itself, and start all additional server
 // peer processing goroutines.
 func (s *server) outboundPeerConnected(c *connmgr.ConnReq, conn net.Conn) {
+	addrPort, err := netip.ParseAddrPort(conn.RemoteAddr().String())
+	if err != nil {
+		conn.Close()
+		return
+	}
 	sp := newServerPeer(s, c.Permanent)
 	p, err := peer.NewOutboundPeer(newPeerConfig(sp), c.Addr.String())
 	if err != nil {
@@ -2182,7 +2193,7 @@ func (s *server) outboundPeerConnected(c *connmgr.ConnReq, conn net.Conn) {
 	sp.Peer = p
 	sp.syncMgrPeer = netsync.NewPeer(sp.Peer)
 	sp.connReq.Store(c)
-	sp.isWhitelisted = isWhitelisted(conn.RemoteAddr())
+	sp.isWhitelisted = isWhitelisted(addrPort.Addr())
 	sp.AssociateConnection(conn)
 	go sp.Run()
 }
@@ -4321,24 +4332,9 @@ func addLocalAddress(addrMgr *addrmgr.AddrManager, addr string, services wire.Se
 
 // isWhitelisted returns whether the IP address is included in the whitelisted
 // networks and IPs.
-func isWhitelisted(addr net.Addr) bool {
-	if len(cfg.whitelists) == 0 {
-		return false
-	}
-
-	host, _, err := net.SplitHostPort(addr.String())
-	if err != nil {
-		srvrLog.Warnf("Unable to SplitHostPort on '%s': %v", addr, err)
-		return false
-	}
-	ip := net.ParseIP(host)
-	if ip == nil {
-		srvrLog.Warnf("Unable to parse IP '%s'", addr)
-		return false
-	}
-
-	for _, ipnet := range cfg.whitelists {
-		if ipnet.Contains(ip) {
+func isWhitelisted(addr netip.Addr) bool {
+	for _, prefix := range cfg.whitelists {
+		if prefix.Contains(addr) {
 			return true
 		}
 	}

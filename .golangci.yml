@@ -9,11 +9,11 @@ linters:
     - asciicheck
     - bidichk
     - bodyclose
+    - copyloopvar
     - dupword
     - durationcheck
     - errchkjson
     - errorlint
-    - exportloopref
     - gofmt
     - goimports
     - gosimple

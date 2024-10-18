@@ -23,6 +23,8 @@ linters:
     - misspell
     - nilerr
     - nosprintfhostport
+    - perfsprint
+    - predeclared
     - reassign
     - rowserrcheck
     - tenv

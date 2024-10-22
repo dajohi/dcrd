@@ -2601,22 +2601,42 @@ func handleGetMixMessage(_ context.Context, s *Server, cmd interface{}) (interfa
 
 // handleGetMixPairRequests implements the getmixpairrequests command,
 // returning all current mixing pair requests messages from mixpool.
-func handleGetMixPairRequests(_ context.Context, s *Server, _ interface{}) (interface{}, error) {
+func handleGetMixPairRequests(_ context.Context, s *Server, cmd interface{}) (interface{}, error) {
+	c := cmd.(*types.GetMixPairRequestsCmd)
+
 	mp := s.cfg.MixPooler
 
 	prs := mp.MixPRs()
 
-	buf := new(strings.Builder)
-	res := make([]string, 0, len(prs))
+	if c.Verbose == nil || !*c.Verbose {
+		buf := new(strings.Builder)
+		res := make([]string, 0, len(prs))
 
-	const pver = wire.MixVersion
-	for _, pr := range prs {
-		err := pr.BtcEncode(hex.NewEncoder(buf), pver)
-		if err != nil {
-			return nil, err
+		const pver = wire.MixVersion
+		for _, pr := range prs {
+			err := pr.BtcEncode(hex.NewEncoder(buf), pver)
+			if err != nil {
+				return nil, err
+			}
+			res = append(res, buf.String())
+			buf.Reset()
 		}
-		res = append(res, buf.String())
-		buf.Reset()
+
+		return res, nil
+	}
+
+	var res types.GetMixPairRequestsVerboseResult
+	for _, pr := range prs {
+		pres := types.MixPairRequestVerboseResult{
+			Signature:  fmt.Sprintf("%x", pr.Signature),
+			Identity:   fmt.Sprintf("%x", pr.Identity),
+			MixAmount:  pr.MixAmount,
+			InputValue: pr.InputValue,
+		}
+		for _, utxo := range pr.UTXOs {
+			pres.UTXOs = append(pres.UTXOs, utxo.OutPoint.String())
+		}
+		res.Requests = append(res.Requests, pres)
 	}
 
 	return res, nil

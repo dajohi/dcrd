@@ -566,12 +566,16 @@ func NewGetMixMessageCmd(hash string) *GetMixMessageCmd {
 }
 
 // GetMixPairRequestsCmd defines the getmixpairrequests JSON-RPC command.
-type GetMixPairRequestsCmd struct{}
+type GetMixPairRequestsCmd struct {
+	Verbose *bool `jsonrpcdefault:"false"`
+}
 
 // NewGetMixPairRequestsCmd returns a new instance which can be used to issue a
 // getmixpairrequests JSON-RPC command.
-func NewGetMixPairRequestsCmd() *GetMixPairRequestsCmd {
-	return &GetMixPairRequestsCmd{}
+func NewGetMixPairRequestsCmd(verbose *bool) *GetMixPairRequestsCmd {
+	return &GetMixPairRequestsCmd{
+		Verbose: verbose,
+	}
 }
 
 // GetNetworkInfoCmd defines the getnetworkinfo JSON-RPC command.

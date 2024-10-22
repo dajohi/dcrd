@@ -459,10 +459,29 @@ func TestChainSvrCmds(t *testing.T) {
 				return dcrjson.NewCmd(Method("getmixpairrequests"))
 			},
 			staticCmd: func() interface{} {
-				return NewGetMixPairRequestsCmd()
+				return NewGetMixPairRequestsCmd(nil)
 			},
-			marshalled:   `{"jsonrpc":"1.0","method":"getmixpairrequests","params":[],"id":1}`,
-			unmarshalled: &GetMixPairRequestsCmd{},
+			marshalled: `{"jsonrpc":"1.0","method":"getmixpairrequests","params":[],"id":1}`,
+			unmarshalled: &GetMixPairRequestsCmd{
+				Verbose: dcrjson.Bool(false),
+			},
+		},
+		{
+			name: "getmixpairrequests required optional1",
+			newCmd: func() (interface{}, error) {
+				// Intentionally use a source param that is
+				// more pointers than the destination to
+				// exercise that path.
+				verbosePtr := dcrjson.Bool(true)
+				return dcrjson.NewCmd(Method("getmixpairrequests"), &verbosePtr)
+			},
+			staticCmd: func() interface{} {
+				return NewGetMixPairRequestsCmd(dcrjson.Bool(true))
+			},
+			marshalled: `{"jsonrpc":"1.0","method":"getmixpairrequests","params":[true],"id":1}`,
+			unmarshalled: &GetMixPairRequestsCmd{
+				Verbose: dcrjson.Bool(true),
+			},
 		},
 		{
 			name: "getnetworkinfo",

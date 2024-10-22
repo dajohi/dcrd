@@ -240,6 +240,18 @@ type GetMixMessageResult struct {
 	Message string `json:"message"`
 }
 
+type MixPairRequestVerboseResult struct {
+	Signature  string   `json:"signature"`
+	Identity   string   `json:"identity"`
+	MixAmount  int64    `json:"mixamount"`
+	InputValue int64    `json:"inputvalue"`
+	UTXOs      []string `json:"utxos"`
+}
+
+type GetMixPairRequestsVerboseResult struct {
+	Requests []MixPairRequestVerboseResult `json:"pairrequests"`
+}
+
 // LocalAddressesResult models the localaddresses data from the getnetworkinfo
 // command.
 type LocalAddressesResult struct {

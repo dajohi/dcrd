@@ -521,6 +521,7 @@ var helpDescsEnUS = map[string]string{
 
 	// GetMixPairRequests help.
 	"getmixpairrequests--synopsis": "Returns current set of mixing pair request messages from mixpool.",
+	"getmixpairrequests-verbose":   "Returns a JSON object.",
 	"getmixpairrequests--result0":  "JSON array of hex-encoded mixing pair request messages.",
 
 	// GetNetworkHashPSCmd help.

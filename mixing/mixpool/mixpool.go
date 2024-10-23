@@ -32,21 +32,22 @@ const earlyKEDuration = 5 * time.Second
 
 type idPubKey = [33]byte
 
-type msgtype int
+type MsgType int
 
 // Message type constants, for quickly checking looked up entries by message
 // hash match the expected type (without performing a type assertion).
 // Excludes PR.
 const (
-	msgtypeKE msgtype = 1 + iota
-	msgtypeCT
-	msgtypeSR
-	msgtypeDC
-	msgtypeCM
-	msgtypeFP
-	msgtypeRS
+	MsgTypePR MsgType = iota
+	MsgTypeKE
+	MsgTypeCT
+	MsgTypeSR
+	MsgTypeDC
+	MsgTypeCM
+	MsgTypeFP
+	MsgTypeRS
 
-	nmsgtypes = msgtypeRS
+	nMsgTypes = MsgTypeRS
 )
 
 const (
@@ -64,21 +65,23 @@ const (
 	maxRecentMixMsgsTTL       = time.Minute
 )
 
-func (m msgtype) String() string {
+func (m MsgType) String() string {
 	switch m {
-	case msgtypeKE:
+	case MsgTypePR:
+		return "PR"
+	case MsgTypeKE:
 		return "KE"
-	case msgtypeCT:
+	case MsgTypeCT:
 		return "CT"
-	case msgtypeSR:
+	case MsgTypeSR:
 		return "SR"
-	case msgtypeDC:
+	case MsgTypeDC:
 		return "DC"
-	case msgtypeCM:
+	case MsgTypeCM:
 		return "CM"
-	case msgtypeFP:
+	case MsgTypeFP:
 		return "FP"
-	case msgtypeRS:
+	case MsgTypeRS:
 		return "RS"
 	default:
 		return "?"
@@ -91,7 +94,7 @@ type entry struct {
 	sid      [32]byte
 	recvTime time.Time
 	msg      mixing.Message
-	msgtype  msgtype
+	msgtype  MsgType
 }
 
 type orphan struct {
@@ -102,17 +105,17 @@ type orphan struct {
 type session struct {
 	sid    [32]byte
 	prs    []chainhash.Hash
-	counts [nmsgtypes]uint32
+	counts [nMsgTypes]uint32
 	hashes map[chainhash.Hash]struct{}
 	expiry uint32
 	bc     broadcast
 }
 
-func (s *session) countFor(t msgtype) uint32 {
+func (s *session) countFor(t MsgType) uint32 {
 	return s.counts[t-1]
 }
 
-func (s *session) incrementCountFor(t msgtype) {
+func (s *session) incrementCountFor(t MsgType) {
 	s.counts[t-1]++
 }
 
@@ -297,6 +300,20 @@ func (p *Pool) RecentMessage(query *chainhash.Hash) (mixing.Message, bool) {
 		return e.msg, true
 	}
 	return p.recentMixMsgs.Get(*query)
+}
+
+// MessagesByType returns all messages by the given type.
+func (p *Pool) MessagesByType(msgType MsgType) []mixing.Message {
+	switch msgType {
+	case MsgTypePR:
+		prs := p.MixPRs()
+		msgs := make([]mixing.Message, 0, len(prs))
+		for i := range prs {
+			msgs = append(msgs, mixing.Message(prs[i]))
+		}
+		return msgs
+	}
+	return nil
 }
 
 // MixPRs returns all MixPR messages.
@@ -555,7 +572,7 @@ func (p *Pool) removeSession(sid [32]byte, txHash *chainhash.Hash, success bool)
 			// XXX: may be better to store this in the runstate as
 			// a CM is received.
 			for h := range ses.hashes {
-				if e, ok := p.pool[h]; ok && e.msgtype == msgtypeCM {
+				if e, ok := p.pool[h]; ok && e.msgtype == MsgTypeCM {
 					cm := e.msg.(*wire.MsgMixConfirm)
 					hash := cm.Mix.TxHash()
 					txHash = &hash
@@ -597,7 +614,7 @@ func (p *Pool) RemoveConfirmedSessions() {
 
 func (p *Pool) removeConfirmedSessions() {
 	for sid, ses := range p.sessions {
-		cmCount := ses.countFor(msgtypeCM)
+		cmCount := ses.countFor(MsgTypeCM)
 		if uint32(len(ses.prs)) != cmCount {
 			continue
 		}
@@ -788,19 +805,19 @@ Loop:
 		for hash := range ses.hashes {
 			msgtype := p.pool[hash].msgtype
 			switch {
-			case msgtype == msgtypeKE && r.KEs != nil:
+			case msgtype == MsgTypeKE && r.KEs != nil:
 				received++
-			case msgtype == msgtypeCT && r.CTs != nil:
+			case msgtype == MsgTypeCT && r.CTs != nil:
 				received++
-			case msgtype == msgtypeSR && r.SRs != nil:
+			case msgtype == MsgTypeSR && r.SRs != nil:
 				received++
-			case msgtype == msgtypeDC && r.DCs != nil:
+			case msgtype == MsgTypeDC && r.DCs != nil:
 				received++
-			case msgtype == msgtypeCM && r.CMs != nil:
+			case msgtype == MsgTypeCM && r.CMs != nil:
 				received++
-			case msgtype == msgtypeFP && r.FPs != nil:
+			case msgtype == MsgTypeFP && r.FPs != nil:
 				received++
-			case msgtype == msgtypeRS:
+			case msgtype == MsgTypeRS:
 				if r.RSs == nil {
 					// Since initial reporters of secrets
 					// need to take the blame for
@@ -952,7 +969,7 @@ func (p *Pool) AcceptMessage(msg mixing.Message) (accepted []mixing.Message, err
 	}
 	id := (*idPubKey)(msg.Pub())
 
-	var msgtype msgtype
+	var msgtype MsgType
 	switch msg := msg.(type) {
 	case *wire.MsgMixPairReq:
 		if err := p.checkAcceptPR(msg); err != nil {
@@ -996,17 +1013,17 @@ func (p *Pool) AcceptMessage(msg mixing.Message) (accepted []mixing.Message, err
 		return allAccepted, nil
 
 	case *wire.MsgMixCiphertexts:
-		msgtype = msgtypeCT
+		msgtype = MsgTypeCT
 	case *wire.MsgMixSlotReserve:
-		msgtype = msgtypeSR
+		msgtype = MsgTypeSR
 	case *wire.MsgMixDCNet:
-		msgtype = msgtypeDC
+		msgtype = MsgTypeDC
 	case *wire.MsgMixConfirm:
-		msgtype = msgtypeCM
+		msgtype = MsgTypeCM
 	case *wire.MsgMixFactoredPoly:
-		msgtype = msgtypeFP
+		msgtype = MsgTypeFP
 	case *wire.MsgMixSecrets:
-		msgtype = msgtypeRS
+		msgtype = MsgTypeRS
 	default:
 		return nil, fmt.Errorf("unknown mix message type %T", msg)
 	}
@@ -1035,7 +1052,7 @@ func (p *Pool) AcceptMessage(msg mixing.Message) (accepted []mixing.Message, err
 				"in session %x conflicts with already accepted message %v",
 				hash, *id, msg.Sid(), prevHash))
 		}
-		if !haveKE && e.msgtype == msgtypeKE && bytes.Equal(e.msg.Sid(), msg.Sid()) {
+		if !haveKE && e.msgtype == MsgTypeKE && bytes.Equal(e.msg.Sid(), msg.Sid()) {
 			haveKE = true
 		}
 	}
@@ -1280,26 +1297,26 @@ func (p *Pool) reconsiderOrphans(accepted mixing.Message, id *idPubKey) []mixing
 				continue
 			}
 
-			var msgtype msgtype
+			var msgType MsgType
 			switch orphan.(type) {
 			case *wire.MsgMixCiphertexts:
-				msgtype = msgtypeCT
+				msgType = MsgTypeCT
 			case *wire.MsgMixSlotReserve:
-				msgtype = msgtypeSR
+				msgType = MsgTypeSR
 			case *wire.MsgMixDCNet:
-				msgtype = msgtypeDC
+				msgType = MsgTypeDC
 			case *wire.MsgMixConfirm:
-				msgtype = msgtypeCM
+				msgType = MsgTypeCM
 			case *wire.MsgMixFactoredPoly:
-				msgtype = msgtypeFP
+				msgType = MsgTypeFP
 			case *wire.MsgMixSecrets:
-				msgtype = msgtypeRS
+				msgType = MsgTypeRS
 			default:
 				log.Errorf("Unknown orphan message %T %s", orphan, orphan.Hash())
 				continue
 			}
 
-			p.acceptEntry(orphan, msgtype, &orphanHash, id, ses)
+			p.acceptEntry(orphan, msgType, &orphanHash, id, ses)
 
 			acceptedOrphans = append(acceptedOrphans, orphan)
 			acceptedMessages = append(acceptedMessages, orphan)
@@ -1495,12 +1512,12 @@ func (p *Pool) acceptKE(ke *wire.MsgMixKeyExchange, hash *chainhash.Hash, id *id
 		p.sessions[sid] = ses
 	}
 
-	p.acceptEntry(ke, msgtypeKE, hash, id, ses)
+	p.acceptEntry(ke, MsgTypeKE, hash, id, ses)
 	p.latestKE[*id] = ke
 	return ke, nil
 }
 
-func (p *Pool) acceptEntry(msg mixing.Message, msgtype msgtype, hash *chainhash.Hash,
+func (p *Pool) acceptEntry(msg mixing.Message, msgtype MsgType, hash *chainhash.Hash,
 	id *[33]byte, ses *session) {
 
 	ses.hashes[*hash] = struct{}{}

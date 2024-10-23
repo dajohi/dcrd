@@ -410,6 +410,17 @@ func TestChainSvrCmds(t *testing.T) {
 			unmarshalled: &GetGenerateCmd{},
 		},
 		{
+			name: "getgreylisted",
+			newCmd: func() (interface{}, error) {
+				return dcrjson.NewCmd(Method("getgreylisted"))
+			},
+			staticCmd: func() interface{} {
+				return NewGetGreylistedCmd()
+			},
+			marshalled:   `{"jsonrpc":"1.0","method":"getgreylisted","params":[],"id":1}`,
+			unmarshalled: &GetGreylistedCmd{},
+		},
+		{
 			name: "gethashespersec",
 			newCmd: func() (interface{}, error) {
 				return dcrjson.NewCmd(Method("gethashespersec"))

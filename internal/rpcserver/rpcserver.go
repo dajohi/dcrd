@@ -49,6 +49,7 @@ import (
 	"github.com/decred/dcrd/internal/mining"
 	"github.com/decred/dcrd/internal/version"
 	"github.com/decred/dcrd/mixing"
+	"github.com/decred/dcrd/mixing/mixpool"
 	"github.com/decred/dcrd/rpc/jsonrpc/types/v4"
 	"github.com/decred/dcrd/txscript/v4"
 	"github.com/decred/dcrd/txscript/v4/stdaddr"
@@ -202,6 +203,7 @@ var rpcHandlersBeforeInit = map[types.Method]commandHandler{
 	"getcurrentnet":         handleGetCurrentNet,
 	"getdifficulty":         handleGetDifficulty,
 	"getgenerate":           handleGetGenerate,
+	"getgreylisted":         handleGetGreylisted,
 	"gethashespersec":       handleGetHashesPerSec,
 	"getheaders":            handleGetHeaders,
 	"getinfo":               handleGetInfo,
@@ -2408,6 +2410,26 @@ func handleGetDifficulty(_ context.Context, s *Server, _ interface{}) (interface
 // handleGetGenerate implements the getgenerate command.
 func handleGetGenerate(_ context.Context, s *Server, _ interface{}) (interface{}, error) {
 	return s.cfg.CPUMiner.IsMining(), nil
+}
+
+func handleGetGreylisted(_ context.Context, s *Server, _ interface{}) (interface{}, error) {
+	mp, ok := s.cfg.MixPooler.(*mixpool.Pool)
+	if !ok || mp == nil {
+		return nil, fmt.Errorf("mixing is not enabled")
+	}
+	observer := mixpool.NewObserver(mp)
+
+	ops := make(map[string][]uint64)
+	f := func(op wire.OutPoint, strikes []uint64) bool {
+		s := make([]uint64, len(strikes))
+		copy(s, strikes)
+		ops[op.String()] = s
+
+		return true
+	}
+	observer.Striked(f)
+
+	return ops, nil
 }
 
 // handleGetHashesPerSec implements the gethashespersec command.

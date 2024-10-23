@@ -460,6 +460,13 @@ var helpDescsEnUS = map[string]string{
 	"getgenerate--synopsis": "Returns if the server is set to generate coins (mine) or not.",
 	"getgenerate--result0":  "True if mining, false if not",
 
+	// GetGreylistedCmd help.
+	"getgreylisted--synopsis":       "Returns a list of utxos.",
+	"getgreylisted--result0":        "A list of utxos.",
+	"getgreylisted--result0--desc":  "An array of strike values keyed by the outpoint.",
+	"getgreylisted--result0--key":   "The outpoint.",
+	"getgreylisted--result0--value": "An array of strike values.",
+
 	// GetHashesPerSecCmd help.
 	"gethashespersec--synopsis": "Returns a recent hashes per second performance measurement while generating coins (mining).",
 	"gethashespersec--result0":  "The number of hashes per second",
@@ -984,6 +991,7 @@ var rpcResultTypes = map[types.Method][]interface{}{
 	"getcurrentnet":         {(*uint32)(nil)},
 	"getdifficulty":         {(*float64)(nil)},
 	"getgenerate":           {(*bool)(nil)},
+	"getgreylisted":         {(*map[string][]uint64)(nil)},
 	"gethashespersec":       {(*float64)(nil)},
 	"getheaders":            {(*types.GetHeadersResult)(nil)},
 	"getinfo":               {(*types.InfoChainResult)(nil)},

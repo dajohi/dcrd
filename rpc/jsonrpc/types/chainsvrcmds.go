@@ -501,6 +501,15 @@ func NewGetGenerateCmd() *GetGenerateCmd {
 	return &GetGenerateCmd{}
 }
 
+// GetGreylistedCmd defines the getgreylisted JSON-RPC command.
+type GetGreylistedCmd struct{}
+
+// NewGetGreylistedCmd returns a new instance which can be used to issue a
+// getgreylisted JSON-RPC command.
+func NewGetGreylistedCmd() *GetGreylistedCmd {
+	return &GetGreylistedCmd{}
+}
+
 // GetHashesPerSecCmd defines the gethashespersec JSON-RPC command.
 type GetHashesPerSecCmd struct{}
 
@@ -1179,6 +1188,7 @@ func init() {
 	dcrjson.MustRegister(Method("getdifficulty"), (*GetDifficultyCmd)(nil), flags)
 	dcrjson.MustRegister(Method("getgenerate"), (*GetGenerateCmd)(nil), flags)
 	dcrjson.MustRegister(Method("gethashespersec"), (*GetHashesPerSecCmd)(nil), flags)
+	dcrjson.MustRegister(Method("getgreylisted"), (*GetGreylistedCmd)(nil), flags)
 	dcrjson.MustRegister(Method("getheaders"), (*GetHeadersCmd)(nil), flags)
 	dcrjson.MustRegister(Method("getinfo"), (*GetInfoCmd)(nil), flags)
 	dcrjson.MustRegister(Method("getmempoolinfo"), (*GetMempoolInfoCmd)(nil), flags)

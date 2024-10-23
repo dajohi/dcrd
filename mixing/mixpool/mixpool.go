@@ -304,16 +304,29 @@ func (p *Pool) RecentMessage(query *chainhash.Hash) (mixing.Message, bool) {
 
 // MessagesByType returns all messages by the given type.
 func (p *Pool) MessagesByType(msgType MsgType) []mixing.Message {
-	switch msgType {
-	case MsgTypePR:
+	var msgs []mixing.Message
+
+	switch {
+	case msgType == MsgTypePR || msgType == -1:
 		prs := p.MixPRs()
-		msgs := make([]mixing.Message, 0, len(prs))
+		msgs = make([]mixing.Message, 0, len(prs))
 		for i := range prs {
 			msgs = append(msgs, mixing.Message(prs[i]))
 		}
-		return msgs
+		if msgType == MsgTypePR {
+			return msgs
+		}
+		fallthrough
+	case msgType <= nMsgTypes || msgType == -1:
+		defer p.mtx.RUnlock()
+		p.mtx.RLock()
+		for _, e := range p.pool {
+			if e.msgtype == msgType {
+				msgs = append(msgs, mixing.Message(e.msg))
+			}
+		}
 	}
-	return nil
+	return msgs
 }
 
 // MixPRs returns all MixPR messages.

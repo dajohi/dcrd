@@ -49,6 +49,7 @@ import (
 	"github.com/decred/dcrd/internal/mining"
 	"github.com/decred/dcrd/internal/version"
 	"github.com/decred/dcrd/mixing"
+	"github.com/decred/dcrd/mixing/mixpool"
 	"github.com/decred/dcrd/rpc/jsonrpc/types/v4"
 	"github.com/decred/dcrd/txscript/v4"
 	"github.com/decred/dcrd/txscript/v4/stdaddr"
@@ -214,6 +215,7 @@ var rpcHandlersBeforeInit = map[types.Method]commandHandler{
 	"getnetworkinfo":        handleGetNetworkInfo,
 	"getpeerinfo":           handleGetPeerInfo,
 	"getrawmempool":         handleGetRawMempool,
+	"getrawmixpool":         handleGetRawMixpool,
 	"getrawtransaction":     handleGetRawTransaction,
 	"getstakedifficulty":    handleGetStakeDifficulty,
 	"getstakeversioninfo":   handleGetStakeVersionInfo,
@@ -2868,6 +2870,51 @@ func handleGetRawMempool(_ context.Context, s *Server, cmd interface{}) (interfa
 		hashStrings = append(hashStrings, descs[i].Tx.Hash().String())
 	}
 	return hashStrings, nil
+}
+
+// handleGetRawMixpool implements the getrawmixpool command.
+func handleGetRawMixpool(_ context.Context, s *Server, cmd interface{}) (interface{}, error) {
+	c := cmd.(*types.GetRawMixpoolCmd)
+
+	mp := s.cfg.MixPooler
+	msgType := mixpool.MsgType(-1)
+	if c.MsgType != nil {
+		switch strings.ToUpper(*c.MsgType) {
+		case "PR":
+			msgType = mixpool.MsgTypePR
+		case "KE":
+			msgType = mixpool.MsgTypeKE
+		case "SR":
+			msgType = mixpool.MsgTypeSR
+		case "CM":
+			msgType = mixpool.MsgTypeCM
+		}
+	}
+
+	if c.Verbose != nil && *c.Verbose {
+		msgs := mp.MessagesByType(msgType)
+		ret := make([]mixing.VerboseMessage, 0, len(msgs))
+		for i := range msgs {
+			vm := mixing.VerboseMessage{
+				MsgType:   mixpool.MsgTypePR.String(),
+				PublicKey: fmt.Sprintf("%x", msgs[i].Pub()),
+				Signature: fmt.Sprintf("%x", msgs[i].Sig()),
+				Hash:      fmt.Sprintf("%s", msgs[i].Hash().String()),
+				SessionID: fmt.Sprintf("%x", msgs[i].Sid()),
+				Run:       msgs[i].GetRun(),
+			}
+			prevMsgs := msgs[i].PrevMsgs()
+
+			vm.PrevMsgs = make([]string, 0, len(prevMsgs))
+			for _, hash := range prevMsgs {
+				vm.PrevMsgs = append(vm.PrevMsgs, hash.String())
+			}
+			ret = append(ret, vm)
+		}
+		return ret, nil
+	}
+
+	return nil, nil
 }
 
 // handleGetRawTransaction implements the getrawtransaction command.

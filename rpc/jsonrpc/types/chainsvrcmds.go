@@ -646,7 +646,7 @@ const (
 	GRMTAdd GetRawMempoolTxTypeCmd = "tadd"
 )
 
-// GetRawMempoolCmd defines the getmempool JSON-RPC command.
+// GetRawMempoolCmd defines the getrawmempool JSON-RPC command.
 type GetRawMempoolCmd struct {
 	Verbose *bool `jsonrpcdefault:"false"`
 	TxType  *string
@@ -661,6 +661,24 @@ func NewGetRawMempoolCmd(verbose *bool, txType *string) *GetRawMempoolCmd {
 	return &GetRawMempoolCmd{
 		Verbose: verbose,
 		TxType:  txType,
+	}
+}
+
+// GetRawMixpoolCmd defines the getrawmixpool JSON-RPC command.
+type GetRawMixpoolCmd struct {
+	Verbose *bool `jsonrpcdefault:"false"`
+	MsgType *string
+}
+
+// NewGetRawMixpoolCmd returns a new instance which can be used to issue a
+// getrawmixpool JSON-RPC command.
+//
+// The parameters which are pointers indicate they are optional.  Passing nil
+// for optional parameters will use the default value.
+func NewGetRawMixpoolCmd(verbose *bool, msgType *string) *GetRawMixpoolCmd {
+	return &GetRawMixpoolCmd{
+		Verbose: verbose,
+		MsgType: msgType,
 	}
 }
 
@@ -1190,6 +1208,7 @@ func init() {
 	dcrjson.MustRegister(Method("getnetworkhashps"), (*GetNetworkHashPSCmd)(nil), flags)
 	dcrjson.MustRegister(Method("getpeerinfo"), (*GetPeerInfoCmd)(nil), flags)
 	dcrjson.MustRegister(Method("getrawmempool"), (*GetRawMempoolCmd)(nil), flags)
+	dcrjson.MustRegister(Method("getrawmixpool"), (*GetRawMixpoolCmd)(nil), flags)
 	dcrjson.MustRegister(Method("getrawtransaction"), (*GetRawTransactionCmd)(nil), flags)
 	dcrjson.MustRegister(Method("getstakedifficulty"), (*GetStakeDifficultyCmd)(nil), flags)
 	dcrjson.MustRegister(Method("getstakeversioninfo"), (*GetStakeVersionInfoCmd)(nil), flags)

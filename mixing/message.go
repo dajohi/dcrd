@@ -32,3 +32,13 @@ type Message interface {
 	Sid() []byte                // PR returns nil
 	GetRun() uint32             // PR returns 0
 }
+
+type VerboseMessage struct {
+	MsgType   string   `json:"msgtype"`
+	PublicKey string   `json:"publicKey"`
+	Signature string   `json:"signature"`
+	Hash      string   `json:"hash"`
+	PrevMsgs  []string `json:"prevMsgs"`
+	SessionID string   `json:"sid"`
+	Run       uint32   `json:"run"`
+}

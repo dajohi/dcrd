@@ -20,6 +20,7 @@ import (
 	"github.com/decred/dcrd/internal/mining"
 	"github.com/decred/dcrd/math/uint256"
 	"github.com/decred/dcrd/mixing"
+	"github.com/decred/dcrd/mixing/mixpool"
 	"github.com/decred/dcrd/peer/v3"
 	"github.com/decred/dcrd/rpc/jsonrpc/types/v4"
 	"github.com/decred/dcrd/txscript/v4/stdaddr"
@@ -664,6 +665,9 @@ type MixPooler interface {
 
 	// Message searches the mixing pool for a message by its hash.
 	Message(query *chainhash.Hash) (mixing.Message, error)
+
+	// MessagesByType seaches the mixing pool for message by its type.
+	MessagesByType(msgType mixpool.MsgType) []mixing.Message
 }
 
 // TxIndexer provides an interface for retrieving details for a given

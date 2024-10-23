@@ -367,6 +367,11 @@ func (l *sessionLogger) logf(format string, args ...interface{}) {
 	l.logger.Debugf("sid=%x "+format, append([]interface{}{l.sid[:]}, args...)...)
 }
 
+// Striked returns an array of outpoints at or above the given threshold.
+func (c *Client) Striked(f func(op wire.OutPoint, strikeLimit []uint64) bool) {
+	c.observer.Striked(f)
+}
+
 // Run runs the client manager, blocking until after the context is
 // cancelled.
 func (c *Client) Run(ctx context.Context) error {

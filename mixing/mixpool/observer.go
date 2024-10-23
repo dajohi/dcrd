@@ -14,7 +14,7 @@ import (
 	"github.com/decred/dcrd/wire"
 )
 
-const strikeLimit = 2
+const StrikeLimit = 2
 
 const minPeers = 4 // Keep synced with mixclient.MinPeers
 
@@ -421,7 +421,7 @@ func (o *Observer) misbehavingTx(tx *wire.MsgTx, block *wire.MsgBlock) bool {
 		if !ok {
 			continue
 		}
-		if len(s.strikes) >= strikeLimit {
+		if len(s.strikes) >= StrikeLimit {
 			if block == nil {
 				log.Debugf("Transaction %v spends misbehaving mixing input %v",
 					txHash, in.PreviousOutPoint)
@@ -433,6 +433,17 @@ func (o *Observer) misbehavingTx(tx *wire.MsgTx, block *wire.MsgBlock) bool {
 		}
 	}
 	return false
+}
+
+func (o *Observer) Striked(f func(op wire.OutPoint, strikes []uint64) bool) {
+	o.mu.RLock()
+	defer o.mu.RUnlock()
+
+	for op, s := range o.strikes {
+		if !f(op, s.strikes) {
+			return
+		}
+	}
 }
 
 // ExcludePRs returns a slice of pair request messages excluding any which
@@ -450,7 +461,7 @@ func (o *Observer) ExcludePRs(prs []*wire.MsgMixPairReq) []*wire.MsgMixPairReq {
 			if !ok {
 				continue
 			}
-			if len(s.strikes) >= strikeLimit {
+			if len(s.strikes) >= StrikeLimit {
 				log.Debugf("Excluding PR %v by %x: output %v "+
 					"flagged for misbehavior %v times",
 					pr.Hash(), pr.Identity[:], op, len(s.strikes))

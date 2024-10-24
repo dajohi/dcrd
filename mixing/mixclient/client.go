@@ -263,13 +263,6 @@ type queueWork struct {
 	res chan error
 }
 
-const timeoutLimit = 2
-
-type timeoutCounter struct {
-	count int
-	time  time.Time
-}
-
 // Client manages local mixing client sessions.
 type Client struct {
 	wallet   Wallet

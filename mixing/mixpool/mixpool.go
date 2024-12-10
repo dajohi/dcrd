@@ -643,6 +643,40 @@ func (p *Pool) RemoveConfirmedMixes(txHashes []chainhash.Hash) {
 	}
 }
 
+type Summary struct {
+	UTXOCountGreylisted  uint32
+	UTXOCount            uint32
+	UTXOAmountGreylisted int64
+	UTXOAmount           int64
+}
+
+// Greylisted
+func (p *Pool) Summary() *Summary {
+	p.mtx.Lock()
+	defer p.mtx.Unlock()
+
+	if p.observer == nil {
+		return nil
+	}
+
+	var summary Summary
+	for _, pr := range p.prs {
+		summary.UTXOCount += uint32(len(pr.UTXOs))
+		summary.UTXOAmount += pr.MixAmount
+
+		op := pr.UTXOs[0].OutPoint
+		s := p.observer.strikes[op]
+		if s == nil {
+			// not greylisted.
+			continue
+		}
+		summary.UTXOCountGreylisted += uint32(len(pr.UTXOs))
+		summary.UTXOAmountGreylisted += pr.MixAmount
+	}
+
+	return nil
+}
+
 // RemoveSpentPRs removes all pair requests that are spent by any transaction
 // input.
 func (p *Pool) RemoveSpentPRs(txs []*wire.MsgTx) {

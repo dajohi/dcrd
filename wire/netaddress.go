@@ -151,7 +151,7 @@ func writeNetAddress(w io.Writer, pver uint32, na *NetAddress, ts bool) error {
 	if na.IP != nil {
 		copy(ip[:], na.IP.To16())
 	}
-	err := writeElements(w, na.Services, ip)
+	err := writeElements(w, &na.Services, ip)
 	if err != nil {
 		return err
 	}

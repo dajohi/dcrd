@@ -157,7 +157,7 @@ func (msg *MsgVersion) BtcEncode(w io.Writer, pver uint32) error {
 		return err
 	}
 
-	err = writeElements(w, msg.ProtocolVersion, msg.Services,
+	err = writeElements(w, &msg.ProtocolVersion, &msg.Services,
 		msg.Timestamp.Unix())
 	if err != nil {
 		return err
@@ -173,7 +173,7 @@ func (msg *MsgVersion) BtcEncode(w io.Writer, pver uint32) error {
 		return err
 	}
 
-	err = writeElement(w, msg.Nonce)
+	err = writeElement(w, &msg.Nonce)
 	if err != nil {
 		return err
 	}
@@ -183,7 +183,7 @@ func (msg *MsgVersion) BtcEncode(w io.Writer, pver uint32) error {
 		return err
 	}
 
-	err = writeElement(w, msg.LastBlock)
+	err = writeElement(w, &msg.LastBlock)
 	if err != nil {
 		return err
 	}

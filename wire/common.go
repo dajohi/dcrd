@@ -424,8 +424,22 @@ func writeElement(w io.Writer, element interface{}) error {
 		}
 		return nil
 
+	case *uint8:
+		err := binarySerializer.PutUint8(w, *e)
+		if err != nil {
+			return err
+		}
+		return nil
+
 	case uint16:
 		err := binarySerializer.PutUint16(w, littleEndian, e)
+		if err != nil {
+			return err
+		}
+		return nil
+
+	case *uint16:
+		err := binarySerializer.PutUint16(w, littleEndian, *e)
 		if err != nil {
 			return err
 		}
@@ -438,8 +452,22 @@ func writeElement(w io.Writer, element interface{}) error {
 		}
 		return nil
 
+	case *int32:
+		err := binarySerializer.PutUint32(w, littleEndian, uint32(*e))
+		if err != nil {
+			return err
+		}
+		return nil
+
 	case uint32:
 		err := binarySerializer.PutUint32(w, littleEndian, e)
+		if err != nil {
+			return err
+		}
+		return nil
+
+	case *uint32:
+		err := binarySerializer.PutUint32(w, littleEndian, *e)
 		if err != nil {
 			return err
 		}
@@ -452,8 +480,22 @@ func writeElement(w io.Writer, element interface{}) error {
 		}
 		return nil
 
+	case *int64:
+		err := binarySerializer.PutUint64(w, littleEndian, uint64(*e))
+		if err != nil {
+			return err
+		}
+		return nil
+
 	case uint64:
 		err := binarySerializer.PutUint64(w, littleEndian, e)
+		if err != nil {
+			return err
+		}
+		return nil
+
+	case *uint64:
+		err := binarySerializer.PutUint64(w, littleEndian, *e)
 		if err != nil {
 			return err
 		}
@@ -473,6 +515,14 @@ func writeElement(w io.Writer, element interface{}) error {
 
 	// Message header checksum.
 	case [4]byte:
+		_, err := w.Write(e[:])
+		if err != nil {
+			return err
+		}
+		return nil
+
+	// Block header final state.
+	case *[6]byte:
 		_, err := w.Write(e[:])
 		if err != nil {
 			return err
@@ -556,8 +606,22 @@ func writeElement(w io.Writer, element interface{}) error {
 		}
 		return nil
 
+	case *ServiceFlag:
+		err := binarySerializer.PutUint64(w, littleEndian, uint64(*e))
+		if err != nil {
+			return err
+		}
+		return nil
+
 	case InvType:
 		err := binarySerializer.PutUint32(w, littleEndian, uint32(e))
+		if err != nil {
+			return err
+		}
+		return nil
+
+	case *InvType:
+		err := binarySerializer.PutUint32(w, littleEndian, uint32(*e))
 		if err != nil {
 			return err
 		}

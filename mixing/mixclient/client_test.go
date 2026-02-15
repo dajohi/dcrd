@@ -338,7 +338,6 @@ func testDisruption(t *testing.T, misbehavingID *identity, h hook, f hookFunc) {
 
 	var g errgroup.Group
 	for _, p := range peers[:len(peers)/2] {
-		p := p
 		g.Go(func() error {
 			err := c.Dicemix(ctx, p.cj)
 			var e *testPeerBlamedError
@@ -351,7 +350,6 @@ func testDisruption(t *testing.T, misbehavingID *identity, h hook, f hookFunc) {
 		})
 	}
 	for _, p := range peers[len(peers)/2:] {
-		p := p
 		g.Go(func() error {
 			err := c2.Dicemix(ctx, p.cj)
 			var e *testPeerBlamedError

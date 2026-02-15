@@ -9,13 +9,16 @@ linters:
     - asciicheck
     - bidichk
     - bodyclose
+    - copyloopvar
     - dupword
     - durationcheck
     - errchkjson
     - errorlint
     - govet
     - grouper
+    - iface
     - ineffassign
+    - mirror
     - misspell
     - nilerr
     - nosprintfhostport
